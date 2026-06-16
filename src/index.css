@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: theme('fontFamily.sans');
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* A single, gentle, consistent focus ring for keyboard users. */
+:focus-visible {
+  outline: 2px solid theme('colors.ever.yellow');
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Keyframes — all ambient motion is CSS so it stays light and calm,
+ * and pauses for free under prefers-reduced-motion (see bottom).
+ * ------------------------------------------------------------------ */
+
+/* Header heading drifts slowly, like floating dust in lamplight. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Rain streaks fall down the window. */
+@keyframes rainfall {
+  0% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(120vh);
+    opacity: 0;
+  }
+}
+
+/* Warm lamp glow breathes very gently. */
+@keyframes lampPulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Soot sprite hops up from the bottom holding the mail. */
+@keyframes sootRise {
+  0% {
+    transform: translateY(40px) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-10px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* A small idle bob once the sprite is awake. */
+@keyframes sootBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* New plants grow up out of the pot and settle. */
+@keyframes plantGrow {
+  0% {
+    transform: translateY(14px) scale(0.2);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(-4px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Modal eases in. */
+@keyframes modalIn {
+  0% {
+    transform: translateY(10px) scale(0.98);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* A leaf gently pops in as a focus session is banked. */
+@keyframes leafPop {
+  0% {
+    transform: scale(0) rotate(-20deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Animation utility classes
+ * ------------------------------------------------------------------ */
+.animate-float {
+  animation: float 7s ease-in-out infinite;
+}
+.animate-rain {
+  animation: rainfall linear infinite;
+}
+.animate-lamp {
+  animation: lampPulse 6s ease-in-out infinite;
+}
+.animate-soot-rise {
+  animation: sootRise 0.7s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+.animate-soot-bob {
+  animation: sootBob 2.4s ease-in-out infinite;
+}
+.animate-plant-grow {
+  animation: plantGrow 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+.animate-modal-in {
+  animation: modalIn 0.25s ease-out forwards;
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+.animate-leaf-pop {
+  animation: leafPop 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+/* ------------------------------------------------------------------ *
+ * Respect prefers-reduced-motion — disable ALL ambient/decorative
+ * motion so the app stays calm and accessible. Functional transitions
+ * (the timer countdown) are driven by state, not these animations.
+ * ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
