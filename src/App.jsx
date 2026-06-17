@@ -93,9 +93,18 @@ function Dashboard() {
             Desktop: timer hero (left) with the rail stacked alongside (right). */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-stretch">
           <div
-            className={`animate-slide-up flex transition-transform duration-500 ${focusMode ? 'lg:scale-[1.01]' : ''}`}
+            className={`animate-slide-up flex flex-col gap-3 transition-transform duration-500 ${focusMode ? 'lg:scale-[1.01]' : ''}`}
             style={{ animationDelay: '0ms' }}
           >
+            {dueCount > 0 && !focusMode && (
+              <button
+                onClick={() => setShowCards(true)}
+                className="flex items-center justify-center gap-2 rounded-2xl border-2 border-brownDark/30 bg-cream/85 px-4 py-2.5 font-display text-sm text-brown shadow-sm transition-all hover:bg-cream active:scale-[0.99] sm:backdrop-blur-sm"
+              >
+                <span aria-hidden="true">🃏</span>
+                Review {dueCount} card{dueCount === 1 ? '' : 's'} due today
+              </button>
+            )}
             <PomodoroTimer onFocusActive={setFocusActive} className="w-full" />
           </div>
 
@@ -124,6 +133,8 @@ function Dashboard() {
         zen={zen}
         onToggleZen={toggleZen}
         mixerEnabled={mixerEnabled}
+        onOpenFlashcards={() => setShowCards(true)}
+        flashcardsDue={dueCount}
       />
       <Suspense fallback={null}>
         {openDrawer === 'mixer' && <AmbientMixerDrawer onClose={closeDrawer} />}

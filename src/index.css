@@ -317,6 +317,29 @@ body {
 .animate-relief        { animation: relief 0.9s ease-out; }
 .animate-wither        { animation: wither 1.2s ease forwards; }
 
+/* ------------------------------------------------------------------ *
+ * Flashcard 3D flip. The inner layer rotates; faces hide their backs.
+ * Under prefers-reduced-motion the global rule zeroes the transition, so
+ * the flip becomes an instant face-swap (no spinning) automatically.
+ * ------------------------------------------------------------------ */
+.flip-card { perspective: 1200px; }
+.flip-inner {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flip-inner.is-flipped { transform: rotateY(180deg); }
+.flip-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flip-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
 /* Freeze decorative animations while the tab is hidden (paired with the
  * usePageHidden hook). Pausing — not stopping — resumes seamlessly with no
  * reflow when the user returns. */

@@ -6,7 +6,7 @@
 // `emily.*` namespace so they sync through the existing usePersistedState hook.
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 /** Default values for every new Phase-8 key (single source of truth). */
 export const DEFAULTS = {
@@ -27,6 +27,11 @@ export const DEFAULTS = {
   'emily.brainDump': '',
   'emily.zen': false,
   'emily.meter': { dailyGoalMin: 100 },
+  // Phase-9: flashcard stats, sprite-letter state, kept letters, verse cache.
+  'emily.flashcardStats': { day: '', reviewedToday: 0, streak: 0, lastReviewDay: null, correct: 0, total: 0 },
+  'emily.spr': { seen: [], lastOpenDay: '' },
+  'emily.keepsakes': [], // [{ id, text, ref, type, signoff, ts }]
+  'emily.verses': {}, // { [reference]: text } cached from the Bible API
 }
 
 /** Safe read with a defaults fallback; never throws. */

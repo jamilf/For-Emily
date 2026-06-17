@@ -4,13 +4,14 @@ import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import useEscapeKey from '../hooks/useEscapeKey.js'
 import { SOOT_AWAKE, SOOT_NAP, PAL } from '../pixel/sprites.js'
-import { QUOTES } from '../data/quotes.js'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
 
 // Post-session overlays — loaded on demand, not part of the initial bundle.
-const QuoteModal = lazy(() => import('./QuoteModal.jsx'))
+// LetterModal carries the (large) encouragement library, so it stays out of the
+// initial bundle and only loads when Emily opens a letter.
+const LetterModal = lazy(() => import('./LetterModal.jsx'))
 const ReflectionModal = lazy(() => import('./ReflectionModal.jsx'))
 
 const DURATIONS = { focus: 25 * 60, break: 5 * 60 }
@@ -47,9 +48,11 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   const [secondsLeft, setSecondsLeft] = useState(DURATIONS.focus)
   const [running, setRunning] = useState(false)
   const [hasMail, setHasMail] = useState(false)
-  const [quote, setQuote] = useState(null)
+  const [letterContext, setLetterContext] = useState(null) // null = letter closed
+  const pendingContext = useRef(null) // a context "armed" by an event for the next tap
   const [intention, setIntention] = useState('') // "the one thing" (session-scoped)
   const [stats, setStats] = usePersistedState('emily.stats', EMPTY_STATS)
+  const [spr] = usePersistedState('emily.spr', { seen: [], lastOpenDay: '' })
   const [reflections, setReflections] = usePersistedState('emily.reflections', [])
   const [garden, setGarden] = usePersistedState('emily.garden', [])
   const [showReflection, setShowReflection] = useState(false)
@@ -82,6 +85,11 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
       if (plantDna != null && !withered) {
         setGarden((prev) => [...prev, { id: plantDna, ts: Date.now() }])
       }
+      // Arm the sprite's next letter: celebration normally, but after a few
+      // sessions today lean toward rest/peace to counter ADHD hyperfocus.
+      // (Reflection mood, chosen next, may refine this to 'rough' / 'breeze'.)
+      const sessionsToday = (stats.day === dayStr() ? stats.sessionsToday : 0) + 1
+      pendingContext.current = sessionsToday >= 3 ? 'break' : 'complete'
       // Focus Fade: gently duck the soundscape into the break.
       rampMaster(0.1, 10)
     } else {
@@ -143,12 +151,18 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
     setPlantDna(null)
     setWithered(false)
     setBreakTip(next === 'break' ? BREAK_ACTIVITIES[Math.floor(Math.random() * BREAK_ACTIVITIES.length)] : null)
+    // Starting a break? Arm a playful/cozy/rest letter for the next tap.
+    if (next === 'break') pendingContext.current = 'break'
   }
 
   function saveReflection(mood) {
     setReflections((prev) => [...prev, { ts: Date.now(), mood, note: reflectionNote.trim() }])
     setReflectionNote('')
     setShowReflection(false)
+    // Refine the armed letter context to match how the session felt.
+    if (mood === 'rain') pendingContext.current = 'rough' // comfort / identity / hope
+    else if (mood === 'sun') pendingContext.current = 'breeze' // joy / celebration
+    // 'cloud' keeps whatever the completion already armed (celebration / rest).
   }
 
   function handleStartPause() {
@@ -174,8 +188,14 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
     setWithered(false)
   }
 
-  function openQuote() {
-    setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)])
+  // Open the sprite's letter. An event may have "armed" a context (completion,
+  // reflection mood, break); otherwise it's the daily letter on the first tap of
+  // the day, or a general encouraging mix.
+  function openLetter() {
+    let ctx = pendingContext.current
+    pendingContext.current = null
+    if (!ctx) ctx = spr.lastOpenDay !== dayStr() ? 'daily' : 'idle'
+    setLetterContext(ctx)
   }
 
   const remainingFraction = total > 0 ? secondsLeft / total : 0
@@ -359,8 +379,8 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
         <div className="flex flex-col items-center gap-1">
           <div className="relative flex h-20 w-full flex-col items-center justify-end">
             <button
-              onClick={openQuote}
-              aria-label="Open a note from the sprite"
+              onClick={openLetter}
+              aria-label="Open a letter from the sprite"
               className={`group relative cursor-pointer transition-opacity active:scale-95 ${
                 napping ? 'opacity-50' : 'opacity-100'
               } ${hasMail ? 'animate-soot-rise' : 'animate-soot-bob'}`}
@@ -377,16 +397,16 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
 
           <p className="text-center text-xs text-brown/70">
             {hasMail
-              ? 'Tap the sprite. It left you a note.'
+              ? 'Tap the sprite. It wrote you a letter.'
               : napping
                 ? "The sprite's napping while you focus."
-                : 'Tap the sprite for a note.'}
+                : 'Tap the sprite for a letter.'}
           </p>
         </div>
       </div>
 
       <Suspense fallback={null}>
-        {quote && <QuoteModal quote={quote} onClose={() => setQuote(null)} />}
+        {letterContext && <LetterModal context={letterContext} onClose={() => setLetterContext(null)} />}
         {justFinishedFocus && showReflection && (
           <ReflectionModal
             note={reflectionNote}
