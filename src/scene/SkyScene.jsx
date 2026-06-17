@@ -6,12 +6,14 @@
 //
 // All of this is decorative: the whole scene is aria-hidden + pointer-events-none.
 
-// --- Time-of-day palettes (all warmed to sunset) ------------------------------
-// Boundaries mirror Header.getGreeting: <12 morning, <18 afternoon, else evening.
+// --- Time-of-day palettes (all warmed to sunset; deep starry night) -----------
+// Greeting (Header) still splits at <12 / <18; the scene adds dusk + night.
 function timeOfDay(hour) {
+  if (hour < 5) return 'night'
   if (hour < 12) return 'morning'
-  if (hour < 18) return 'afternoon'
-  return 'evening'
+  if (hour < 17) return 'afternoon'
+  if (hour < 20) return 'evening'
+  return 'night'
 }
 
 const SKIES = {
@@ -68,6 +70,28 @@ const SKIES = {
     stars: true,
     fireflies: true,
     rain: true,
+    sparkles: true,
+    shooting: true,
+  },
+  // Deep navy starry night — bright moon, twinkling sparkle-stars, shooting stars.
+  night: {
+    bands: ['#15163A', '#1C1E48', '#242759', '#2C2F6B', '#343B7A', '#41507F'],
+    sun: '#EEF1FB',
+    sunHi: '#FFFFFF',
+    sunGlow: 'rgba(210,220,255,0.5)',
+    horizonGlow: 'rgba(216,176,134,0.3)',
+    isMoon: true,
+    hills: ['#2A2E5E', '#212450', '#171A3C', '#0E1029'],
+    cityFar: '#2A2E5E',
+    cityNear: '#12142E',
+    cottage: '#0C0E22',
+    cottageWindow: '#FFD27D',
+    clouds: ['#3A3E72', '#4A4E86'],
+    stars: true,
+    fireflies: true,
+    rain: false,
+    sparkles: true,
+    shooting: true,
   },
 }
 
@@ -152,6 +176,26 @@ const STARS = Array.from({ length: 40 }).map((_, i) => ({
   delay: `${Math.random() * 5}s`,
 }))
 
+// Cross "✦" sparkle stars (twinkle in size + brightness).
+const SPARKLES = Array.from({ length: 14 }).map((_, i) => ({
+  id: i,
+  left: Math.random() * 100,
+  top: Math.random() * 50,
+  size: 9 + Math.round(Math.random() * 9),
+  duration: `${2.6 + Math.random() * 3}s`,
+  delay: `${Math.random() * 4}s`,
+}))
+
+// Occasional shooting stars (brief diagonal streaks, long dark waits).
+const SHOOTING_STARS = Array.from({ length: 3 }).map((_, i) => ({
+  id: i,
+  top: 5 + Math.random() * 28,
+  left: 6 + Math.random() * 52,
+  width: 90 + Math.random() * 70,
+  duration: `${7 + Math.random() * 6}s`,
+  delay: `${i * 5 + Math.random() * 6}s`,
+}))
+
 const FIREFLIES = Array.from({ length: 10 }).map((_, i) => ({
   id: i,
   bottom: 6 + Math.random() * 38,
@@ -171,6 +215,27 @@ const RAIN = Array.from({ length: 46 }).map((_, i) => ({
   height: 40 + Math.random() * 55,
   wide: i % 3 === 0,
 }))
+
+// A pixel "✦" sparkle star: thin cross arms + a bright square core.
+function Sparkle({ size, style, className }) {
+  return (
+    <svg
+      viewBox="0 0 7 7"
+      width={size}
+      height={size}
+      className={`pixelated ${className}`}
+      style={style}
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+    >
+      <g fill="#FFFFFF">
+        <rect x="3" y="0" width="1" height="7" />
+        <rect x="0" y="3" width="7" height="1" />
+        <rect x="2" y="2" width="3" height="3" />
+      </g>
+    </svg>
+  )
+}
 
 // A blocky cloud rendered from the CLOUD_CELLS grid.
 function PixelCloud({ className = '', style, color }) {
@@ -209,21 +274,62 @@ export default function SkyScene() {
       <div className="absolute inset-0" style={{ background: bandedGradient(t.bands) }} />
       <div className="pixel-dither absolute inset-0 opacity-40" />
 
-      {/* Stars — square pixels (dusk; faint otherwise) */}
-      {t.stars &&
-        STARS.map((s) => (
-          <span
-            key={s.id}
-            className="animate-twinkle absolute bg-white"
-            style={{
-              left: `${s.left}%`,
-              top: `${s.top}%`,
-              height: `${s.size}px`,
-              width: `${s.size}px`,
-              animationDuration: s.duration,
-              animationDelay: s.delay,
-            }}
-          />
+      {/* Star field — square dot-stars + ✦ sparkle-stars, drifting almost
+          imperceptibly across the sky (dusk + night). */}
+      {(t.stars || t.sparkles) && (
+        <div className="animate-star-drift absolute inset-0">
+          {t.stars &&
+            STARS.map((s) => (
+              <span
+                key={s.id}
+                className="animate-twinkle absolute bg-white"
+                style={{
+                  left: `${s.left}%`,
+                  top: `${s.top}%`,
+                  height: `${s.size}px`,
+                  width: `${s.size}px`,
+                  animationDuration: s.duration,
+                  animationDelay: s.delay,
+                }}
+              />
+            ))}
+          {t.sparkles &&
+            SPARKLES.map((s) => (
+              <Sparkle
+                key={`sp${s.id}`}
+                size={s.size}
+                className="animate-sparkle absolute drop-shadow-[0_0_3px_rgba(255,255,255,0.8)]"
+                style={{
+                  left: `${s.left}%`,
+                  top: `${s.top}%`,
+                  animationDuration: s.duration,
+                  animationDelay: s.delay,
+                }}
+              />
+            ))}
+        </div>
+      )}
+
+      {/* Shooting stars — brief diagonal streaks (dusk + night).
+          Rotation on the wrapper; the streak animates along its own length. */}
+      {t.shooting &&
+        SHOOTING_STARS.map((s) => (
+          <div
+            key={`sh${s.id}`}
+            className="absolute"
+            style={{ top: `${s.top}%`, left: `${s.left}%`, transform: 'rotate(26deg)' }}
+          >
+            <span
+              className="animate-shooting block h-px rounded-full"
+              style={{
+                width: `${s.width}px`,
+                background: 'linear-gradient(to right, transparent, #ffffff)',
+                boxShadow: '0 0 4px 1px rgba(255,255,255,0.7)',
+                animationDuration: s.duration,
+                animationDelay: s.delay,
+              }}
+            />
+          </div>
         ))}
 
       {/* Chunky pixel sun / moon + glow halo */}
