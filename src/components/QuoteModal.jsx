@@ -22,7 +22,7 @@ export default function QuoteModal({ quote, onClose }) {
       onMouseDown={onClose}
       onTouchEnd={onClose}
     >
-      <div className="absolute inset-0 bg-bgDim/75 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-bgDim/75 sm:backdrop-blur-sm" />
 
       <div
         role="dialog"

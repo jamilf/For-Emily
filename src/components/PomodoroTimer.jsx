@@ -1,6 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import QuoteModal from './QuoteModal.jsx'
-import ReflectionModal from './ReflectionModal.jsx'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
@@ -10,6 +8,10 @@ import { QUOTES } from '../data/quotes.js'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
+
+// Post-session overlays — loaded on demand, not part of the initial bundle.
+const QuoteModal = lazy(() => import('./QuoteModal.jsx'))
+const ReflectionModal = lazy(() => import('./ReflectionModal.jsx'))
 
 const DURATIONS = { focus: 25 * 60, break: 5 * 60 }
 const FOCUS_MINUTES = DURATIONS.focus / 60
@@ -194,8 +196,16 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   // The session's growing tree (seed → sprout → sapling → mature by progress).
   const elapsedFrac = total > 0 ? (total - secondsLeft) / total : 0
   const stageIdx = secondsLeft === 0 ? 3 : stageForProgress(elapsedFrac)
-  const plant = mode === 'focus' && plantDna != null ? generate(plantDna, STAGES[stageIdx]) : null
-  const plantPalette = plant && withered ? witherPalette(plant.palette) : plant?.palette
+  // generate() is deterministic and only changes shape with the species/stage —
+  // not with every 1s tick — so memoize on those instead of secondsLeft.
+  const plant = useMemo(
+    () => (mode === 'focus' && plantDna != null ? generate(plantDna, STAGES[stageIdx]) : null),
+    [mode, plantDna, stageIdx],
+  )
+  const plantPalette = useMemo(
+    () => (plant && withered ? witherPalette(plant.palette) : plant?.palette),
+    [plant, withered],
+  )
 
   return (
     <WindowFrame title="Spirited Pomodoro" bodyClass="bg-latte" className={className}>
@@ -376,19 +386,21 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
         </div>
       </div>
 
-      {quote && <QuoteModal quote={quote} onClose={() => setQuote(null)} />}
-      {justFinishedFocus && showReflection && (
-        <ReflectionModal
-          note={reflectionNote}
-          onNoteChange={setReflectionNote}
-          onSaveMood={saveReflection}
-          parkedCount={parked.length}
-          onClearParked={() => setParked([])}
-          intention={trimmedIntention}
-          onClearIntention={() => setIntention('')}
-          onClose={() => setShowReflection(false)}
-        />
-      )}
+      <Suspense fallback={null}>
+        {quote && <QuoteModal quote={quote} onClose={() => setQuote(null)} />}
+        {justFinishedFocus && showReflection && (
+          <ReflectionModal
+            note={reflectionNote}
+            onNoteChange={setReflectionNote}
+            onSaveMood={saveReflection}
+            parkedCount={parked.length}
+            onClearParked={() => setParked([])}
+            intention={trimmedIntention}
+            onClearIntention={() => setIntention('')}
+            onClose={() => setShowReflection(false)}
+          />
+        )}
+      </Suspense>
     </WindowFrame>
   )
 }

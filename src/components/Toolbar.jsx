@@ -6,7 +6,7 @@
  */
 export default function Toolbar({ focusMode, onToggleFocus, onOpenFlashcards, dueCount = 0 }) {
   const chip =
-    'flex items-center gap-2 rounded-full border-2 border-brownDark/30 bg-cream/85 px-4 py-2 font-display text-sm text-brown shadow-sm backdrop-blur-sm transition-all hover:bg-cream active:scale-95'
+    'flex items-center gap-2 rounded-full border-2 border-brownDark/30 bg-cream/85 px-4 py-2 font-display text-sm text-brown shadow-sm sm:backdrop-blur-sm transition-all hover:bg-cream active:scale-95'
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">

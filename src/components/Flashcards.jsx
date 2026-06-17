@@ -63,7 +63,7 @@ export default function Flashcards({ onClose }) {
       className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4"
       onMouseDown={onClose}
     >
-      <div className="absolute inset-0 bg-bgDim/80 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-bgDim/80 sm:backdrop-blur-sm" />
 
       <div
         role="dialog"
@@ -157,6 +157,12 @@ export default function Flashcards({ onClose }) {
                   </span>
                 </span>
               </button>
+
+              {/* Announce the visible face + position to screen readers (the card
+                  itself is a silent visual flip otherwise). */}
+              <p className="sr-only" aria-live="polite">
+                {`Card ${index + 1} of ${queue.length}. ${flipped ? `Answer: ${current.back}` : `Prompt: ${current.front}`}`}
+              </p>
 
               {flipped ? (
                 <div className="mt-4 flex gap-2 font-display">

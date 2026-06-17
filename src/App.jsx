@@ -1,19 +1,23 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import Header from './components/Header.jsx'
 import PomodoroTimer from './components/PomodoroTimer.jsx'
 import ParkingLot from './components/ParkingLot.jsx'
-import Flashcards from './components/Flashcards.jsx'
 import FocusMeter from './components/FocusMeter.jsx'
 import FocusGarden from './components/FocusGarden.jsx'
 import Dock from './components/Dock.jsx'
-import AmbientMixerDrawer from './components/AmbientMixerDrawer.jsx'
-import BrainDumpDrawer from './components/BrainDumpDrawer.jsx'
 import WeatherCanvas from './components/WeatherCanvas.jsx'
 import SkyScene from './scene/SkyScene.jsx'
 import AudioMixerProvider, { useMixer } from './audio/AudioMixerProvider.jsx'
 import usePersistedState from './hooks/useLocalStorage.js'
+import usePageHidden from './hooks/usePageHidden.js'
 import { SEED_CARDS, countDue } from './data/flashcards.js'
 import { migrate } from './storage/StorageManager.js'
+
+// On-demand overlays — split into their own chunks so they stay out of the
+// initial bundle until the user actually opens them.
+const Flashcards = lazy(() => import('./components/Flashcards.jsx'))
+const AmbientMixerDrawer = lazy(() => import('./components/AmbientMixerDrawer.jsx'))
+const BrainDumpDrawer = lazy(() => import('./components/BrainDumpDrawer.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
@@ -24,6 +28,7 @@ function Dashboard() {
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
   const dueCount = countDue(cards)
   const { enabled: mixerEnabled } = useMixer()
+  const pageHidden = usePageHidden()
 
   // In focus mode the supporting rail recedes so the timer is the single point
   // of focus.
@@ -48,6 +53,7 @@ function Dashboard() {
     'app-root relative min-h-screen overflow-hidden',
     focusActive ? 'focus-active' : '',
     zen ? 'zen' : '',
+    pageHidden ? 'anims-paused' : '', // freeze decorative animations when tab is hidden
   ]
     .filter(Boolean)
     .join(' ')
@@ -110,11 +116,13 @@ function Dashboard() {
         onToggleZen={toggleZen}
         mixerEnabled={mixerEnabled}
       />
-      {openDrawer === 'mixer' && <AmbientMixerDrawer onClose={closeDrawer} />}
-      {openDrawer === 'brainDump' && <BrainDumpDrawer onClose={closeDrawer} />}
+      <Suspense fallback={null}>
+        {openDrawer === 'mixer' && <AmbientMixerDrawer onClose={closeDrawer} />}
+        {openDrawer === 'brainDump' && <BrainDumpDrawer onClose={closeDrawer} />}
 
-      {/* Flashcards overlay */}
-      {showCards && <Flashcards onClose={() => setShowCards(false)} />}
+        {/* Flashcards overlay */}
+        {showCards && <Flashcards onClose={() => setShowCards(false)} />}
+      </Suspense>
     </div>
   )
 }

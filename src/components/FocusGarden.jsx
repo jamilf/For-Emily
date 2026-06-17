@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
@@ -14,6 +14,13 @@ export default function FocusGarden({ className = '' }) {
   const [garden, setGarden] = usePersistedState('emily.garden', [])
   const [confirming, setConfirming] = useState(false)
 
+  // Generate each tree's sprite once per garden change — not on every re-render
+  // (e.g. toggling the clear-confirm), since generate() is deterministic by DNA.
+  const sprites = useMemo(
+    () => garden.map((tree) => ({ ts: tree.ts, ...generate(tree.id, 'mature') })),
+    [garden],
+  )
+
   return (
     <WindowFrame title="My Garden" className={className}>
       {garden.length === 0 ? (
@@ -26,18 +33,15 @@ export default function FocusGarden({ className = '' }) {
       ) : (
         <div className="flex h-full flex-col">
           <div className="grid grid-cols-5 gap-2 min-[480px]:grid-cols-6 lg:grid-cols-5">
-            {garden.map((tree) => {
-              const { grid, palette } = generate(tree.id, 'mature')
-              return (
-                <div
-                  key={tree.ts}
-                  className="flex items-end justify-center"
-                  title={new Date(tree.ts).toLocaleDateString()}
-                >
-                  <PixelSprite grid={grid} palette={palette} pixel={4} />
-                </div>
-              )
-            })}
+            {sprites.map((tree) => (
+              <div
+                key={tree.ts}
+                className="flex items-end justify-center"
+                title={new Date(tree.ts).toLocaleDateString()}
+              >
+                <PixelSprite grid={tree.grid} palette={tree.palette} pixel={4} />
+              </div>
+            ))}
           </div>
           <div className="mt-4 flex items-center justify-between gap-2">
             <p className="text-xs text-brown/60">

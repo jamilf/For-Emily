@@ -103,10 +103,10 @@ export default function ParkingLot() {
               </ul>
             )}
 
-            <p className="mt-2 text-center text-xs text-brown/60">
+            <p className="mt-2 text-center text-xs text-brown/60" aria-live="polite">
               {items.length === 0
                 ? 'Nothing parked — your focus is clear 🌿'
-                : 'Come back to these after you focus.'}
+                : `${items.length} parked — come back to these after you focus.`}
             </p>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function ParkingLot() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label="Open the distraction parking lot"
-        className="flex items-center gap-2 rounded-full border-2 border-brownDark/40 bg-cream/90 px-4 py-2.5 font-display text-sm text-brown shadow-cozy backdrop-blur-sm transition-all hover:bg-cream active:scale-95"
+        className="flex items-center gap-2 rounded-full border-2 border-brownDark/40 bg-cream/90 px-4 py-2.5 font-display text-sm text-brown shadow-cozy sm:backdrop-blur-sm transition-all hover:bg-cream active:scale-95"
       >
         ✏️ Capture
         {items.length > 0 && (
