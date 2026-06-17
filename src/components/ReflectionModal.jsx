@@ -77,18 +77,18 @@ export default function ReflectionModal({
           </div>
 
           <input
-            type="text"
+            type=”text”
             value={note}
             onChange={(e) => onNoteChange(e.target.value)}
-            placeholder="Add a note (optional)"
-            className="mt-4 w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2.5 text-left text-sm text-brownDark placeholder:text-brown/40 focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow"
+            placeholder=”Add a note (optional)”
+            className=”mt-4 w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2.5 text-left text-sm text-brownDark placeholder:text-brown/40 focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow”
           />
 
           {intention && (
-            <div className="mt-4 border-t border-brown/15 pt-4 text-sm">
+            <div className=”mt-4 border-t border-brown/15 pt-4 text-sm”>
               <button
                 onClick={onClearIntention}
-                className="rounded-full bg-brown/10 px-4 py-1.5 font-display text-xs text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                className=”rounded-full bg-brown/10 px-4 py-1.5 font-display text-xs text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow”
               >
                 Clear “{intention.length > 24 ? intention.slice(0, 24) + '…' : intention}”
               </button>
