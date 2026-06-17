@@ -41,7 +41,7 @@ function tipCoords(fraction) {
   return { cx: 150 + RADIUS * Math.cos(angle), cy: 150 + RADIUS * Math.sin(angle) }
 }
 
-/** Widget 2 — The Spirited Pomodoro (centerpiece, lofi window). */
+/** Widget 2 — The Pomodoro timer (centerpiece, lofi window). */
 export default function PomodoroTimer({ onFocusActive, className = '' }) {
   const [mode, setMode] = useState('focus')
   const [secondsLeft, setSecondsLeft] = useState(DURATIONS.focus)
@@ -207,7 +207,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   )
 
   return (
-    <WindowFrame title="Spirited Pomodoro" bodyClass="bg-latte" className={className}>
+    <WindowFrame title="Pomodoro" bodyClass="bg-latte" className={className}>
       <div className="flex flex-col items-center gap-5">
         {/* Mode toggle */}
         <div
@@ -287,7 +287,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
           </svg>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="font-display text-5xl font-semibold tabular-nums sm:text-5xl md:text-6xl">
+            <span className="font-sans text-6xl font-bold tabular-nums tracking-tight sm:text-6xl md:text-7xl">
               {format(secondsLeft)}
             </span>
             <span className="mt-1.5 text-sm text-brown" aria-live="polite">

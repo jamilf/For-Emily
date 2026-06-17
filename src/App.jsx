@@ -110,7 +110,7 @@ function Dashboard() {
         </div>
 
         <footer className="mb-24 mt-12 text-center font-display text-sm text-cream/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
-          For Emily. You&apos;ve got this.
+          For Emily Tran. You&apos;ve got this.
         </footer>
       </main>
 
