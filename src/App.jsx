@@ -58,7 +58,6 @@ function Dashboard() {
   ]
     .filter(Boolean)
     .join(' ')
-
   return (
     <div className={rootClass}>
       {/* Painterly Ghibli landscape (fixed; content scrolls over it) */}
