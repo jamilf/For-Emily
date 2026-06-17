@@ -29,13 +29,13 @@ export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, due
         <div
           aria-hidden="true"
           className="absolute -inset-6 rounded-3xl blur-2xl"
-          style={{ background: 'radial-gradient(circle, rgba(219,188,127,0.35) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(255,210,125,0.4) 0%, transparent 70%)' }}
         />
         <PixelSprite grid={STUDY_ROOM} palette={PAL} pixel={6} className="relative drop-shadow-[0_8px_18px_rgba(0,0,0,0.5)]" />
       </div>
 
       <div>
-        <p className="mb-2 font-display text-sm uppercase tracking-[0.25em] text-ever-yellow drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+        <p className="mb-2 font-display text-sm uppercase tracking-[0.25em] text-sunset-gold drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
           {dateLabel}
         </p>
         <h1 className="font-display text-4xl font-semibold text-cream drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] sm:text-5xl">

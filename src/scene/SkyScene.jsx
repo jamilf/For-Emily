@@ -1,71 +1,206 @@
-// A layered, hand-authored painterly "Studio Ghibli" landscape that the whole
+// A layered, hand-authored **pixel-art** sunset landscape that the whole
 // dashboard scrolls over. Everything here is original SVG + CSS — no image files —
-// so nothing can 404 on GitHub Pages. The palette shifts gently with time of day.
+// so nothing can 404 on GitHub Pages. Shapes are drawn from crisp-edged <rect>s
+// (no anti-aliasing) for a true blocky, lo-fi look. The palette warms through
+// the day but always stays in sunset/dusk territory.
 //
 // All of this is decorative: the whole scene is aria-hidden + pointer-events-none.
 
-// --- Time-of-day palettes -----------------------------------------------------
-// Boundaries mirror Header.getGreeting: <12 morning, <18 afternoon, else evening.
+// --- Time-of-day palettes (all warmed to sunset; deep starry night) -----------
+// Greeting (Header) still splits at <12 / <18; the scene adds dusk + night.
 function timeOfDay(hour) {
+  if (hour < 5) return 'night'
   if (hour < 12) return 'morning'
-  if (hour < 18) return 'afternoon'
-  return 'evening'
+  if (hour < 17) return 'afternoon'
+  if (hour < 20) return 'evening'
+  return 'night'
 }
 
 const SKIES = {
+  // Pale rose/peach dawn.
   morning: {
-    sky: ['#E9C9A0', '#E7B98C', '#CBB689', '#A9B98A'], // peach → soft gold → green haze
-    orb: '#FBE3B3',
-    orbGlow: 'rgba(251,227,179,0.65)',
+    bands: ['#7C6BA0', '#A87FA8', '#D98BA6', '#F3AEBE', '#FBCDB0', '#FCE6C4'],
+    sun: '#FFE9C2',
+    sunHi: '#FFF6E2',
+    sunGlow: 'rgba(255,224,170,0.6)',
+    horizonGlow: 'rgba(252,200,160,0.55)',
     isMoon: false,
-    haze: 'rgba(245, 224, 188, 0.5)',
-    hills: ['#9BB089', '#7E9A6E', '#5E7C54', '#41603C'],
-    cottage: '#33473A',
-    cottageWindow: '#F2C66B',
+    hills: ['#9B7BA8', '#7C5E8C', '#5E4572', '#46335A'],
+    cityFar: '#7C5E8A',
+    cityNear: '#4A3760',
+    cottage: '#3A2A50',
+    cottageWindow: '#FFD27D',
+    clouds: ['#FBD6CB', '#F7BEC4'],
+    stars: false,
     fireflies: false,
     rain: false,
   },
+  // Vivid pink / coral / gold sunset.
   afternoon: {
-    sky: ['#9FC6CB', '#A9CBC0', '#B6C99E', '#A9B98A'], // soft blue-green day
-    orb: '#FFF4D6',
-    orbGlow: 'rgba(255,244,214,0.55)',
+    bands: ['#3E3A6E', '#7E3F86', '#B14A82', '#E0719C', '#F4845F', '#F9A857'],
+    sun: '#FFF1C9',
+    sunHi: '#FFFDF2',
+    sunGlow: 'rgba(255,210,125,0.55)',
+    horizonGlow: 'rgba(244,132,95,0.6)',
     isMoon: false,
-    haze: 'rgba(220, 233, 222, 0.5)',
-    hills: ['#A7C08C', '#86A86F', '#5E7C54', '#41603C'],
-    cottage: '#33473A',
-    cottageWindow: '#F2C66B',
+    hills: ['#8E5A86', '#6E4470', '#52335A', '#3C2647'],
+    cityFar: '#6E4A78',
+    cityNear: '#3A2A50',
+    cottage: '#2C1E3E',
+    cottageWindow: '#FFD27D',
+    clouds: ['#FBC8B0', '#F4A6C0'],
+    stars: false,
     fireflies: false,
     rain: false,
   },
+  // Deep indigo → plum → magenta dusk, with moon + stars + fireflies + rain.
   evening: {
-    sky: ['#2B3A55', '#3C4A6B', '#5A5170', '#6E5A63'], // deep indigo → warm dusk horizon
-    orb: '#E8EAD6',
-    orbGlow: 'rgba(232,234,214,0.45)',
+    bands: ['#241B3A', '#352A52', '#5C3A6E', '#9B3D73', '#C25A6E', '#E08A66'],
+    sun: '#F2EAD3',
+    sunHi: '#FFFFFF',
+    sunGlow: 'rgba(232,234,214,0.45)',
+    horizonGlow: 'rgba(224,138,102,0.5)',
     isMoon: true,
-    haze: 'rgba(60, 74, 107, 0.55)',
-    hills: ['#3E5A52', '#33493F', '#28392F', '#1E2B25'],
-    cottage: '#161F1C',
-    cottageWindow: '#F4C56A',
+    hills: ['#4A3A66', '#3A2C52', '#2A2040', '#1E1730'],
+    cityFar: '#42345E',
+    cityNear: '#241B38',
+    cottage: '#161024',
+    cottageWindow: '#FFD27D',
+    clouds: ['#7E5A78', '#9B5A6E'],
+    stars: true,
     fireflies: true,
     rain: true,
+    sparkles: true,
+    shooting: true,
+  },
+  // Deep navy starry night — bright moon, twinkling sparkle-stars, shooting stars.
+  night: {
+    bands: ['#15163A', '#1C1E48', '#242759', '#2C2F6B', '#343B7A', '#41507F'],
+    sun: '#EEF1FB',
+    sunHi: '#FFFFFF',
+    sunGlow: 'rgba(210,220,255,0.5)',
+    horizonGlow: 'rgba(216,176,134,0.3)',
+    isMoon: true,
+    hills: ['#2A2E5E', '#212450', '#171A3C', '#0E1029'],
+    cityFar: '#2A2E5E',
+    cityNear: '#12142E',
+    cottage: '#0C0E22',
+    cottageWindow: '#FFD27D',
+    clouds: ['#3A3E72', '#4A4E86'],
+    stars: true,
+    fireflies: true,
+    rain: false,
+    sparkles: true,
+    shooting: true,
   },
 }
 
-// --- Deterministic-ish scene props (computed once at module load) -------------
-const STARS = Array.from({ length: 36 }).map((_, i) => ({
+// --- Hard-stop banded gradient (reads as a dithered pixel sky) ----------------
+function bandedGradient(bands) {
+  const n = bands.length
+  const stops = bands.flatMap((c, i) => {
+    const a = ((i / n) * 100).toFixed(2)
+    const b = (((i + 1) / n) * 100).toFixed(2)
+    return [`${c} ${a}%`, `${c} ${b}%`]
+  })
+  return `linear-gradient(to bottom, ${stops.join(', ')})`
+}
+
+// --- Chunky pixel disc (sun / moon) -------------------------------------------
+// One rect per row spanning the disc width — crisp, blocky edges.
+const SUN_D = 14
+const SUN_ROWS = Array.from({ length: SUN_D }).map((_, y) => {
+  const c = (SUN_D - 1) / 2
+  const r = SUN_D / 2
+  const half = Math.floor(Math.sqrt(Math.max(0, r * r - (y - c) * (y - c))))
+  return { y, x: Math.round(c - half), w: half * 2 + 1 }
+})
+
+// --- Pixel skyline: rows of buildings with lit windows ------------------------
+function buildSkyline(n, minH, maxH, litChance) {
+  const unit = 200 / n
+  return Array.from({ length: n }).map((_, i) => {
+    const h = Math.round(minH + Math.random() * (maxH - minH))
+    const w = Math.round(unit * (0.72 + Math.random() * 0.22))
+    const x = Math.round(i * unit + (unit - w) / 2)
+    const top = 60 - h
+    const cols = Math.max(1, Math.floor((w - 1) / 3))
+    const rows = Math.max(1, Math.floor((h - 2) / 4))
+    const windows = []
+    for (let r = 0; r < rows; r++) {
+      for (let cc = 0; cc < cols; cc++) {
+        if (Math.random() < litChance) {
+          windows.push({ x: x + 1.5 + cc * 3, y: top + 2 + r * 4 })
+        }
+      }
+    }
+    return { x, w, h, top, windows }
+  })
+}
+
+const CITY_FAR = buildSkyline(26, 10, 26, 0.22)
+const CITY_NEAR = buildSkyline(18, 16, 38, 0.32)
+
+// --- Pixel hills: coarse height-maps rendered as vertical bars ----------------
+function buildHill(steps, base, amp, rough) {
+  let h = base
+  return Array.from({ length: steps }).map(() => {
+    h += (Math.random() - 0.5) * rough
+    h = Math.max(base - amp, Math.min(base + amp, h))
+    return Math.round(h)
+  })
+}
+// viewBox is 0 0 200 100 (bottom-anchored). Nearer hills are taller.
+const HILLS = [
+  buildHill(40, 34, 8, 5),
+  buildHill(34, 48, 10, 7),
+  buildHill(28, 64, 12, 9),
+  buildHill(22, 82, 12, 11),
+]
+
+// --- Blocky pixel cloud -------------------------------------------------------
+const CLOUD_CELLS = [
+  '  XXXX  ',
+  ' XXXXXX ',
+  'XXXXXXXX',
+  ' XXXXXX ',
+]
+
+// --- Ambient particle props (computed once at module load) --------------------
+const STARS = Array.from({ length: 40 }).map((_, i) => ({
   id: i,
   left: Math.random() * 100,
-  top: Math.random() * 45,
-  size: Math.random() < 0.25 ? 2.5 : 1.5,
+  top: Math.random() * 42,
+  size: Math.random() < 0.3 ? 3 : 2,
   duration: `${2.5 + Math.random() * 4}s`,
   delay: `${Math.random() * 5}s`,
 }))
 
-const FIREFLIES = Array.from({ length: 9 }).map((_, i) => ({
+// Cross "✦" sparkle stars (twinkle in size + brightness).
+const SPARKLES = Array.from({ length: 14 }).map((_, i) => ({
+  id: i,
+  left: Math.random() * 100,
+  top: Math.random() * 50,
+  size: 9 + Math.round(Math.random() * 9),
+  duration: `${2.6 + Math.random() * 3}s`,
+  delay: `${Math.random() * 4}s`,
+}))
+
+// Occasional shooting stars (brief diagonal streaks, long dark waits).
+const SHOOTING_STARS = Array.from({ length: 3 }).map((_, i) => ({
+  id: i,
+  top: 5 + Math.random() * 28,
+  left: 6 + Math.random() * 52,
+  width: 90 + Math.random() * 70,
+  duration: `${7 + Math.random() * 6}s`,
+  delay: `${i * 5 + Math.random() * 6}s`,
+}))
+
+const FIREFLIES = Array.from({ length: 10 }).map((_, i) => ({
   id: i,
   bottom: 6 + Math.random() * 38,
   left: 6 + Math.random() * 88,
-  size: i % 3 === 0 ? 'h-2.5 w-2.5' : 'h-1.5 w-1.5',
+  size: i % 3 === 0 ? 6 : 4,
   duration: `${13 + Math.random() * 9}s`,
   delay: `${Math.random() * 12}s`,
   drift: `${(Math.random() - 0.5) * 60}px`,
@@ -81,16 +216,49 @@ const RAIN = Array.from({ length: 46 }).map((_, i) => ({
   wide: i % 3 === 0,
 }))
 
-// A soft, blobby Ghibli cloud built from overlapping circles in one path-ish group.
-function Cloud({ className = '', style }) {
+// A pixel "✦" sparkle star: thin cross arms + a bright square core.
+function Sparkle({ size, style, className }) {
   return (
-    <svg viewBox="0 0 220 90" className={className} style={style} aria-hidden="true">
-      <g fill="currentColor">
-        <ellipse cx="60" cy="58" rx="56" ry="30" />
-        <ellipse cx="110" cy="44" rx="50" ry="34" />
-        <ellipse cx="158" cy="56" rx="48" ry="28" />
-        <ellipse cx="100" cy="64" rx="70" ry="24" />
+    <svg
+      viewBox="0 0 7 7"
+      width={size}
+      height={size}
+      className={`pixelated ${className}`}
+      style={style}
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+    >
+      <g fill="#FFFFFF">
+        <rect x="3" y="0" width="1" height="7" />
+        <rect x="0" y="3" width="7" height="1" />
+        <rect x="2" y="2" width="3" height="3" />
       </g>
+    </svg>
+  )
+}
+
+// A blocky cloud rendered from the CLOUD_CELLS grid.
+function PixelCloud({ className = '', style, color }) {
+  const cell = 8
+  const rects = []
+  CLOUD_CELLS.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      if (row[x] === 'X') rects.push({ x: x * cell, y: y * cell })
+    }
+  })
+  const w = CLOUD_CELLS[0].length * cell
+  const h = CLOUD_CELLS.length * cell
+  return (
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      className={`pixelated ${className}`}
+      style={style}
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+    >
+      {rects.map((r, i) => (
+        <rect key={i} x={r.x} y={r.y} width={cell} height={cell} fill={color} />
+      ))}
     </svg>
   )
 }
@@ -98,152 +266,246 @@ function Cloud({ className = '', style }) {
 export default function SkyScene() {
   const hour = new Date().getHours()
   const t = SKIES[timeOfDay(hour)]
+  const stepW = 200
 
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
-      {/* Sky gradient */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `linear-gradient(to bottom, ${t.sky[0]} 0%, ${t.sky[1]} 38%, ${t.sky[2]} 68%, ${t.sky[3]} 100%)`,
-        }}
-      />
+      {/* Banded (dithered) pixel sky */}
+      <div className="absolute inset-0" style={{ background: bandedGradient(t.bands) }} />
+      <div className="pixel-dither absolute inset-0 opacity-40" />
 
-      {/* Stars (dusk only) */}
-      {t.isMoon &&
-        STARS.map((s) => (
-          <span
-            key={s.id}
-            className="animate-twinkle absolute rounded-full bg-white"
-            style={{
-              left: `${s.left}%`,
-              top: `${s.top}%`,
-              height: `${s.size}px`,
-              width: `${s.size}px`,
-              animationDuration: s.duration,
-              animationDelay: s.delay,
-            }}
-          />
+      {/* Star field — square dot-stars + ✦ sparkle-stars, drifting almost
+          imperceptibly across the sky (dusk + night). */}
+      {(t.stars || t.sparkles) && (
+        <div className="animate-star-drift absolute inset-0">
+          {t.stars &&
+            STARS.map((s) => (
+              <span
+                key={s.id}
+                className="animate-twinkle absolute bg-white"
+                style={{
+                  left: `${s.left}%`,
+                  top: `${s.top}%`,
+                  height: `${s.size}px`,
+                  width: `${s.size}px`,
+                  animationDuration: s.duration,
+                  animationDelay: s.delay,
+                }}
+              />
+            ))}
+          {t.sparkles &&
+            SPARKLES.map((s) => (
+              <Sparkle
+                key={`sp${s.id}`}
+                size={s.size}
+                className="animate-sparkle absolute drop-shadow-[0_0_3px_rgba(255,255,255,0.8)]"
+                style={{
+                  left: `${s.left}%`,
+                  top: `${s.top}%`,
+                  animationDuration: s.duration,
+                  animationDelay: s.delay,
+                }}
+              />
+            ))}
+        </div>
+      )}
+
+      {/* Shooting stars — brief diagonal streaks (dusk + night).
+          Rotation on the wrapper; the streak animates along its own length. */}
+      {t.shooting &&
+        SHOOTING_STARS.map((s) => (
+          <div
+            key={`sh${s.id}`}
+            className="absolute"
+            style={{ top: `${s.top}%`, left: `${s.left}%`, transform: 'rotate(26deg)' }}
+          >
+            <span
+              className="animate-shooting block h-px rounded-full"
+              style={{
+                width: `${s.width}px`,
+                background: 'linear-gradient(to right, transparent, #ffffff)',
+                boxShadow: '0 0 4px 1px rgba(255,255,255,0.7)',
+                animationDuration: s.duration,
+                animationDelay: s.delay,
+              }}
+            />
+          </div>
         ))}
 
-      {/* Celestial body + glow halo */}
-      <div className="absolute" style={{ top: '9%', right: '14%' }}>
+      {/* Chunky pixel sun / moon + glow halo */}
+      <div className="absolute" style={{ top: '10%', right: '15%' }}>
         <div
-          className="animate-lamp absolute -inset-24 rounded-full blur-3xl"
-          style={{ background: `radial-gradient(circle, ${t.orbGlow} 0%, transparent 70%)` }}
+          className="animate-lamp absolute -inset-20 rounded-full blur-3xl"
+          style={{ background: `radial-gradient(circle, ${t.sunGlow} 0%, transparent 70%)` }}
         />
-        <div
-          className="animate-float relative rounded-full"
-          style={{
-            height: t.isMoon ? '92px' : '108px',
-            width: t.isMoon ? '92px' : '108px',
-            background: `radial-gradient(circle at 38% 35%, #ffffff 0%, ${t.orb} 55%, ${t.orb} 100%)`,
-            boxShadow: `0 0 60px 12px ${t.orbGlow}`,
-          }}
+        <svg
+          viewBox={`0 0 ${SUN_D} ${SUN_D}`}
+          className="animate-float pixelated relative"
+          style={{ width: t.isMoon ? 104 : 120, height: t.isMoon ? 104 : 120 }}
+          shapeRendering="crispEdges"
         >
-          {/* Moon craters */}
+          {SUN_ROWS.map((row) => (
+            <rect key={row.y} x={row.x} y={row.y} width={row.w} height={1} fill={t.sun} />
+          ))}
+          {/* upper-left highlight */}
+          <rect x={SUN_ROWS[4].x + 1} y={3} width={3} height={2} fill={t.sunHi} />
           {t.isMoon && (
             <>
-              <span className="absolute rounded-full bg-black/10" style={{ width: 16, height: 16, top: 22, left: 24 }} />
-              <span className="absolute rounded-full bg-black/10" style={{ width: 10, height: 10, top: 48, left: 52 }} />
-              <span className="absolute rounded-full bg-black/10" style={{ width: 8, height: 8, top: 30, left: 60 }} />
+              <rect x={5} y={4} width={2} height={2} fill="rgba(0,0,0,0.10)" />
+              <rect x={8} y={7} width={2} height={2} fill="rgba(0,0,0,0.10)" />
+              <rect x={6} y={9} width={1} height={1} fill="rgba(0,0,0,0.10)" />
             </>
           )}
-        </div>
-      </div>
-
-      {/* Clouds — two parallax layers drifting at different speeds */}
-      <div className="absolute inset-0 text-white/70">
-        <Cloud
-          className="animate-cloud-slow absolute h-24 w-60 opacity-80 blur-[1px]"
-          style={{ top: '12%', left: '-15%' }}
-        />
-        <Cloud
-          className="animate-cloud absolute h-16 w-44 opacity-60 blur-[2px]"
-          style={{ top: '24%', left: '-25%', animationDelay: '-18s' }}
-        />
-        <Cloud
-          className="animate-cloud-slow absolute h-20 w-52 opacity-50 blur-[1px]"
-          style={{ top: '6%', left: '-40%', animationDelay: '-40s' }}
-        />
-      </div>
-
-      {/* Soft fog band over the far hills */}
-      <div
-        className="animate-fog absolute left-0 right-0"
-        style={{
-          bottom: '30%',
-          height: '120px',
-          background: `linear-gradient(to bottom, transparent, ${t.haze}, transparent)`,
-          filter: 'blur(8px)',
-        }}
-      />
-
-      {/* Rolling hills — receding bands for depth */}
-      <svg
-        className="absolute bottom-0 left-0 w-full"
-        style={{ height: '52%' }}
-        viewBox="0 0 1440 480"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        {/* farthest */}
-        <path d="M0 240 Q 360 150 720 220 T 1440 200 V 480 H 0 Z" fill={t.hills[0]} opacity="0.85" />
-        {/* mid-far */}
-        <path d="M0 300 Q 300 220 640 290 T 1440 280 V 480 H 0 Z" fill={t.hills[1]} opacity="0.92" />
-        {/* mid-near (cottage sits on this one) */}
-        <path d="M0 360 Q 420 300 820 350 T 1440 340 V 480 H 0 Z" fill={t.hills[2]} />
-        {/* nearest */}
-        <path d="M0 420 Q 360 380 760 410 T 1440 400 V 480 H 0 Z" fill={t.hills[3]} />
-      </svg>
-
-      {/* Cottage with a warm glowing window + a couple of trees, on the mid hill */}
-      <div className="absolute" style={{ bottom: '30%', left: '17%' }}>
-        {/* warm spill of light */}
-        <div
-          className="animate-lamp absolute -inset-8 rounded-full blur-2xl"
-          style={{ background: `radial-gradient(circle, ${t.cottageWindow}55 0%, transparent 70%)` }}
-        />
-        <svg width="120" height="92" viewBox="0 0 120 92" aria-hidden="true" className="relative drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)]">
-          {/* trees */}
-          <g fill={t.hills[3]}>
-            <ellipse cx="14" cy="64" rx="13" ry="20" />
-            <rect x="11" y="74" width="6" height="14" />
-            <ellipse cx="106" cy="60" rx="15" ry="24" />
-            <rect x="103" y="74" width="6" height="14" />
-          </g>
-          {/* cottage body */}
-          <rect x="40" y="50" width="44" height="38" rx="2" fill={t.cottage} />
-          {/* roof */}
-          <path d="M34 52 L62 28 L90 52 Z" fill={t.cottage} />
-          {/* glowing window */}
-          <rect x="54" y="60" width="16" height="16" rx="1.5" fill={t.cottageWindow} />
-          <line x1="62" y1="60" x2="62" y2="76" stroke={t.cottage} strokeWidth="1.5" />
-          <line x1="54" y1="68" x2="70" y2="68" stroke={t.cottage} strokeWidth="1.5" />
-          {/* chimney */}
-          <rect x="76" y="34" width="7" height="16" fill={t.cottage} />
         </svg>
       </div>
 
-      {/* Foreground foliage fringe (bottom corners) */}
+      {/* Drifting pixel clouds */}
+      <div className="absolute inset-0">
+        <PixelCloud
+          color={t.clouds[0]}
+          className="animate-cloud-slow absolute h-16 w-56 opacity-80"
+          style={{ top: '14%', left: '-18%' }}
+        />
+        <PixelCloud
+          color={t.clouds[1]}
+          className="animate-cloud absolute h-12 w-44 opacity-70"
+          style={{ top: '26%', left: '-28%', animationDelay: '-18s' }}
+        />
+        <PixelCloud
+          color={t.clouds[0]}
+          className="animate-cloud-slow absolute h-14 w-48 opacity-60"
+          style={{ top: '7%', left: '-42%', animationDelay: '-40s' }}
+        />
+      </div>
+
+      {/* Warm horizon glow where the sun meets the skyline (the sunset band) */}
+      <div
+        className="absolute left-0 right-0"
+        style={{
+          bottom: '34%',
+          height: '26%',
+          background: `radial-gradient(130% 100% at 72% 100%, ${t.horizonGlow} 0%, transparent 68%)`,
+        }}
+      />
+
+      {/* Distant pixel city skyline (behind the hills) */}
       <svg
-        className="absolute bottom-0 left-0 w-full"
-        style={{ height: '120px' }}
-        viewBox="0 0 1440 120"
+        className="pixelated absolute left-0 w-full"
+        style={{ bottom: '38%', height: '24%' }}
+        viewBox="0 0 200 60"
         preserveAspectRatio="none"
+        shapeRendering="crispEdges"
         aria-hidden="true"
       >
-        <path
-          d="M0 120 V60 Q 40 30 70 60 Q 90 20 120 55 Q 150 25 180 60 Q 210 40 240 70 L 240 120 Z"
-          fill={t.hills[3]}
-        />
-        <path
-          d="M1440 120 V55 Q 1400 25 1370 58 Q 1345 20 1315 55 Q 1285 30 1255 62 Q 1225 40 1200 70 L 1200 120 Z"
-          fill={t.hills[3]}
-        />
+        {/* far layer */}
+        {CITY_FAR.map((b, i) => (
+          <g key={`f${i}`}>
+            <rect x={b.x} y={b.top} width={b.w} height={b.h} fill={t.cityFar} opacity="0.75" />
+            {b.windows.map((w, j) => (
+              <rect key={j} x={w.x} y={w.y} width={1.2} height={1.6} fill={t.cottageWindow} opacity="0.5" />
+            ))}
+          </g>
+        ))}
+        {/* near layer */}
+        {CITY_NEAR.map((b, i) => (
+          <g key={`n${i}`}>
+            <rect x={b.x} y={b.top} width={b.w} height={b.h} fill={t.cityNear} />
+            {b.windows.map((w, j) => (
+              <rect
+                key={j}
+                className={j % 7 === 0 ? 'animate-twinkle' : ''}
+                x={w.x}
+                y={w.y}
+                width={1.4}
+                height={1.8}
+                fill={t.cottageWindow}
+                opacity="0.85"
+              />
+            ))}
+          </g>
+        ))}
       </svg>
 
-      {/* Rain (dusk only) */}
+      {/* Rolling pixel hills — coarse height-maps as vertical bars */}
+      <svg
+        className="pixelated absolute bottom-0 left-0 w-full"
+        style={{ height: '44%' }}
+        viewBox="0 0 200 100"
+        preserveAspectRatio="none"
+        shapeRendering="crispEdges"
+        aria-hidden="true"
+      >
+        {HILLS.map((hill, layer) => {
+          const w = stepW / hill.length
+          return (
+            <g key={layer} fill={t.hills[layer]}>
+              {hill.map((h, i) => (
+                <rect key={i} x={i * w} y={100 - h} width={w + 0.5} height={h} />
+              ))}
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Pixel cottage with a warm glowing window, on the mid hill */}
+      <div className="absolute" style={{ bottom: '31%', left: '16%' }}>
+        <div
+          className="animate-lamp absolute -inset-6 rounded-full blur-2xl"
+          style={{ background: `radial-gradient(circle, ${t.cottageWindow}66 0%, transparent 70%)` }}
+        />
+        <svg
+          width="96"
+          height="84"
+          viewBox="0 0 48 42"
+          className="pixelated relative drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
+          shapeRendering="crispEdges"
+          aria-hidden="true"
+        >
+          {/* trees (blocky) */}
+          <g fill={t.hills[3]}>
+            <rect x="2" y="20" width="8" height="12" />
+            <rect x="4" y="16" width="4" height="4" />
+            <rect x="40" y="18" width="8" height="14" />
+            <rect x="42" y="14" width="4" height="4" />
+          </g>
+          {/* roof — stepped pixel triangle */}
+          <g fill={t.cottage}>
+            <rect x="22" y="6" width="4" height="3" />
+            <rect x="19" y="9" width="10" height="3" />
+            <rect x="16" y="12" width="16" height="3" />
+            <rect x="13" y="15" width="22" height="3" />
+          </g>
+          {/* body */}
+          <rect x="16" y="18" width="16" height="16" fill={t.cottage} />
+          {/* chimney */}
+          <rect x="28" y="4" width="3" height="6" fill={t.cottage} />
+          {/* glowing window */}
+          <rect x="20" y="22" width="8" height="8" fill={t.cottageWindow} />
+          <rect x="23.5" y="22" width="1" height="8" fill={t.cottage} />
+          <rect x="20" y="25.5" width="8" height="1" fill={t.cottage} />
+        </svg>
+      </div>
+
+      {/* Pixel bushes at the bottom corners */}
+      <svg
+        className="pixelated absolute bottom-0 left-0 w-full"
+        style={{ height: '60px' }}
+        viewBox="0 0 200 30"
+        preserveAspectRatio="none"
+        shapeRendering="crispEdges"
+        aria-hidden="true"
+      >
+        <g fill={t.hills[3]}>
+          <rect x="0" y="14" width="34" height="16" />
+          <rect x="6" y="10" width="10" height="4" />
+          <rect x="20" y="8" width="10" height="6" />
+          <rect x="170" y="12" width="30" height="18" />
+          <rect x="176" y="8" width="10" height="4" />
+          <rect x="186" y="10" width="10" height="4" />
+        </g>
+      </svg>
+
+      {/* Rain — square pixels (dusk only) */}
       {t.rain && (
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -inset-[15%]" style={{ transform: 'rotate(8deg)' }}>
@@ -265,15 +527,18 @@ export default function SkyScene() {
         </div>
       )}
 
-      {/* Fireflies / bokeh (dusk only) */}
+      {/* Fireflies — square gold pixels (dusk only) */}
       {t.fireflies &&
         FIREFLIES.map((b) => (
           <span
             key={b.id}
-            className={`animate-bokeh absolute rounded-full bg-ever-yellow/70 blur-sm ${b.size}`}
+            className="animate-bokeh absolute bg-sunset-gold"
             style={{
               bottom: `${b.bottom}%`,
               left: `${b.left}%`,
+              height: `${b.size}px`,
+              width: `${b.size}px`,
+              boxShadow: '0 0 6px 1px rgba(255,210,125,0.7)',
               animationDuration: b.duration,
               animationDelay: b.delay,
               '--drift': b.drift,
