@@ -1,32 +1,47 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  // Scan every component/data file so our custom utilities are generated.
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        // Core "Studio Ghibli meets Everforest" palette
-        forest: '#2D352B', // deep forest (background top)
-        olive: '#4A5D23', // mossy olive (background bottom)
-        cream: '#FDF6E3', // warm beige widget surface
-        latte: '#EFF1F5', // latte cream surface
-        brown: '#8F5E36', // warm brown accent / terracotta
-        brownDark: '#6E4527', // darker brown
-        // Everforest accents for small details
+        // Authentic Everforest — Dark Medium backgrounds (cool, soft, warm)
+        bgDim: '#232A2E',
+        bg0: '#2D353B',
+        bg1: '#343F44',
+        bg2: '#3D484D',
+        bg3: '#475258',
+
+        // Light surfaces (Everforest light bg + paper tones for cozy cards)
+        cream: '#FDF6E3', // light bg0
+        paper: '#F4F0D9', // light bg1
+        latte: '#EFEBD4', // light bg2
+
+        // Wood accents (Ghibli interior)
+        brown: '#8F5E36',
+        brownDark: '#6E4527',
+
+        // Everforest foreground text + accents
+        fg: '#D3C6AA',
+        grey: '#859289',
         ever: {
+          red: '#E67E80',
+          orange: '#E69875',
+          yellow: '#DBBC7F',
           green: '#A7C080',
           aqua: '#83C092',
-          yellow: '#DBBC7F',
-          red: '#E67E80',
+          blue: '#7FBBB3',
+          purple: '#D699B6',
         },
       },
       fontFamily: {
-        // Elegant serif for headings, clean sans for body.
-        serif: ['"Playfair Display"', 'Merriweather', 'serif'],
+        // Pixel display font for headings/labels; Inter for readable body.
+        display: ['"Pixelify Sans"', 'ui-monospace', 'monospace'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         cozy: '0 18px 40px -12px rgba(0, 0, 0, 0.45)',
+        // Crisp lofi "desktop window" shadow with a hard offset edge.
+        window: '0 10px 0 -4px rgba(0,0,0,0.18), 0 22px 45px -16px rgba(0,0,0,0.55)',
       },
     },
   },
