@@ -33,8 +33,8 @@ const ENTRIES = [
   },
   {
     title: 'Flashcards',
-    how: 'Make cards, then review. "Got it" pushes a card further out; "Review again" brings it back soon.',
-    why: 'Pulling an answer from memory, then spacing the next review further apart each time, is one of the best supported ways to make things stick.',
+    how: 'Make cards (or paste a batch as "term — definition"), pick a deck, then review. Recall the answer first, flip, and rate it Again, Hard, Good, or Easy (keys 1–4). Sessions are capped so they always end.',
+    why: 'Pulling an answer from memory, then spacing the next review further apart each time, is one of the best supported ways to make things stick. Rating honestly lets the schedule bring hard cards back sooner and easy ones much later.',
   },
   {
     title: 'Breaks',
@@ -47,9 +47,9 @@ const ENTRIES = [
     why: 'Fewer things on screen means fewer things to pull your eyes away from the task in front of you.',
   },
   {
-    title: 'Notes from the corner',
-    how: 'Tap the little sprite for a line of encouragement or a verse.',
-    why: 'A brief, kind nudge can reset your mood enough to keep going when a session feels heavy.',
+    title: 'Letters from the sprite',
+    how: 'Tap the little sprite for a short letter — encouragement or a verse, chosen to fit the moment (a hard session, a finished one, the start of your day). Tap the heart to keep a letter and reread it later.',
+    why: 'A brief, kind, well-timed nudge can reset your mood enough to keep going when a session feels heavy. Saved letters are there for the days you need to hear it again.',
   },
 ]
 
