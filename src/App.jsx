@@ -8,6 +8,7 @@ import Dock from './components/Dock.jsx'
 import WeatherCanvas from './components/WeatherCanvas.jsx'
 import SkyScene from './scene/SkyScene.jsx'
 import AudioMixerProvider, { useMixer } from './audio/AudioMixerProvider.jsx'
+import SyncProvider from './sync/SyncProvider.jsx'
 import usePersistedState from './hooks/useLocalStorage.js'
 import usePageHidden from './hooks/usePageHidden.js'
 import { SEED_CARDS, countDue } from './data/flashcards.js'
@@ -18,12 +19,14 @@ import { migrate } from './storage/StorageManager.js'
 const Flashcards = lazy(() => import('./components/Flashcards.jsx'))
 const AmbientMixerDrawer = lazy(() => import('./components/AmbientMixerDrawer.jsx'))
 const GuideModal = lazy(() => import('./components/GuideModal.jsx'))
+const SyncModal = lazy(() => import('./components/SyncModal.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
   const [focusActive, setFocusActive] = useState(false) // a focus session is running
   const [showCards, setShowCards] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
+  const [showSync, setShowSync] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
@@ -84,6 +87,7 @@ function Dashboard() {
           onToggleFocus={() => setFocusMode((f) => !f)}
           onOpenFlashcards={() => setShowCards(true)}
           onOpenGuide={() => setShowGuide(true)}
+          onOpenSync={() => setShowSync(true)}
           dueCount={dueCount}
         />
 
@@ -144,6 +148,9 @@ function Dashboard() {
 
         {/* How-to / why-it-helps guide */}
         {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+
+        {/* Cross-device sync */}
+        {showSync && <SyncModal onClose={() => setShowSync(false)} />}
       </Suspense>
     </div>
   )
@@ -156,8 +163,10 @@ export default function App() {
   }, [])
 
   return (
-    <AudioMixerProvider>
-      <Dashboard />
-    </AudioMixerProvider>
+    <SyncProvider>
+      <AudioMixerProvider>
+        <Dashboard />
+      </AudioMixerProvider>
+    </SyncProvider>
   )
 }

@@ -9,7 +9,7 @@ function getGreeting(hour) {
   return 'Good Evening'
 }
 
-export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, onOpenGuide, dueCount }) {
+export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, onOpenGuide, onOpenSync, dueCount }) {
   const { greeting, dateLabel } = useMemo(() => {
     const now = new Date()
     return {
@@ -52,6 +52,7 @@ export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, onO
             onToggleFocus={onToggleFocus}
             onOpenFlashcards={onOpenFlashcards}
             onOpenGuide={onOpenGuide}
+            onOpenSync={onOpenSync}
             dueCount={dueCount}
           />
         </div>

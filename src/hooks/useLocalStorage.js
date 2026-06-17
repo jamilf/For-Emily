@@ -2,7 +2,23 @@ import { useCallback, useEffect, useState } from 'react'
 
 // A tiny same-tab event channel so multiple components bound to the same key
 // stay in sync (e.g. the timer writes stats, the Focus Meter reads them).
-const CHANNEL = 'emily:storage'
+// Exported so the cloud-sync engine can push pulled values into live state by
+// writing to localStorage and broadcasting on the same channel.
+export const CHANNEL = 'emily:storage'
+
+/**
+ * Write a value to localStorage and notify all mounted usePersistedState
+ * instances (same tab) so they re-read immediately. Used by the sync engine to
+ * apply values pulled from the cloud. Never throws.
+ */
+export function writeAndBroadcast(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+    window.dispatchEvent(new CustomEvent(CHANNEL, { detail: { key } }))
+  } catch {
+    /* ignore quota errors */
+  }
+}
 
 function safeLoad(key, initial) {
   try {
