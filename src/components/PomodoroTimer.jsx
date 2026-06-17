@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import QuoteModal from './QuoteModal.jsx'
 import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
@@ -7,6 +7,8 @@ import useEscapeKey from '../hooks/useEscapeKey.js'
 import { SOOT_AWAKE, SOOT_NAP, PAL } from '../pixel/sprites.js'
 import { QUOTES } from '../data/quotes.js'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
+import { useMixer } from '../audio/AudioMixerProvider.jsx'
+import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
 
 const DURATIONS = { focus: 25 * 60, break: 5 * 60 }
 const FOCUS_MINUTES = DURATIONS.focus / 60
@@ -37,7 +39,7 @@ function tipCoords(fraction) {
 }
 
 /** Widget 2 — The Spirited Pomodoro (centerpiece, lofi window). */
-export default function PomodoroTimer() {
+export default function PomodoroTimer({ onFocusActive }) {
   const [mode, setMode] = useState('focus')
   const [secondsLeft, setSecondsLeft] = useState(DURATIONS.focus)
   const [running, setRunning] = useState(false)
@@ -47,9 +49,15 @@ export default function PomodoroTimer() {
   const [parked, setParked] = usePersistedState('emily.parkingLot', [])
   const [stats, setStats] = usePersistedState('emily.stats', EMPTY_STATS)
   const [reflections, setReflections] = usePersistedState('emily.reflections', [])
+  const [garden, setGarden] = usePersistedState('emily.garden', [])
   const [showReflection, setShowReflection] = useState(false)
   const [reflectionNote, setReflectionNote] = useState('')
   const [breakTip, setBreakTip] = useState(null)
+  const [plantDna, setPlantDna] = useState(null) // this session's growing tree
+  const [withered, setWithered] = useState(false) // tab-away penalty state
+  const penaltyTimer = useRef(null)
+
+  const { rampMaster, restoreMaster } = useMixer()
 
   const total = DURATIONS[mode]
 
@@ -73,10 +81,45 @@ export default function PomodoroTimer() {
     if (mode === 'focus') {
       recordFocusSession()
       setShowReflection(true)
+      // Harvest the grown tree into the persistent garden.
+      if (plantDna != null && !withered) {
+        setGarden((prev) => [...prev, { id: plantDna, ts: Date.now() }])
+      }
+      // Focus Fade: gently duck the soundscape into the break.
+      rampMaster(0.1, 10)
+    } else {
+      // Break ended — restore the user's audio levels.
+      restoreMaster(5)
     }
     // recordFocusSession reads the latest stats via the functional updater.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, running, mode])
+
+  // Tell the app when a focus session is active (drives the visual focus-fade).
+  useEffect(() => {
+    onFocusActive?.(running && mode === 'focus')
+  }, [running, mode, onFocusActive])
+
+  // Gentle tab-away penalty: if the user leaves mid-focus and doesn't return
+  // within 10s, the seedling rests and the session pauses (never shaming).
+  useEffect(() => {
+    function onVisibility() {
+      if (document.hidden && running && mode === 'focus') {
+        clearTimeout(penaltyTimer.current)
+        penaltyTimer.current = setTimeout(() => {
+          setRunning(false)
+          setWithered(true)
+        }, 10000)
+      } else {
+        clearTimeout(penaltyTimer.current)
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      clearTimeout(penaltyTimer.current)
+    }
+  }, [running, mode])
 
   // Record one completed focus session: minutes, sessions, and a kind streak
   // (a missed day quietly restarts the streak — it is never framed as broken).
@@ -100,6 +143,8 @@ export default function PomodoroTimer() {
     setRunning(false)
     setHasMail(false)
     setShowReflection(false)
+    setPlantDna(null)
+    setWithered(false)
     setBreakTip(next === 'break' ? BREAK_ACTIVITIES[Math.floor(Math.random() * BREAK_ACTIVITIES.length)] : null)
   }
 
@@ -111,14 +156,25 @@ export default function PomodoroTimer() {
 
   function handleStartPause() {
     if (secondsLeft === 0) return
+    const starting = !running
     setRunning((r) => !r)
     setHasMail(false)
+    if (starting && mode === 'focus') {
+      // Plant a fresh seedling when a focus session begins from full.
+      if (secondsLeft === total) {
+        setPlantDna(randomDNA())
+        setWithered(false)
+      }
+      restoreMaster(2) // ensure audio is back to normal during focus
+    }
   }
 
   function handleReset() {
     setRunning(false)
     setSecondsLeft(DURATIONS[mode])
     setHasMail(false)
+    setPlantDna(null)
+    setWithered(false)
   }
 
   function openQuote() {
@@ -138,6 +194,12 @@ export default function PomodoroTimer() {
   const showIntentionInput = mode === 'focus' && !sessionActive
   const trimmedIntention = intention.trim()
   const justFinishedFocus = mode === 'focus' && secondsLeft === 0
+
+  // The session's growing tree (seed → sprout → sapling → mature by progress).
+  const elapsedFrac = total > 0 ? (total - secondsLeft) / total : 0
+  const stageIdx = secondsLeft === 0 ? 3 : stageForProgress(elapsedFrac)
+  const plant = mode === 'focus' && plantDna != null ? generate(plantDna, STAGES[stageIdx]) : null
+  const plantPalette = plant && withered ? witherPalette(plant.palette) : plant?.palette
 
   return (
     <WindowFrame title="Spirited Pomodoro" bodyClass="bg-latte">
@@ -254,6 +316,30 @@ export default function PomodoroTimer() {
             Reset
           </button>
         </div>
+
+        {/* Focus Garden — a seedling that grows with the session */}
+        {plant && (
+          <div className="mt-6 flex flex-col items-center" aria-live="polite">
+            <PixelSprite
+              key={withered ? 'withered' : stageIdx}
+              grid={plant.grid}
+              palette={plantPalette}
+              pixel={5}
+              className={withered ? 'animate-wither' : 'animate-pixel-pop'}
+            />
+            <p className="mt-2 max-w-xs text-center text-xs text-brown/70">
+              {withered
+                ? 'Your seedling is resting — stepping away is okay. Reset to plant a fresh one. 🌱'
+                : stageIdx === 0
+                  ? 'A seed is planted…'
+                  : stageIdx === 1
+                    ? 'It’s sprouting 🌱'
+                    : stageIdx === 2
+                      ? 'Growing steadily 🌿'
+                      : 'Fully grown — into the garden it goes 🌳'}
+            </p>
+          </div>
+        )}
 
         {/* Break micro-activity */}
         {mode === 'break' && breakTip && (
