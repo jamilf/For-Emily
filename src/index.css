@@ -22,43 +22,61 @@ body {
   border-radius: 0.5rem;
 }
 
+/* Crisp scaling for pixel-art sprites. */
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 /* ------------------------------------------------------------------ *
- * Glassmorphism widget surface — backdrop-blur without a bg color so
- * each widget can set its own (cream or latte).
+ * Components
  * ------------------------------------------------------------------ */
 @layer components {
-  .widget-glass {
-    @apply backdrop-blur-md border border-white/30 rounded-3xl shadow-cozy;
+  /* Muted pastel-green graph-paper wallpaper (the "desktop" surface). */
+  .grid-wallpaper {
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        rgba(167, 192, 128, 0.05) 0,
+        rgba(167, 192, 128, 0.05) 1px,
+        transparent 1px,
+        transparent 28px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(167, 192, 128, 0.05) 0,
+        rgba(167, 192, 128, 0.05) 1px,
+        transparent 1px,
+        transparent 28px
+      );
+  }
+
+  /* Cozy room edge-darkening so widgets sit "inside" the scene. */
+  .room-vignette {
+    box-shadow: inset 0 0 180px 40px rgba(20, 26, 28, 0.55);
   }
 }
 
 /* ------------------------------------------------------------------ *
  * Keyframes
  * ------------------------------------------------------------------ */
-
-/* Header floats gently upward like a warm dust mote. */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-10px); }
+  50%       { transform: translateY(-8px); }
 }
 
-/* Angled rain streaks fall down the window. */
 @keyframes rainfall {
   0%   { transform: translateY(-140%); opacity: 0; }
   8%   { opacity: 0.7; }
   88%  { opacity: 0.6; }
   100% { transform: translateY(130vh); opacity: 0; }
 }
-
-/* Wide rain streaks (every 3rd) — slightly more opaque. */
 @keyframes rainfallWide {
   0%   { transform: translateY(-140%); opacity: 0; }
   8%   { opacity: 0.5; }
   88%  { opacity: 0.45; }
   100% { transform: translateY(130vh); opacity: 0; }
 }
-
-/* Slow condensation drip — a longer streak crawling down the pane. */
 @keyframes drip {
   0%   { transform: translateY(-5%); opacity: 0; }
   6%   { opacity: 0.4; }
@@ -66,13 +84,11 @@ body {
   100% { transform: translateY(108vh); opacity: 0; }
 }
 
-/* Warm lamp glow breathes softly. */
 @keyframes lampPulse {
   0%, 100% { opacity: 0.8; }
   50%       { opacity: 1; }
 }
 
-/* Firefly/bokeh dust motes float up and drift sideways. */
 @keyframes bokehFloat {
   0%   { transform: translateY(0) translateX(0); opacity: 0; }
   12%  { opacity: 0.9; }
@@ -80,7 +96,6 @@ body {
   100% { transform: translateY(-65vh) translateX(var(--drift, 24px)); opacity: 0; }
 }
 
-/* Background foliage blobs drift slowly for organic depth. */
 @keyframes blobDrift {
   0%   { transform: translate(0, 0) scale(1); }
   30%  { transform: translate(18px, -12px) scale(1.04); }
@@ -88,84 +103,70 @@ body {
   100% { transform: translate(0, 0) scale(1); }
 }
 
-/* Widget entrance — slides up and fades in on page load. */
 @keyframes slideUp {
   0%   { transform: translateY(32px); opacity: 0; }
   100% { transform: translateY(0);    opacity: 1; }
 }
 
-/* Soot sprite hops up with the mail envelope. */
 @keyframes sootRise {
   0%   { transform: translateY(44px) scale(0.55); opacity: 0; }
   55%  { transform: translateY(-12px) scale(1.06); opacity: 1; }
   100% { transform: translateY(0) scale(1);        opacity: 1; }
 }
-
-/* Sprite bobs gently when awake and idle. */
 @keyframes sootBob {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-7px); }
 }
-
-/* Sprite's shadow squishes in sync with the bob (inverse). */
 @keyframes shadowSquish {
   0%, 100% { transform: scaleX(1.3); opacity: 0.3; }
   50%       { transform: scaleX(0.65); opacity: 0.12; }
 }
 
-/* Sprite eyes blink occasionally when awake. */
-@keyframes blink {
-  0%, 82%, 100% { transform: scaleY(1); }
-  87%           { transform: scaleY(0.08); }
-  92%           { transform: scaleY(1); }
-}
-
-/* Start button pulses outward to invite a tap (ADHD cue). */
 @keyframes invitePulse {
   0%   { transform: scale(1);   opacity: 0.55; }
   100% { transform: scale(1.45); opacity: 0; }
 }
 
-/* SVG ring tip glows when the timer is running. */
 @keyframes ringGlow {
   0%, 100% { opacity: 0.7; }
   50%       { opacity: 1; }
 }
 
-/* Plants sway in a gentle breeze. */
 @keyframes sway {
-  0%, 100% { transform: rotate(-2.5deg); }
-  50%       { transform: rotate(2.5deg); }
+  0%, 100% { transform: rotate(-3deg); }
+  50%       { transform: rotate(3deg); }
 }
 
-/* Plant grows up out of the pot on first appear. */
-@keyframes plantGrow {
-  0%   { transform: translateY(16px) scale(0.15); opacity: 0; }
-  65%  { transform: translateY(-5px) scale(1.12); opacity: 1; }
+/* Pixel plant entrance — grows up out of the pot. */
+@keyframes pixelPop {
+  0%   { transform: translateY(14px) scale(0.2); opacity: 0; }
+  65%  { transform: translateY(-4px) scale(1.12); opacity: 1; }
   100% { transform: translateY(0) scale(1);        opacity: 1; }
 }
 
-/* Water button ripple expands and fades. */
 @keyframes rippleWater {
   0%   { transform: scale(0.8); opacity: 0.5; }
   100% { transform: scale(2.2); opacity: 0; }
 }
 
-/* Modal eases in. */
 @keyframes modalIn {
   0%   { transform: translateY(12px) scale(0.97); opacity: 0; }
   100% { transform: translateY(0) scale(1);       opacity: 1; }
 }
-
 @keyframes fadeIn {
   0%   { opacity: 0; }
   100% { opacity: 1; }
 }
-
-/* Leaf pops in as a focus session is banked. */
 @keyframes leafPop {
   0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
   100% { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+
+/* Steam wisp rising from the pixel mug in the study-room scene. */
+@keyframes steam {
+  0%   { transform: translateY(0) scaleX(1); opacity: 0; }
+  30%  { opacity: 0.7; }
+  100% { transform: translateY(-14px) scaleX(0.6); opacity: 0; }
 }
 
 /* ------------------------------------------------------------------ *
@@ -182,14 +183,14 @@ body {
 .animate-soot-rise     { animation: sootRise 0.75s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
 .animate-soot-bob      { animation: sootBob 2.6s ease-in-out infinite; }
 .animate-shadow-squish { animation: shadowSquish 2.6s ease-in-out infinite; }
-.animate-blink         { animation: blink 7s ease-in-out infinite; }
 .animate-invite-pulse  { animation: invitePulse 2.2s ease-out infinite; }
 .animate-ring-glow     { animation: ringGlow 1.8s ease-in-out infinite; }
-.animate-plant-grow    { animation: plantGrow 0.65s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+.animate-pixel-pop     { animation: pixelPop 0.55s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
 .animate-ripple-water  { animation: rippleWater 0.6s ease-out forwards; }
 .animate-modal-in      { animation: modalIn 0.28s ease-out forwards; }
 .animate-fade-in       { animation: fadeIn 0.22s ease-out forwards; }
 .animate-leaf-pop      { animation: leafPop 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+.animate-steam         { animation: steam 3s ease-in-out infinite; }
 
 /* ------------------------------------------------------------------ *
  * Respect prefers-reduced-motion
