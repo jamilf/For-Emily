@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import { STUDY_ROOM, PAL } from '../pixel/sprites.js'
+import Toolbar from './Toolbar.jsx'
 
 function getGreeting(hour) {
   if (hour < 12) return 'Good Morning'
@@ -8,7 +9,7 @@ function getGreeting(hour) {
   return 'Good Evening'
 }
 
-export default function Header() {
+export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, dueCount }) {
   const { greeting, dateLabel } = useMemo(() => {
     const now = new Date()
     return {
@@ -44,6 +45,15 @@ export default function Header() {
           Your cozy corner to think, rest, and grow. There&apos;s no rush here —
           just take the next small step.
         </p>
+
+        <div className="mt-4">
+          <Toolbar
+            focusMode={focusMode}
+            onToggleFocus={onToggleFocus}
+            onOpenFlashcards={onOpenFlashcards}
+            dueCount={dueCount}
+          />
+        </div>
       </div>
     </header>
   )
