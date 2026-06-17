@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import Header from './components/Header.jsx'
 import PomodoroTimer from './components/PomodoroTimer.jsx'
-import ParkingLot from './components/ParkingLot.jsx'
+import BrainDump from './components/BrainDump.jsx'
 import FocusMeter from './components/FocusMeter.jsx'
 import FocusGarden from './components/FocusGarden.jsx'
 import Dock from './components/Dock.jsx'
@@ -17,12 +17,13 @@ import { migrate } from './storage/StorageManager.js'
 // initial bundle until the user actually opens them.
 const Flashcards = lazy(() => import('./components/Flashcards.jsx'))
 const AmbientMixerDrawer = lazy(() => import('./components/AmbientMixerDrawer.jsx'))
-const BrainDumpDrawer = lazy(() => import('./components/BrainDumpDrawer.jsx'))
+const GuideModal = lazy(() => import('./components/GuideModal.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
   const [focusActive, setFocusActive] = useState(false) // a focus session is running
   const [showCards, setShowCards] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
@@ -60,6 +61,13 @@ function Dashboard() {
 
   return (
     <div className={rootClass}>
+      <a
+        href="#main-content"
+        className="sr-only z-[100] rounded-lg bg-brown px-4 py-2 font-display text-sm text-cream focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+      >
+        Skip to main content
+      </a>
+
       {/* Painterly Ghibli landscape (fixed; content scrolls over it) */}
       <SkyScene />
 
@@ -70,11 +78,12 @@ function Dashboard() {
       <div aria-hidden="true" className="film-grain pointer-events-none fixed inset-0 z-[1]" />
 
       {/* Foreground */}
-      <main className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+      <main id="main-content" className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
         <Header
           focusMode={focusMode}
           onToggleFocus={() => setFocusMode((f) => !f)}
           onOpenFlashcards={() => setShowCards(true)}
+          onOpenGuide={() => setShowGuide(true)}
           dueCount={dueCount}
         />
 
@@ -101,12 +110,12 @@ function Dashboard() {
         </div>
 
         <footer className="mb-24 mt-12 text-center font-display text-sm text-cream/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
-          Made with care for Emily. Be gentle with yourself today. 🤍
+          For Emily. You&apos;ve got this.
         </footer>
       </main>
 
-      {/* Always-available distraction parking lot */}
-      <ParkingLot />
+      {/* Always-available floating notepad */}
+      <BrainDump />
 
       {/* Control dock + feature drawers */}
       <Dock
@@ -118,10 +127,12 @@ function Dashboard() {
       />
       <Suspense fallback={null}>
         {openDrawer === 'mixer' && <AmbientMixerDrawer onClose={closeDrawer} />}
-        {openDrawer === 'brainDump' && <BrainDumpDrawer onClose={closeDrawer} />}
 
         {/* Flashcards overlay */}
         {showCards && <Flashcards onClose={() => setShowCards(false)} />}
+
+        {/* How-to / why-it-helps guide */}
+        {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
       </Suspense>
     </div>
   )

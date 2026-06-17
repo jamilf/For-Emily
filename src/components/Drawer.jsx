@@ -2,12 +2,11 @@ import { useEffect, useRef } from 'react'
 import useEscapeKey from '../hooks/useEscapeKey.js'
 
 /**
- * Drawer — a calm, non-modal slide-in panel anchored bottom-right on desktop and
- * a bottom sheet on mobile. Wraps content in the app's window chrome.
+ * Drawer — a non-modal slide-in panel anchored bottom-right on desktop and a
+ * bottom sheet on mobile. Wraps content in the app's window chrome.
  *
- * `open` controls visibility. Media drawers (Study Partner, Spotify) stay mounted
- * and just hide (so playback continues); lightweight drawers are unmounted by the
- * parent when closed. Closes on Esc and returns focus to the opener.
+ * `open` controls visibility; the parent unmounts the drawer when closed. Closes
+ * on Esc and returns focus to the opener.
  *
  * @param {boolean} open
  * @param {() => void} onClose
@@ -56,7 +55,7 @@ export default function Drawer({ open = true, onClose, title, children, classNam
             ✕
           </button>
         </div>
-        <div className="paper-grain relative max-h-[60vh] overflow-y-auto bg-cream p-4 text-brownDark sm:max-h-none">
+        <div className="paper-grain relative max-h-[65dvh] overflow-y-auto bg-cream p-4 text-brownDark sm:max-h-none">
           {children}
         </div>
       </div>

@@ -30,13 +30,13 @@ export default function FocusMeter({ className = '' }) {
 
   const message =
     frac >= 1
-      ? 'Goal reached — beautifully done 🌟'
+      ? 'You hit your goal for today.'
       : minutes > 0
-        ? 'Lovely momentum. Keep going gently.'
-        : 'A fresh page. Begin whenever you’re ready.'
+        ? 'Good start. Keep going.'
+        : 'Nothing logged yet today. Start when you want.'
 
   const Tile = ({ value, label, icon }) => (
-    <div className="rounded-xl bg-brown/5 px-2 py-2.5 text-center">
+    <div className="rounded-xl bg-brown/5 px-2 py-2.5 text-center sm:px-3">
       <div className="font-display text-lg text-brown">
         <span aria-hidden="true">{icon} </span>
         {value}
@@ -71,7 +71,7 @@ export default function FocusMeter({ className = '' }) {
           </div>
         </div>
 
-        <div className="grid w-full grid-cols-3 gap-2">
+        <div className="grid w-full grid-cols-3 gap-2 sm:gap-3">
           <Tile value={sessions} label="sessions today" icon="🍃" />
           <Tile value={stats.streak || 0} label="day streak" icon="🌱" />
           <Tile value={garden.length} label="trees grown" icon="🌳" />

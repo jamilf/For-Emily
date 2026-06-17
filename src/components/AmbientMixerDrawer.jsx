@@ -58,7 +58,7 @@ export default function AmbientMixerDrawer({ onClose }) {
       </div>
 
       <p className="mt-2 text-xs text-brown/60" aria-live="polite">
-        {enabled ? 'Environment playing' : 'Tap Start to begin (audio never autoplays)'}
+        {enabled ? 'Playing' : "Tap Start. Nothing plays on its own."}
       </p>
 
       <div className="mt-3 border-t border-brown/15 pt-3">

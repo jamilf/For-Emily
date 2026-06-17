@@ -25,9 +25,9 @@ export default function FocusGarden({ className = '' }) {
     <WindowFrame title="My Garden" className={className}>
       {garden.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center py-8 text-center">
-          <p className="font-display text-lg text-brown">Your garden is waiting 🌱</p>
+          <p className="font-display text-lg text-brown">Your garden is empty for now.</p>
           <p className="mt-1 max-w-xs text-sm text-brown/60">
-            Finish a focus session and a tree will grow here — one for every session you complete.
+            Finish a focus session and a tree shows up here. One per session.
           </p>
         </div>
       ) : (
@@ -45,7 +45,7 @@ export default function FocusGarden({ className = '' }) {
           </div>
           <div className="mt-4 flex items-center justify-between gap-2">
             <p className="text-xs text-brown/60">
-              {garden.length} {garden.length === 1 ? 'tree' : 'trees'} grown 🌳
+              {garden.length} {garden.length === 1 ? 'tree' : 'trees'} so far
             </p>
             {confirming ? (
               <span className="flex items-center gap-1.5 text-xs">

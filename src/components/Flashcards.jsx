@@ -69,7 +69,7 @@ export default function Flashcards({ onClose }) {
         role="dialog"
         aria-modal="true"
         aria-label="Flashcards"
-        className="animate-modal-in relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
+        className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Title bar */}
@@ -90,7 +90,7 @@ export default function Flashcards({ onClose }) {
           </button>
         </div>
 
-        <div className="bg-cream p-6 text-brownDark">
+        <div className="overflow-y-auto bg-cream p-6 text-brownDark">
           {creating ? (
             <form onSubmit={addCard} className="space-y-3">
               <p className="font-display text-lg text-brown">New card</p>
@@ -124,7 +124,7 @@ export default function Flashcards({ onClose }) {
             </form>
           ) : done ? (
             <div className="py-8 text-center">
-              <p className="font-display text-xl text-brown">All caught up 🌿</p>
+              <p className="font-display text-xl text-brown">All caught up.</p>
               <p className="mt-2 text-sm text-brown/70">
                 {cards.length === 0 ? 'Make your first card to begin.' : 'Come back when more are due to review.'}
               </p>
@@ -176,7 +176,7 @@ export default function Flashcards({ onClose }) {
                     onClick={() => grade(true)}
                     className="flex-1 rounded-2xl bg-ever-green px-4 py-2.5 text-bg0 transition-colors hover:brightness-95 active:scale-95"
                   >
-                    Got it 🌿
+                    Got it
                   </button>
                 </div>
               ) : (
