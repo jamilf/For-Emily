@@ -2,13 +2,11 @@ import { useEffect, useState } from 'react'
 import QuoteModal from './QuoteModal.jsx'
 import { QUOTES } from '../data/quotes.js'
 
-// Durations in seconds. Focus is the default; break is framed as gentle rest.
 const DURATIONS = {
   focus: 25 * 60,
   break: 5 * 60,
 }
 
-// Geometry for the SVG progress ring.
 const RADIUS = 130
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
@@ -19,22 +17,31 @@ function format(seconds) {
 }
 
 /**
+ * The leading-edge x/y on the progress arc.
+ * The SVG is rotated -90° by CSS, so arc angle 0 = visual 12 o'clock.
+ * fraction = 1 → full circle (tip at 12 o'clock); fraction = 0 → empty.
+ */
+function tipCoords(fraction) {
+  const angle = fraction * 2 * Math.PI
+  return {
+    cx: 150 + RADIUS * Math.cos(angle),
+    cy: 150 + RADIUS * Math.sin(angle),
+  }
+}
+
+/**
  * Widget 2 — The Spirited Pomodoro (centerpiece).
- * 25-min focus / 5-min break, with a depleting ring, a leaf counter for
- * banked sessions, and a soot sprite that naps while you work and wakes
- * with mail when the timer finishes.
  */
 export default function PomodoroTimer() {
   const [mode, setMode] = useState('focus')
   const [secondsLeft, setSecondsLeft] = useState(DURATIONS.focus)
   const [running, setRunning] = useState(false)
   const [sessionsToday, setSessionsToday] = useState(0)
-  const [hasMail, setHasMail] = useState(false) // sprite woke with an envelope
-  const [quote, setQuote] = useState(null) // open modal when set
+  const [hasMail, setHasMail] = useState(false)
+  const [quote, setQuote] = useState(null)
 
   const total = DURATIONS[mode]
 
-  // The one unavoidable JS loop: tick down once per second while running.
   useEffect(() => {
     if (!running) return
     const id = setInterval(() => {
@@ -43,14 +50,11 @@ export default function PomodoroTimer() {
     return () => clearInterval(id)
   }, [running])
 
-  // Handle completion when the clock reaches zero.
   useEffect(() => {
     if (secondsLeft !== 0 || !running) return
     setRunning(false)
-    if (mode === 'focus') {
-      setSessionsToday((n) => n + 1) // bank a leaf
-    }
-    setHasMail(true) // the soot sprite wakes with mail
+    if (mode === 'focus') setSessionsToday((n) => n + 1)
+    setHasMail(true)
   }, [secondsLeft, running, mode])
 
   function switchMode(next) {
@@ -61,9 +65,9 @@ export default function PomodoroTimer() {
   }
 
   function handleStartPause() {
-    if (secondsLeft === 0) return // finished; reset first
+    if (secondsLeft === 0) return
     setRunning((r) => !r)
-    setHasMail(false) // back to napping when we resume work
+    setHasMail(false)
   }
 
   function handleReset() {
@@ -76,17 +80,21 @@ export default function PomodoroTimer() {
     setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)])
   }
 
-  // Ring "depletes": the drawn arc shrinks toward zero as time runs down.
   const remainingFraction = total > 0 ? secondsLeft / total : 0
   const dashOffset = CIRCUMFERENCE * (1 - remainingFraction)
-
-  // Sprite is "napping" only while actively counting down a focus session.
   const napping = running
+  const strokeColour = mode === 'focus' ? '#8F5E36' : '#A7C080'
+  const glowColour  = mode === 'focus' ? '#DBBC7F' : '#83C092'
+
+  // Show the invite pulse only when completely idle at the start of a session.
+  const showInvitePulse = !running && secondsLeft === total
+
+  const tip = tipCoords(remainingFraction)
 
   return (
     <section
       aria-label="The Spirited Pomodoro timer"
-      className="flex flex-col items-center rounded-3xl bg-latte p-6 text-brownDark shadow-cozy"
+      className="widget-glass flex flex-col items-center bg-latte/95 p-6 text-brownDark transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.012]"
     >
       <h2 className="mb-4 font-serif text-2xl font-semibold">
         The Spirited Pomodoro <span aria-hidden="true">⏳</span>
@@ -101,9 +109,9 @@ export default function PomodoroTimer() {
         <button
           onClick={() => switchMode('focus')}
           aria-pressed={mode === 'focus'}
-          className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
+          className={`rounded-full px-5 py-1.5 font-medium transition-all duration-200 ${
             mode === 'focus'
-              ? 'bg-brown text-cream'
+              ? 'bg-brown text-cream shadow-sm scale-[1.04]'
               : 'text-brown hover:bg-brown/10'
           }`}
         >
@@ -112,9 +120,9 @@ export default function PomodoroTimer() {
         <button
           onClick={() => switchMode('break')}
           aria-pressed={mode === 'break'}
-          className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
+          className={`rounded-full px-5 py-1.5 font-medium transition-all duration-200 ${
             mode === 'break'
-              ? 'bg-ever-green text-forest'
+              ? 'bg-ever-green text-forest shadow-sm scale-[1.04]'
               : 'text-brown hover:bg-brown/10'
           }`}
         >
@@ -122,45 +130,78 @@ export default function PomodoroTimer() {
         </button>
       </div>
 
-      {/* Ring + time */}
-      <div className="relative h-72 w-72">
+      {/* SVG ring + countdown — responsive size */}
+      <div className="relative h-56 w-56 sm:h-64 sm:w-64 md:h-72 md:w-72">
         <svg
           className="h-full w-full -rotate-90"
           viewBox="0 0 300 300"
           aria-hidden="true"
         >
-          {/* Track */}
+          {/* Track ring */}
           <circle
-            cx="150"
-            cy="150"
-            r={RADIUS}
+            cx="150" cy="150" r={RADIUS}
             fill="none"
-            stroke="rgba(143,94,54,0.15)"
-            strokeWidth="14"
+            stroke="rgba(143,94,54,0.12)"
+            strokeWidth="16"
           />
-          {/* Depleting progress */}
+
+          {/* Subtle glow copy behind the progress arc (blurred) */}
           <circle
-            cx="150"
-            cy="150"
-            r={RADIUS}
+            cx="150" cy="150" r={RADIUS}
             fill="none"
-            stroke={mode === 'focus' ? '#8F5E36' : '#A7C080'}
-            strokeWidth="14"
+            stroke={glowColour}
+            strokeWidth="22"
             strokeLinecap="round"
             strokeDasharray={CIRCUMFERENCE}
             strokeDashoffset={dashOffset}
+            opacity={running ? 0.25 : 0.1}
+            style={{
+              filter: 'blur(6px)',
+              transition: 'stroke-dashoffset 1s linear, opacity 0.6s ease',
+            }}
+          />
+
+          {/* Main progress arc */}
+          <circle
+            cx="150" cy="150" r={RADIUS}
+            fill="none"
+            stroke={strokeColour}
+            strokeWidth="16"
+            strokeLinecap="round"
+            strokeDasharray={CIRCUMFERENCE}
+            strokeDashoffset={dashOffset}
+            className={running ? 'animate-ring-glow' : ''}
             style={{ transition: 'stroke-dashoffset 1s linear' }}
           />
+
+          {/* Glowing dot at the leading edge of the arc */}
+          {remainingFraction > 0.002 && remainingFraction < 0.999 && (
+            <>
+              {/* Blurred outer glow */}
+              <circle
+                cx={tip.cx} cy={tip.cy}
+                r="12"
+                fill={glowColour}
+                opacity={running ? 0.55 : 0.3}
+                style={{ filter: 'blur(4px)', transition: 'opacity 0.4s' }}
+              />
+              {/* Bright core dot */}
+              <circle
+                cx={tip.cx} cy={tip.cy}
+                r={running ? 6 : 4}
+                fill={strokeColour}
+                style={{ transition: 'r 0.4s' }}
+              />
+            </>
+          )}
         </svg>
 
-        {/* Time + status sit inside the ring. */}
+        {/* Time and status label inside the ring */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          {/* No aria-live here: announcing every second would overwhelm a
-              screen reader. The status line below speaks state changes. */}
-          <span className="font-serif text-6xl font-semibold tabular-nums">
+          <span className="font-serif text-5xl font-semibold tabular-nums sm:text-6xl">
             {format(secondsLeft)}
           </span>
-          <span className="mt-1 text-sm text-brown" aria-live="polite">
+          <span className="mt-1.5 text-sm text-brown" aria-live="polite">
             {secondsLeft === 0
               ? mode === 'focus'
                 ? 'Beautiful work 💌'
@@ -176,27 +217,36 @@ export default function PomodoroTimer() {
         </div>
       </div>
 
-      {/* Controls — start is one tap. */}
+      {/* Controls */}
       <div className="mt-6 flex gap-3">
-        <button
-          onClick={handleStartPause}
-          disabled={secondsLeft === 0}
-          className="rounded-2xl bg-brown px-7 py-2.5 font-medium text-cream shadow-sm transition-colors hover:bg-brownDark disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {running ? 'Pause' : secondsLeft === 0 ? 'Done' : 'Start'}
-        </button>
+        {/* Start / Pause with invite-pulse ring when idle at full time */}
+        <div className="relative">
+          {showInvitePulse && (
+            <span
+              aria-hidden="true"
+              className="animate-invite-pulse pointer-events-none absolute inset-0 rounded-2xl bg-brown/45"
+            />
+          )}
+          <button
+            onClick={handleStartPause}
+            disabled={secondsLeft === 0}
+            className="relative min-h-[44px] min-w-[88px] rounded-2xl bg-brown px-7 py-2.5 font-medium text-cream shadow-sm transition-all hover:bg-brownDark active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {running ? 'Pause' : secondsLeft === 0 ? 'Done ✓' : 'Start'}
+          </button>
+        </div>
         <button
           onClick={handleReset}
-          className="rounded-2xl bg-brown/10 px-7 py-2.5 font-medium text-brown transition-colors hover:bg-brown/20"
+          className="min-h-[44px] min-w-[80px] rounded-2xl bg-brown/10 px-7 py-2.5 font-medium text-brown transition-all hover:bg-brown/20 active:scale-95"
         >
           Reset
         </button>
       </div>
 
-      {/* Banked focus sessions — visible accumulation. */}
+      {/* Focus session leaves */}
       <div className="mt-6 text-center">
         <p className="text-sm text-brown">Focus sessions today</p>
-        <div className="mt-1 flex min-h-[28px] flex-wrap items-center justify-center gap-0.5">
+        <div className="mt-1 flex min-h-[30px] flex-wrap items-center justify-center gap-0.5">
           {sessionsToday === 0 ? (
             <span className="text-sm text-brown/60">
               Your first leaf is one session away 🍃
@@ -206,6 +256,7 @@ export default function PomodoroTimer() {
               <span
                 key={i}
                 className="animate-leaf-pop text-xl"
+                style={{ animationDelay: `${i * 90}ms` }}
                 aria-hidden="true"
               >
                 🍃
@@ -214,66 +265,74 @@ export default function PomodoroTimer() {
           )}
         </div>
         {sessionsToday > 0 && (
-          <span className="sr-only">{sessionsToday} sessions completed</span>
+          <span className="sr-only">{sessionsToday} focus sessions completed</span>
         )}
       </div>
 
-      {/* Soot sprite — naps while you work, wakes with mail at 00:00. */}
-      <div className="relative mt-6 flex h-24 w-full items-end justify-center overflow-hidden">
+      {/* Soot sprite */}
+      <div className="relative mt-6 flex h-28 w-full flex-col items-center justify-end">
         <button
           onClick={openQuote}
           aria-label="Open a little note from the soot sprite"
-          className={`group relative rounded-full transition-opacity ${
-            napping ? 'opacity-50' : 'opacity-100'
+          className={`group relative cursor-pointer rounded-full transition-opacity active:scale-95 ${
+            napping ? 'opacity-45' : 'opacity-100'
           } ${hasMail ? 'animate-soot-rise' : 'animate-soot-bob'}`}
         >
-          {/* Fuzzy black body */}
+          {/* Fuzzy body */}
           <span
             aria-hidden="true"
-            className="relative block h-14 w-14 rounded-full bg-neutral-900"
-            style={{ boxShadow: '0 0 7px 3px rgba(0,0,0,0.55)' }}
+            className="relative block h-[4.5rem] w-[4.5rem] rounded-full bg-neutral-900"
+            style={{ boxShadow: '0 0 10px 4px rgba(0,0,0,0.6)' }}
           >
-            {/* spiky tufts */}
-            {[0, 60, 120, 180, 240, 300].map((deg) => (
+            {/* Spiky tufts around the body */}
+            {[0, 55, 110, 180, 250, 305].map((deg) => (
               <span
                 key={deg}
-                className="absolute left-1/2 top-1/2 h-3 w-1.5 rounded-full bg-neutral-900"
+                className="absolute left-1/2 top-1/2 h-3.5 w-2 rounded-full bg-neutral-900"
                 style={{
-                  transform: `translate(-50%, -50%) rotate(${deg}deg) translateY(-26px)`,
+                  transform: `translate(-50%, -50%) rotate(${deg}deg) translateY(-30px)`,
                 }}
               />
             ))}
 
-            {/* Eyes: open dots, or closed lines while napping. */}
-            <span className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 gap-2">
+            {/* Eyes — open with pupils, or droopy closed lines while napping.
+                When awake, blink animation fires every 7s. */}
+            <span
+              className={`absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 gap-2.5 ${
+                !napping ? 'animate-blink' : ''
+              }`}
+            >
               {napping ? (
                 <>
-                  <span className="h-0.5 w-2.5 rounded-full bg-white/90" />
-                  <span className="h-0.5 w-2.5 rounded-full bg-white/90" />
+                  <span className="h-[3px] w-3 rounded-full bg-white/85" />
+                  <span className="h-[3px] w-3 rounded-full bg-white/85" />
                 </>
               ) : (
                 <>
-                  <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-white">
-                    <span className="h-1 w-1 rounded-full bg-neutral-900" />
+                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
+                    <span className="h-1.5 w-1.5 rounded-full bg-neutral-900" />
                   </span>
-                  <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-white">
-                    <span className="h-1 w-1 rounded-full bg-neutral-900" />
+                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
+                    <span className="h-1.5 w-1.5 rounded-full bg-neutral-900" />
                   </span>
                 </>
               )}
             </span>
           </span>
 
-          {/* Envelope appears when the sprite wakes with mail. */}
+          {/* Envelope badge */}
           {hasMail && (
-            <span
-              className="absolute -right-3 -top-2 text-2xl"
-              aria-hidden="true"
-            >
+            <span className="absolute -right-3 -top-3 text-3xl" aria-hidden="true">
               ✉️
             </span>
           )}
         </button>
+
+        {/* Squish shadow below the sprite — grows when sprite bobs down, shrinks when up. */}
+        <div
+          aria-hidden="true"
+          className="animate-shadow-squish mt-1 h-2 w-12 rounded-full bg-black/25 blur-sm"
+        />
       </div>
 
       <p className="mt-2 text-center text-xs text-brown/70">
