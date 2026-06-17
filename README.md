@@ -7,7 +7,7 @@ A single-page app (Vite + React + Tailwind) with three widgets:
 
 - **The Book Nook** — a notebook-paper "current reads" list (one field + Enter to
   add, checkbox to strike through, persists in `localStorage`).
-- **The Spirited Pomodoro** — a 25-min focus / 5-min rest timer with a depleting
+- **The Pomodoro** — a 25-min focus / 5-min rest timer with a depleting
   SVG ring, a leaf counter for banked sessions, and a soot sprite that naps while
   you work and wakes with mail (a quote) when the timer finishes.
 - **The Mind's Garden** — "Water the Mind" grows a plant from a pure-CSS

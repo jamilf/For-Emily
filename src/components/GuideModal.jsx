@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react'
  */
 const ENTRIES = [
   {
-    title: 'Spirited Pomodoro',
+    title: 'Pomodoro',
     how: 'Name one thing you want to do, start the 25 minute timer, then take the 5 minute rest when it ends. A tree grows while you work.',
     why: 'Working in fixed blocks lowers the friction of starting, and deciding the single next step in advance makes it easier to begin. The scheduled rest keeps you from running on empty.',
   },
