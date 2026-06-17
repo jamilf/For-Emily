@@ -23,19 +23,24 @@ export default function Header() {
 
   return (
     <header className="mb-9 flex flex-col items-center gap-5 text-center text-fg sm:mb-12 sm:flex-row sm:justify-center sm:gap-8 sm:text-left">
-      {/* Pixel study-room scene */}
-      <div className="animate-float shrink-0">
-        <PixelSprite grid={STUDY_ROOM} palette={PAL} pixel={6} className="drop-shadow-[0_8px_18px_rgba(0,0,0,0.5)]" />
+      {/* Pixel study-room scene with a soft glow so it reads against the sky */}
+      <div className="relative animate-float shrink-0">
+        <div
+          aria-hidden="true"
+          className="absolute -inset-6 rounded-3xl blur-2xl"
+          style={{ background: 'radial-gradient(circle, rgba(219,188,127,0.35) 0%, transparent 70%)' }}
+        />
+        <PixelSprite grid={STUDY_ROOM} palette={PAL} pixel={6} className="relative drop-shadow-[0_8px_18px_rgba(0,0,0,0.5)]" />
       </div>
 
       <div>
-        <p className="mb-2 font-display text-sm uppercase tracking-[0.25em] text-ever-yellow">
+        <p className="mb-2 font-display text-sm uppercase tracking-[0.25em] text-ever-yellow drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
           {dateLabel}
         </p>
-        <h1 className="font-display text-4xl font-semibold text-cream drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-5xl">
+        <h1 className="font-display text-4xl font-semibold text-cream drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] sm:text-5xl">
           {greeting}, Emily <span aria-hidden="true">🌿</span>
         </h1>
-        <p className="mx-auto mt-3 max-w-md text-pretty text-fg/80 sm:mx-0">
+        <p className="mx-auto mt-3 max-w-md text-pretty text-cream/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.55)] sm:mx-0">
           Your cozy corner to think, rest, and grow. There&apos;s no rush here —
           just take the next small step.
         </p>

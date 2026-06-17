@@ -53,7 +53,29 @@ body {
 
   /* Cozy room edge-darkening so widgets sit "inside" the scene. */
   .room-vignette {
-    box-shadow: inset 0 0 180px 40px rgba(20, 26, 28, 0.55);
+    box-shadow: inset 0 0 180px 40px rgba(20, 26, 28, 0.45);
+  }
+
+  /* Subtle organic paper grain for the cream window bodies (no image file —
+     an inline SVG feTurbulence noise tile). */
+  .paper-grain {
+    position: relative;
+  }
+  .paper-grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Faint full-screen film grain for the lo-fi look. */
+  .film-grain {
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
   }
 }
 
@@ -169,6 +191,24 @@ body {
   100% { transform: translateY(-14px) scaleX(0.6); opacity: 0; }
 }
 
+/* Big soft clouds drifting slowly across the sky. */
+@keyframes cloudDrift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(135vw); }
+}
+
+/* Stars gently twinkling at dusk. */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 1; }
+}
+
+/* Fog band breathing softly over the far hills. */
+@keyframes fogDrift {
+  0%, 100% { transform: translateX(0); opacity: 0.6; }
+  50%       { transform: translateX(28px); opacity: 0.85; }
+}
+
 /* ------------------------------------------------------------------ *
  * Animation utility classes
  * ------------------------------------------------------------------ */
@@ -191,6 +231,10 @@ body {
 .animate-fade-in       { animation: fadeIn 0.22s ease-out forwards; }
 .animate-leaf-pop      { animation: leafPop 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
 .animate-steam         { animation: steam 3s ease-in-out infinite; }
+.animate-cloud         { animation: cloudDrift 90s linear infinite; }
+.animate-cloud-slow    { animation: cloudDrift 140s linear infinite; }
+.animate-twinkle       { animation: twinkle 4s ease-in-out infinite; }
+.animate-fog           { animation: fogDrift 26s ease-in-out infinite; }
 
 /* ------------------------------------------------------------------ *
  * Respect prefers-reduced-motion
