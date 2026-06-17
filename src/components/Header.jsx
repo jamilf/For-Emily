@@ -9,7 +9,7 @@ function getGreeting(hour) {
   return 'Good Evening'
 }
 
-export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, dueCount }) {
+export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, onOpenGuide, dueCount }) {
   const { greeting, dateLabel } = useMemo(() => {
     const now = new Date()
     return {
@@ -39,11 +39,11 @@ export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, due
           {dateLabel}
         </p>
         <h1 className="font-display text-4xl font-semibold text-cream drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] sm:text-[2.75rem] md:text-5xl">
-          {greeting}, Emily <span aria-hidden="true">🌿</span>
+          {greeting}, Emily
         </h1>
         <p className="mx-auto mt-3 max-w-md text-pretty text-cream/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.55)] sm:mx-0">
-          Your cozy corner to think, rest, and grow. There&apos;s no rush here —
-          just take the next small step.
+          Pick one thing, start the timer, and let the rest wait. You can always
+          come back to it.
         </p>
 
         <div className="mt-4">
@@ -51,6 +51,7 @@ export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, due
             focusMode={focusMode}
             onToggleFocus={onToggleFocus}
             onOpenFlashcards={onOpenFlashcards}
+            onOpenGuide={onOpenGuide}
             dueCount={dueCount}
           />
         </div>

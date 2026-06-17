@@ -1,6 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import QuoteModal from './QuoteModal.jsx'
-import ReflectionModal from './ReflectionModal.jsx'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
@@ -10,6 +8,10 @@ import { QUOTES } from '../data/quotes.js'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
+
+// Post-session overlays — loaded on demand, not part of the initial bundle.
+const QuoteModal = lazy(() => import('./QuoteModal.jsx'))
+const ReflectionModal = lazy(() => import('./ReflectionModal.jsx'))
 
 const DURATIONS = { focus: 25 * 60, break: 5 * 60 }
 const FOCUS_MINUTES = DURATIONS.focus / 60
@@ -47,7 +49,6 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   const [hasMail, setHasMail] = useState(false)
   const [quote, setQuote] = useState(null)
   const [intention, setIntention] = useState('') // "the one thing" (session-scoped)
-  const [parked, setParked] = usePersistedState('emily.parkingLot', [])
   const [stats, setStats] = usePersistedState('emily.stats', EMPTY_STATS)
   const [reflections, setReflections] = usePersistedState('emily.reflections', [])
   const [garden, setGarden] = usePersistedState('emily.garden', [])
@@ -194,8 +195,16 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   // The session's growing tree (seed → sprout → sapling → mature by progress).
   const elapsedFrac = total > 0 ? (total - secondsLeft) / total : 0
   const stageIdx = secondsLeft === 0 ? 3 : stageForProgress(elapsedFrac)
-  const plant = mode === 'focus' && plantDna != null ? generate(plantDna, STAGES[stageIdx]) : null
-  const plantPalette = plant && withered ? witherPalette(plant.palette) : plant?.palette
+  // generate() is deterministic and only changes shape with the species/stage —
+  // not with every 1s tick — so memoize on those instead of secondsLeft.
+  const plant = useMemo(
+    () => (mode === 'focus' && plantDna != null ? generate(plantDna, STAGES[stageIdx]) : null),
+    [mode, plantDna, stageIdx],
+  )
+  const plantPalette = useMemo(
+    () => (plant && withered ? witherPalette(plant.palette) : plant?.palette),
+    [plant, withered],
+  )
 
   return (
     <WindowFrame title="Spirited Pomodoro" bodyClass="bg-latte" className={className}>
@@ -251,7 +260,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
         )}
 
         {/* Ring */}
-        <div className="relative h-56 w-56 sm:h-64 sm:w-64 md:h-72 md:w-72">
+        <div className="relative h-56 w-56 sm:h-60 sm:w-60 md:h-72 md:w-72">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 300 300" aria-hidden="true">
             <circle cx="150" cy="150" r={RADIUS} fill="none" stroke="rgba(143,94,54,0.12)" strokeWidth="16" />
             <circle
@@ -278,15 +287,15 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
           </svg>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="font-display text-5xl font-semibold tabular-nums sm:text-6xl">
+            <span className="font-display text-5xl font-semibold tabular-nums sm:text-5xl md:text-6xl">
               {format(secondsLeft)}
             </span>
             <span className="mt-1.5 text-sm text-brown" aria-live="polite">
               {secondsLeft === 0
-                ? mode === 'focus' ? 'Beautiful work 💌' : 'Welcome back 🌿'
+                ? mode === 'focus' ? 'Session done.' : "Break's over."
                 : running
-                  ? mode === 'focus' ? 'Settling in… 🌙' : 'Resting gently…'
-                  : mode === 'focus' ? 'Ready when you are' : 'A little rest is earned'}
+                  ? mode === 'focus' ? 'In focus.' : 'Resting.'
+                  : mode === 'focus' ? 'Ready when you are.' : 'Time for a break.'}
             </span>
           </div>
         </div>
@@ -325,14 +334,14 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
             />
             <p className="mt-2 max-w-xs text-center text-xs text-brown/70">
               {withered
-                ? 'Your seedling is resting — stepping away is okay. Reset to plant a fresh one. 🌱'
+                ? "This seedling's on pause. Hit reset to start a new one whenever you're ready."
                 : stageIdx === 0
-                  ? 'A seed is planted…'
+                  ? 'Seed planted.'
                   : stageIdx === 1
-                    ? 'It’s sprouting 🌱'
+                    ? 'Sprouting.'
                     : stageIdx === 2
-                      ? 'Growing steadily 🌿'
-                      : 'Fully grown — into the garden it goes 🌳'}
+                      ? 'Coming along.'
+                      : 'Grown. Into the garden it goes.'}
             </p>
           </div>
         )}
@@ -340,7 +349,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
         {/* Break micro-activity */}
         {mode === 'break' && breakTip && (
           <div className="w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown" aria-live="polite">
-            <span className="font-display text-brown/70">A little restoration:</span>
+            <span className="font-display text-brown/70">Try this:</span>
             <br />
             {breakTip}
           </div>
@@ -351,7 +360,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
           <div className="relative flex h-20 w-full flex-col items-center justify-end">
             <button
               onClick={openQuote}
-              aria-label="Open a little note from the soot sprite"
+              aria-label="Open a note from the sprite"
               className={`group relative cursor-pointer transition-opacity active:scale-95 ${
                 napping ? 'opacity-50' : 'opacity-100'
               } ${hasMail ? 'animate-soot-rise' : 'animate-soot-bob'}`}
@@ -368,27 +377,27 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
 
           <p className="text-center text-xs text-brown/70">
             {hasMail
-              ? 'Tap the soot sprite — it brought you a note.'
+              ? 'Tap the sprite. It left you a note.'
               : napping
-                ? 'Shh… the soot sprite is napping while you focus.'
-                : 'Tap the soot sprite for a little encouragement.'}
+                ? "The sprite's napping while you focus."
+                : 'Tap the sprite for a note.'}
           </p>
         </div>
       </div>
 
-      {quote && <QuoteModal quote={quote} onClose={() => setQuote(null)} />}
-      {justFinishedFocus && showReflection && (
-        <ReflectionModal
-          note={reflectionNote}
-          onNoteChange={setReflectionNote}
-          onSaveMood={saveReflection}
-          parkedCount={parked.length}
-          onClearParked={() => setParked([])}
-          intention={trimmedIntention}
-          onClearIntention={() => setIntention('')}
-          onClose={() => setShowReflection(false)}
-        />
-      )}
+      <Suspense fallback={null}>
+        {quote && <QuoteModal quote={quote} onClose={() => setQuote(null)} />}
+        {justFinishedFocus && showReflection && (
+          <ReflectionModal
+            note={reflectionNote}
+            onNoteChange={setReflectionNote}
+            onSaveMood={saveReflection}
+            intention={trimmedIntention}
+            onClearIntention={() => setIntention('')}
+            onClose={() => setShowReflection(false)}
+          />
+        )}
+      </Suspense>
     </WindowFrame>
   )
 }

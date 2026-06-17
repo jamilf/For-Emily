@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
@@ -14,34 +14,38 @@ export default function FocusGarden({ className = '' }) {
   const [garden, setGarden] = usePersistedState('emily.garden', [])
   const [confirming, setConfirming] = useState(false)
 
+  // Generate each tree's sprite once per garden change — not on every re-render
+  // (e.g. toggling the clear-confirm), since generate() is deterministic by DNA.
+  const sprites = useMemo(
+    () => garden.map((tree) => ({ ts: tree.ts, ...generate(tree.id, 'mature') })),
+    [garden],
+  )
+
   return (
     <WindowFrame title="My Garden" className={className}>
       {garden.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center py-8 text-center">
-          <p className="font-display text-lg text-brown">Your garden is waiting 🌱</p>
+          <p className="font-display text-lg text-brown">Your garden is empty for now.</p>
           <p className="mt-1 max-w-xs text-sm text-brown/60">
-            Finish a focus session and a tree will grow here — one for every session you complete.
+            Finish a focus session and a tree shows up here. One per session.
           </p>
         </div>
       ) : (
         <div className="flex h-full flex-col">
           <div className="grid grid-cols-5 gap-2 min-[480px]:grid-cols-6 lg:grid-cols-5">
-            {garden.map((tree) => {
-              const { grid, palette } = generate(tree.id, 'mature')
-              return (
-                <div
-                  key={tree.ts}
-                  className="flex items-end justify-center"
-                  title={new Date(tree.ts).toLocaleDateString()}
-                >
-                  <PixelSprite grid={grid} palette={palette} pixel={4} />
-                </div>
-              )
-            })}
+            {sprites.map((tree) => (
+              <div
+                key={tree.ts}
+                className="flex items-end justify-center"
+                title={new Date(tree.ts).toLocaleDateString()}
+              >
+                <PixelSprite grid={tree.grid} palette={tree.palette} pixel={4} />
+              </div>
+            ))}
           </div>
           <div className="mt-4 flex items-center justify-between gap-2">
             <p className="text-xs text-brown/60">
-              {garden.length} {garden.length === 1 ? 'tree' : 'trees'} grown 🌳
+              {garden.length} {garden.length === 1 ? 'tree' : 'trees'} so far
             </p>
             {confirming ? (
               <span className="flex items-center gap-1.5 text-xs">

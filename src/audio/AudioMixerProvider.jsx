@@ -32,12 +32,10 @@ export default function AudioMixerProvider({ children }) {
   const userMasterRef = useRef(mixer.master) // master to restore after a fade
   userMasterRef.current = mixer.master
 
-  // Build the graph once, on first start.
-  const buildGraph = useCallback(() => {
-    const Ctx = window.AudioContext || window.webkitAudioContext
-    if (!Ctx) return null
-    const ctx = new Ctx()
-
+  // Build the synthesized graph onto an already-running context. Source nodes
+  // (buffers/oscillators) are only started here, never before the context is
+  // running — iOS/Android WebKit silently drop sources started while suspended.
+  const buildGraph = useCallback((ctx) => {
     const compressor = ctx.createDynamicsCompressor()
     compressor.threshold.value = -12
     compressor.ratio.value = 4
@@ -57,9 +55,7 @@ export default function AudioMixerProvider({ children }) {
       disposersRef.current.push(dispose)
     })
 
-    ctxRef.current = ctx
     masterRef.current = master
-    return ctx
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -71,12 +67,30 @@ export default function AudioMixerProvider({ children }) {
   }
 
   const start = useCallback(() => {
-    if (!ctxRef.current) buildGraph()
+    // Create the context lazily, inside this user gesture.
+    if (!ctxRef.current) {
+      const Ctx = window.AudioContext || window.webkitAudioContext
+      if (!Ctx) return
+      ctxRef.current = new Ctx()
+    }
     const ctx = ctxRef.current
-    if (!ctx) return
-    if (ctx.state === 'suspended') ctx.resume()
-    rampParam(masterRef.current?.gain, userMasterRef.current, 0.4)
-    setMixer((m) => ({ ...m, enabled: true }))
+
+    // Build (and start) the graph only once the context is actually running.
+    const begin = () => {
+      if (!masterRef.current) buildGraph(ctx)
+      rampParam(masterRef.current?.gain, userMasterRef.current, 0.4)
+      setMixer((m) => ({ ...m, enabled: true }))
+    }
+
+    if (ctx.state !== 'running') {
+      // resume() must be called synchronously within the gesture (mobile unlock).
+      const p = ctx.resume()
+      if (p && typeof p.then === 'function') {
+        p.then(begin).catch(begin)
+        return
+      }
+    }
+    begin()
   }, [buildGraph, setMixer])
 
   const stop = useCallback(() => {

@@ -4,10 +4,7 @@
  * core dashboard reads as uncluttered (progressive disclosure for ADHD).
  */
 export default function Dock({ openDrawer, onToggle, zen, onToggleZen, mixerEnabled }) {
-  const items = [
-    { id: 'mixer', icon: '🎚️', label: 'Ambient mixer' },
-    { id: 'brainDump', icon: '🧠', label: 'Brain dump' },
-  ]
+  const items = [{ id: 'mixer', icon: '🎚️', label: 'Ambient mixer' }]
 
   const base =
     'relative flex h-11 w-11 items-center justify-center rounded-full border-2 text-lg transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow'
@@ -15,7 +12,8 @@ export default function Dock({ openDrawer, onToggle, zen, onToggleZen, mixerEnab
   return (
     <nav
       aria-label="Tools"
-      className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border-2 border-brownDark/30 bg-cream/85 px-2.5 py-2 shadow-window backdrop-blur-sm"
+      role="toolbar"
+      className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border-2 border-brownDark/30 bg-cream/85 px-2.5 py-2 shadow-window sm:backdrop-blur-sm"
     >
       {items.map((it) => {
         const active = openDrawer === it.id
@@ -24,6 +22,7 @@ export default function Dock({ openDrawer, onToggle, zen, onToggleZen, mixerEnab
             key={it.id}
             onClick={() => onToggle(it.id)}
             aria-label={it.label}
+            title={it.label}
             aria-expanded={active}
             className={`${base} ${
               active ? 'border-sunset-magenta bg-sunset-pink/40' : 'border-brownDark/20 bg-cream'
@@ -45,6 +44,7 @@ export default function Dock({ openDrawer, onToggle, zen, onToggleZen, mixerEnab
       <button
         onClick={onToggleZen}
         aria-label="Zen mode"
+        title="Zen mode"
         aria-pressed={zen}
         className={`${base} ${zen ? 'border-sunset-magenta bg-sunset-plum text-cream' : 'border-brownDark/20 bg-cream'}`}
       >

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 
 /**
  * Pure-CSS pixel-art renderer — no image files.
@@ -12,7 +12,7 @@ import { useMemo } from 'react'
  * @param {Object}   palette Map of char -> hex color.
  * @param {number}   pixel   Size of one pixel cell in px (default 4).
  */
-export default function PixelSprite({ grid, palette, pixel = 4, className = '', style = {} }) {
+function PixelSprite({ grid, palette, pixel = 4, className = '', style = {} }) {
   const { shadow, cols, rows } = useMemo(() => {
     const shadows = []
     let maxCols = 0
@@ -41,3 +41,7 @@ export default function PixelSprite({ grid, palette, pixel = 4, className = '', 
     </div>
   )
 }
+
+// Memoized: with stable grid/palette references (callers pass module constants or
+// memoized DNA-generated sprites), this skips re-renders driven by a ticking parent.
+export default memo(PixelSprite)

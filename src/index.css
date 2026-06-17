@@ -317,6 +317,15 @@ body {
 .animate-relief        { animation: relief 0.9s ease-out; }
 .animate-wither        { animation: wither 1.2s ease forwards; }
 
+/* Freeze decorative animations while the tab is hidden (paired with the
+ * usePageHidden hook). Pausing — not stopping — resumes seamlessly with no
+ * reflow when the user returns. */
+.app-root.anims-paused *,
+.app-root.anims-paused *::before,
+.app-root.anims-paused *::after {
+  animation-play-state: paused !important;
+}
+
 /* ------------------------------------------------------------------ *
  * Respect prefers-reduced-motion
  * ------------------------------------------------------------------ */
@@ -334,9 +343,8 @@ body {
  * surfaces stay fully legible for users who ask for it.
  * ------------------------------------------------------------------ */
 @media (prefers-reduced-transparency: reduce) {
-  .backdrop-blur-sm,
-  .backdrop-blur,
-  .backdrop-blur-md {
+  /* Attribute match so it also covers responsive variants (e.g. sm:backdrop-blur-sm). */
+  [class*='backdrop-blur'] {
     backdrop-filter: none !important;
   }
   .weather-layer {

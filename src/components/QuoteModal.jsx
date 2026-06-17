@@ -22,13 +22,13 @@ export default function QuoteModal({ quote, onClose }) {
       onMouseDown={onClose}
       onTouchEnd={onClose}
     >
-      <div className="absolute inset-0 bg-bgDim/75 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-bgDim/75 sm:backdrop-blur-sm" />
 
       <div
         role="dialog"
         aria-modal="true"
         aria-label="A little note for you"
-        className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window animate-modal-in"
+        className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
         onMouseDown={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
       >
@@ -45,7 +45,7 @@ export default function QuoteModal({ quote, onClose }) {
           <span className="ml-1 font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">✉ A note for you</span>
         </div>
 
-        <div className="paper-grain bg-cream p-7 text-brownDark">
+        <div className="paper-grain overflow-y-auto bg-cream p-7 text-brownDark">
           <p className="font-sans text-base leading-relaxed sm:text-lg">{quote}</p>
 
           <button

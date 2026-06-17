@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 // A tiny same-tab event channel so multiple components bound to the same key
-// stay in sync (e.g. ParkingLot writes, PomodoroTimer reads).
+// stay in sync (e.g. the timer writes stats, the Focus Meter reads them).
 const CHANNEL = 'emily:storage'
 
 function safeLoad(key, initial) {
