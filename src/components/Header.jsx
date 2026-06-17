@@ -38,7 +38,7 @@ export default function Header({ focusMode, onToggleFocus, onOpenFlashcards, due
         <p className="mb-2 font-display text-sm uppercase tracking-[0.25em] text-sunset-gold drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
           {dateLabel}
         </p>
-        <h1 className="font-display text-4xl font-semibold text-cream drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] sm:text-5xl">
+        <h1 className="font-display text-4xl font-semibold text-cream drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] sm:text-[2.75rem] md:text-5xl">
           {greeting}, Emily <span aria-hidden="true">🌿</span>
         </h1>
         <p className="mx-auto mt-3 max-w-md text-pretty text-cream/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.55)] sm:mx-0">

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import QuoteModal from './QuoteModal.jsx'
+import ReflectionModal from './ReflectionModal.jsx'
 import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
@@ -39,7 +40,7 @@ function tipCoords(fraction) {
 }
 
 /** Widget 2 — The Spirited Pomodoro (centerpiece, lofi window). */
-export default function PomodoroTimer({ onFocusActive }) {
+export default function PomodoroTimer({ onFocusActive, className = '' }) {
   const [mode, setMode] = useState('focus')
   const [secondsLeft, setSecondsLeft] = useState(DURATIONS.focus)
   const [running, setRunning] = useState(false)
@@ -62,11 +63,6 @@ export default function PomodoroTimer({ onFocusActive }) {
   const total = DURATIONS[mode]
 
   useEscapeKey(() => setShowReflection(false), showReflection)
-
-  // Today's progress (stale stats from a previous day read as zero until updated).
-  const today = dayStr()
-  const sessionsToday = stats.day === today ? stats.sessionsToday : 0
-  const minutesToday = stats.day === today ? stats.minutesToday : 0
 
   useEffect(() => {
     if (!running) return
@@ -202,13 +198,13 @@ export default function PomodoroTimer({ onFocusActive }) {
   const plantPalette = plant && withered ? witherPalette(plant.palette) : plant?.palette
 
   return (
-    <WindowFrame title="Spirited Pomodoro" bodyClass="bg-latte">
-      <div className="flex flex-col items-center">
+    <WindowFrame title="Spirited Pomodoro" bodyClass="bg-latte" className={className}>
+      <div className="flex flex-col items-center gap-5">
         {/* Mode toggle */}
         <div
           role="group"
           aria-label="Timer mode"
-          className="mb-6 flex gap-1 rounded-full bg-brown/10 p-1 font-display text-sm"
+          className="flex gap-1 rounded-full bg-brown/10 p-1 font-display text-sm"
         >
           <button
             onClick={() => switchMode('focus')}
@@ -232,7 +228,7 @@ export default function PomodoroTimer({ onFocusActive }) {
 
         {/* Session intention — "the one thing" */}
         {showIntentionInput ? (
-          <div className="mb-5 w-full max-w-xs">
+          <div className="w-full max-w-xs">
             <label htmlFor="intention-input" className="mb-1.5 block text-center font-display text-sm text-brown">
               What&apos;s the one thing?
             </label>
@@ -248,7 +244,7 @@ export default function PomodoroTimer({ onFocusActive }) {
         ) : (
           mode === 'focus' &&
           trimmedIntention && (
-            <p className="mb-5 max-w-xs text-center font-display text-sm text-brown" aria-live="polite">
+            <p className="max-w-xs text-center font-display text-sm text-brown" aria-live="polite">
               <span className="text-brown/60">Your one thing:</span> {trimmedIntention}
             </p>
           )
@@ -296,7 +292,7 @@ export default function PomodoroTimer({ onFocusActive }) {
         </div>
 
         {/* Controls */}
-        <div className="mt-6 flex gap-3 font-display">
+        <div className="flex gap-3 font-display">
           <div className="relative">
             {showInvitePulse && (
               <span aria-hidden="true" className="animate-invite-pulse pointer-events-none absolute inset-0 rounded-2xl bg-brown/45" />
@@ -304,14 +300,14 @@ export default function PomodoroTimer({ onFocusActive }) {
             <button
               onClick={handleStartPause}
               disabled={secondsLeft === 0}
-              className="relative min-h-[44px] min-w-[88px] rounded-2xl bg-brown px-7 py-2.5 text-cream shadow-sm transition-all hover:bg-brownDark active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              className="relative min-h-[44px] min-w-[96px] rounded-2xl bg-brown px-6 py-2.5 text-cream shadow-sm transition-all hover:bg-brownDark active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {running ? 'Pause' : secondsLeft === 0 ? 'Done ✓' : 'Start'}
             </button>
           </div>
           <button
             onClick={handleReset}
-            className="min-h-[44px] min-w-[80px] rounded-2xl bg-brown/10 px-7 py-2.5 text-brown transition-all hover:bg-brown/20 active:scale-95"
+            className="min-h-[44px] min-w-[96px] rounded-2xl bg-brown/10 px-6 py-2.5 text-brown transition-all hover:bg-brown/20 active:scale-95"
           >
             Reset
           </button>
@@ -319,7 +315,7 @@ export default function PomodoroTimer({ onFocusActive }) {
 
         {/* Focus Garden — a seedling that grows with the session */}
         {plant && (
-          <div className="mt-6 flex flex-col items-center" aria-live="polite">
+          <div className="flex flex-col items-center" aria-live="polite">
             <PixelSprite
               key={withered ? 'withered' : stageIdx}
               grid={plant.grid}
@@ -343,128 +339,56 @@ export default function PomodoroTimer({ onFocusActive }) {
 
         {/* Break micro-activity */}
         {mode === 'break' && breakTip && (
-          <div className="mt-5 w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown" aria-live="polite">
+          <div className="w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown" aria-live="polite">
             <span className="font-display text-brown/70">A little restoration:</span>
             <br />
             {breakTip}
           </div>
         )}
 
-        {/* Focus leaves + minutes + a kind streak */}
-        <div className="mt-6 text-center">
-          <p className="font-display text-sm text-brown">Focus sessions today</p>
-          <div className="mt-1 flex min-h-[30px] flex-wrap items-center justify-center gap-0.5">
-            {sessionsToday === 0 ? (
-              <span className="text-sm text-brown/60">Your first leaf is one session away 🍃</span>
-            ) : (
-              Array.from({ length: sessionsToday }).map((_, i) => (
-                <span key={i} className="animate-leaf-pop text-xl" style={{ animationDelay: `${i * 90}ms` }} aria-hidden="true">
-                  🍃
-                </span>
-              ))
-            )}
+        {/* Pixel soot sprite companion */}
+        <div className="flex flex-col items-center gap-1">
+          <div className="relative flex h-20 w-full flex-col items-center justify-end">
+            <button
+              onClick={openQuote}
+              aria-label="Open a little note from the soot sprite"
+              className={`group relative cursor-pointer transition-opacity active:scale-95 ${
+                napping ? 'opacity-50' : 'opacity-100'
+              } ${hasMail ? 'animate-soot-rise' : 'animate-soot-bob'}`}
+            >
+              <PixelSprite grid={napping ? SOOT_NAP : SOOT_AWAKE} palette={PAL} pixel={5} />
+              {hasMail && (
+                <span className="absolute -right-3 -top-3 text-3xl" aria-hidden="true">✉️</span>
+              )}
+            </button>
+
+            {/* Squish shadow */}
+            <div aria-hidden="true" className="animate-shadow-squish mt-1 h-2 w-12 rounded-full bg-black/25 blur-sm" />
           </div>
-          <p className="mt-1 text-xs text-brown/70" aria-live="polite">
-            {sessionsToday > 0 && (
-              <span className="sr-only">{sessionsToday} focus sessions, </span>
-            )}
-            {minutesToday > 0 ? `${minutesToday} min focused today` : 'Every minute counts'}
-            {stats.streak > 0 && ` · ${stats.streak} day${stats.streak === 1 ? '' : 's'} tended 🌱`}
+
+          <p className="text-center text-xs text-brown/70">
+            {hasMail
+              ? 'Tap the soot sprite — it brought you a note.'
+              : napping
+                ? 'Shh… the soot sprite is napping while you focus.'
+                : 'Tap the soot sprite for a little encouragement.'}
           </p>
         </div>
-
-        {/* Pixel soot sprite */}
-        <div className="relative mt-6 flex h-28 w-full flex-col items-center justify-end">
-          <button
-            onClick={openQuote}
-            aria-label="Open a little note from the soot sprite"
-            className={`group relative cursor-pointer transition-opacity active:scale-95 ${
-              napping ? 'opacity-50' : 'opacity-100'
-            } ${hasMail ? 'animate-soot-rise' : 'animate-soot-bob'}`}
-          >
-            <PixelSprite grid={napping ? SOOT_NAP : SOOT_AWAKE} palette={PAL} pixel={5} />
-            {hasMail && (
-              <span className="absolute -right-3 -top-3 text-3xl" aria-hidden="true">✉️</span>
-            )}
-          </button>
-
-          {/* Squish shadow */}
-          <div aria-hidden="true" className="animate-shadow-squish mt-1 h-2 w-12 rounded-full bg-black/25 blur-sm" />
-        </div>
-
-        <p className="mt-2 text-center text-xs text-brown/70">
-          {hasMail
-            ? 'Tap the soot sprite — it brought you a note.'
-            : napping
-              ? 'Shh… the soot sprite is napping while you focus.'
-              : 'Tap the soot sprite for a little encouragement.'}
-        </p>
-
-        {/* End-of-session reflection check-in */}
-        {justFinishedFocus && showReflection && (
-          <div className="mt-4 w-full max-w-xs rounded-2xl bg-white/60 p-4 text-center">
-            <p className="font-display text-sm text-brown">How did that feel?</p>
-            <div className="mt-2 flex justify-center gap-3" role="group" aria-label="Reflect on this session">
-              {[
-                { mood: 'rain', icon: '🌧️', label: 'Tough' },
-                { mood: 'cloud', icon: '🌤️', label: 'Okay' },
-                { mood: 'sun', icon: '☀️', label: 'Great' },
-              ].map((m) => (
-                <button
-                  key={m.mood}
-                  onClick={() => saveReflection(m.mood)}
-                  aria-label={m.label}
-                  className="rounded-2xl bg-brown/5 px-3 py-2 text-2xl transition-all hover:bg-brown/15 active:scale-95"
-                >
-                  {m.icon}
-                </button>
-              ))}
-            </div>
-            <input
-              type="text"
-              value={reflectionNote}
-              onChange={(e) => setReflectionNote(e.target.value)}
-              placeholder="A note, if you like…"
-              className="mt-3 w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2 text-sm text-brownDark placeholder:text-brown/40 focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow"
-            />
-            <button
-              onClick={() => setShowReflection(false)}
-              className="mt-2 font-display text-xs text-brown/60 underline-offset-2 hover:underline"
-            >
-              Maybe later
-            </button>
-          </div>
-        )}
-
-        {/* Session wrap-up: parked thoughts + clear the one thing */}
-        {justFinishedFocus && (parked.length > 0 || trimmedIntention) && (
-          <div className="mt-4 w-full max-w-xs space-y-2 rounded-2xl bg-white/50 p-3 text-center text-sm">
-            {parked.length > 0 && (
-              <div>
-                <p className="text-brown">
-                  You parked {parked.length} thing{parked.length === 1 ? '' : 's'} while you focused.
-                </p>
-                <button
-                  onClick={() => setParked([])}
-                  className="mt-1 rounded-full bg-brown/10 px-4 py-1.5 font-display text-xs text-brown transition-colors hover:bg-brown/20 active:scale-95"
-                >
-                  Clear the parking lot
-                </button>
-              </div>
-            )}
-            {trimmedIntention && (
-              <button
-                onClick={() => setIntention('')}
-                className="rounded-full bg-brown/10 px-4 py-1.5 font-display text-xs text-brown transition-colors hover:bg-brown/20 active:scale-95"
-              >
-                Clear “{trimmedIntention.length > 24 ? trimmedIntention.slice(0, 24) + '…' : trimmedIntention}”
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {quote && <QuoteModal quote={quote} onClose={() => setQuote(null)} />}
+      {justFinishedFocus && showReflection && (
+        <ReflectionModal
+          note={reflectionNote}
+          onNoteChange={setReflectionNote}
+          onSaveMood={saveReflection}
+          parkedCount={parked.length}
+          onClearParked={() => setParked([])}
+          intention={trimmedIntention}
+          onClearIntention={() => setIntention('')}
+          onClose={() => setShowReflection(false)}
+        />
+      )}
     </WindowFrame>
   )
 }

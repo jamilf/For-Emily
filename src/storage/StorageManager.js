@@ -25,7 +25,6 @@ export const DEFAULTS = {
   },
   'emily.garden': [], // [{ id: <DNA number>, ts }]
   'emily.brainDump': '',
-  'emily.partner': 0, // index into the study-partner video list
   'emily.zen': false,
   'emily.meter': { dailyGoalMin: 100 },
 }

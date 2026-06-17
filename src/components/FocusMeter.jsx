@@ -13,9 +13,10 @@ const C = 2 * Math.PI * R
 /**
  * Feature 7 — ADHD Focus Meter. Positive-only reinforcement: a progress ring
  * toward a gentle daily goal plus warm stat tiles. Never any red, failure, or
- * shame language — only encouragement and recovery.
+ * shame language — only encouragement and recovery. Laid out as a vertical card
+ * (ring over a row of tiles) so it reads cleanly in the narrow side rail.
  */
-export default function FocusMeter() {
+export default function FocusMeter({ className = '' }) {
   const [stats] = usePersistedState('emily.stats', EMPTY_STATS)
   const [garden] = usePersistedState('emily.garden', [])
   const [meter] = usePersistedState('emily.meter', DEFAULTS['emily.meter'])
@@ -35,20 +36,20 @@ export default function FocusMeter() {
         : 'A fresh page. Begin whenever you’re ready.'
 
   const Tile = ({ value, label, icon }) => (
-    <div className="rounded-xl bg-brown/5 px-3 py-2 text-center">
-      <div className="font-display text-xl text-brown">
+    <div className="rounded-xl bg-brown/5 px-2 py-2.5 text-center">
+      <div className="font-display text-lg text-brown">
         <span aria-hidden="true">{icon} </span>
         {value}
       </div>
-      <div className="text-xs text-brown/60">{label}</div>
+      <div className="mt-0.5 text-[0.7rem] leading-tight text-brown/60">{label}</div>
     </div>
   )
 
   return (
-    <WindowFrame title="Focus Meter">
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
-        <div className="relative shrink-0">
-          <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
+    <WindowFrame title="Focus Meter" className={className}>
+      <div className="flex flex-col items-center gap-5">
+        <div className="relative h-32 w-32 shrink-0 sm:h-36 sm:w-36">
+          <svg viewBox="0 0 132 132" className="h-full w-full" aria-hidden="true">
             <circle cx="66" cy="66" r={R} fill="none" stroke="#8F5E36" strokeOpacity="0.12" strokeWidth="12" />
             <circle
               cx="66"
@@ -65,7 +66,7 @@ export default function FocusMeter() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-display text-2xl text-brown">{minutes}</span>
+            <span className="font-display text-3xl text-brown">{minutes}</span>
             <span className="text-xs text-brown/60">of {goal} min</span>
           </div>
         </div>
@@ -75,10 +76,11 @@ export default function FocusMeter() {
           <Tile value={stats.streak || 0} label="day streak" icon="🌱" />
           <Tile value={garden.length} label="trees grown" icon="🌳" />
         </div>
+
+        <p className="text-center text-sm text-brown/70" aria-live="polite">
+          {message}
+        </p>
       </div>
-      <p className="mt-3 text-center text-sm text-brown/70" aria-live="polite">
-        {message}
-      </p>
     </WindowFrame>
   )
 }

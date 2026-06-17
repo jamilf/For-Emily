@@ -7,8 +7,6 @@ export default function Dock({ openDrawer, onToggle, zen, onToggleZen, mixerEnab
   const items = [
     { id: 'mixer', icon: '🎚️', label: 'Ambient mixer' },
     { id: 'brainDump', icon: '🧠', label: 'Brain dump' },
-    { id: 'partner', icon: '🎬', label: 'Study partner' },
-    { id: 'spotify', icon: '🎵', label: 'Zen music' },
   ]
 
   const base =
