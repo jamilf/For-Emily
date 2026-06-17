@@ -26,7 +26,7 @@ export default function WindowFrame({
         style={
           barClass
             ? undefined
-            : { background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }
+            : { background: 'linear-gradient(to bottom, #9B3D73, #7C3F76 55%, #5C3A6E)' }
         }
       >
         <span className="flex gap-1.5" aria-hidden="true">

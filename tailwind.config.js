@@ -32,6 +32,22 @@ export default {
           blue: '#7FBBB3',
           purple: '#D699B6',
         },
+
+        // Pixel-art sunset / dusk palette (scene + warm accents).
+        sunset: {
+          indigo: '#352A52', // top-of-sky / deep dusk
+          plum: '#5C3A6E',
+          magenta: '#9B3D73',
+          rose: '#E0719C',
+          pink: '#F4A6C0',
+          coral: '#F4845F',
+          orange: '#F9A857',
+          gold: '#FFD27D', // sun / lit windows
+          peach: '#FFCBA4',
+          teal: '#3FB0AC', // Ghibli water accent
+          city: '#2A2140', // near building silhouette
+          cityFar: '#5A4A78', // far building silhouette
+        },
       },
       fontFamily: {
         // Pixel display font for headings/labels; Inter for readable body.
