@@ -79,7 +79,7 @@ export default function ParkingLot() {
               <button
                 type="submit"
                 aria-label="Save thought"
-                className="flex h-[40px] w-[40px] flex-shrink-0 items-center justify-center rounded-xl bg-brown/15 font-display text-xl text-brown transition-colors hover:bg-brown/30 active:scale-95"
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brown/15 font-display text-xl text-brown transition-colors hover:bg-brown/30 active:scale-95"
               >
                 +
               </button>

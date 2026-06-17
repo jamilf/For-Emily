@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import Header from './components/Header.jsx'
-import BookNook from './components/BookNook.jsx'
 import PomodoroTimer from './components/PomodoroTimer.jsx'
-import MindsGarden from './components/MindsGarden.jsx'
 import ParkingLot from './components/ParkingLot.jsx'
 import Flashcards from './components/Flashcards.jsx'
 import FocusMeter from './components/FocusMeter.jsx'
@@ -10,8 +8,6 @@ import FocusGarden from './components/FocusGarden.jsx'
 import Dock from './components/Dock.jsx'
 import AmbientMixerDrawer from './components/AmbientMixerDrawer.jsx'
 import BrainDumpDrawer from './components/BrainDumpDrawer.jsx'
-import StudyPartnerDrawer from './components/StudyPartnerDrawer.jsx'
-import SpotifyDrawer from './components/SpotifyDrawer.jsx'
 import WeatherCanvas from './components/WeatherCanvas.jsx'
 import SkyScene from './scene/SkyScene.jsx'
 import AudioMixerProvider, { useMixer } from './audio/AudioMixerProvider.jsx'
@@ -24,21 +20,18 @@ function Dashboard() {
   const [focusActive, setFocusActive] = useState(false) // a focus session is running
   const [showCards, setShowCards] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
-  const [mediaSeen, setMediaSeen] = useState({ partner: false, spotify: false })
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
   const dueCount = countDue(cards)
   const { enabled: mixerEnabled } = useMixer()
 
-  // In focus mode the side cards recede so the timer is the single point of focus.
-  const sideClass = focusMode
-    ? 'pointer-events-none scale-95 opacity-30 blur-[1px] transition-all duration-500'
+  // In focus mode the supporting rail recedes so the timer is the single point
+  // of focus.
+  const railRecede = focusMode
+    ? 'pointer-events-none scale-[0.98] opacity-30 blur-[1px] transition-all duration-500'
     : 'transition-all duration-500'
 
   function toggleDrawer(id) {
-    if (id === 'partner' || id === 'spotify') {
-      setMediaSeen((m) => ({ ...m, [id]: true }))
-    }
     setOpenDrawer((cur) => (cur === id ? null : id))
   }
 
@@ -58,6 +51,7 @@ function Dashboard() {
   ]
     .filter(Boolean)
     .join(' ')
+
   return (
     <div className={rootClass}>
       {/* Painterly Ghibli landscape (fixed; content scrolls over it) */}
@@ -78,31 +72,26 @@ function Dashboard() {
           dueCount={dueCount}
         />
 
-        <div className="grid grid-cols-1 items-start gap-5 min-[640px]:grid-cols-2 min-[900px]:grid-cols-3 sm:gap-6">
-          <div className={`focus-dim animate-slide-up order-2 min-[640px]:order-2 min-[900px]:order-1 ${sideClass}`} style={{ animationDelay: '150ms' }}>
-            <BookNook />
-          </div>
+        {/* Hero timer + supporting rail.
+            Mobile: single stacked column.
+            Tablet: timer on top, meter + garden side-by-side beneath.
+            Desktop: timer hero (left) with the rail stacked alongside (right). */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-stretch">
           <div
-            className={`animate-slide-up order-1 min-[640px]:order-1 min-[640px]:col-span-2 min-[900px]:order-2 min-[900px]:col-span-1 transition-all duration-500 ${
-              focusMode ? 'scale-[1.02]' : ''
-            }`}
+            className={`animate-slide-up flex transition-transform duration-500 ${focusMode ? 'lg:scale-[1.01]' : ''}`}
             style={{ animationDelay: '0ms' }}
           >
-            <PomodoroTimer onFocusActive={setFocusActive} />
+            <PomodoroTimer onFocusActive={setFocusActive} className="w-full" />
           </div>
-          <div className={`focus-dim animate-slide-up order-3 min-[640px]:order-3 min-[900px]:order-3 ${sideClass}`} style={{ animationDelay: '300ms' }}>
-            <MindsGarden />
-          </div>
-        </div>
 
-        {/* Garden + positive-reinforcement dashboard */}
-        <div className="mt-6 grid grid-cols-1 gap-5 min-[900px]:grid-cols-2 sm:gap-6">
-          <div className="focus-dim animate-slide-up" style={{ animationDelay: '200ms' }}>
-            <FocusMeter />
-          </div>
-          <div className="animate-slide-up" style={{ animationDelay: '260ms' }}>
-            <FocusGarden />
-          </div>
+          <aside className={`grid grid-cols-1 gap-6 min-[640px]:grid-cols-2 lg:flex lg:flex-col ${railRecede}`}>
+            <div className="focus-dim animate-slide-up flex" style={{ animationDelay: '150ms' }}>
+              <FocusMeter className="w-full" />
+            </div>
+            <div className="animate-slide-up flex lg:flex-1" style={{ animationDelay: '260ms' }}>
+              <FocusGarden className="w-full" />
+            </div>
+          </aside>
         </div>
 
         <footer className="mb-24 mt-12 text-center font-display text-sm text-cream/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
@@ -123,8 +112,6 @@ function Dashboard() {
       />
       {openDrawer === 'mixer' && <AmbientMixerDrawer onClose={closeDrawer} />}
       {openDrawer === 'brainDump' && <BrainDumpDrawer onClose={closeDrawer} />}
-      {mediaSeen.partner && <StudyPartnerDrawer open={openDrawer === 'partner'} onClose={closeDrawer} />}
-      {mediaSeen.spotify && <SpotifyDrawer open={openDrawer === 'spotify'} onClose={closeDrawer} />}
 
       {/* Flashcards overlay */}
       {showCards && <Flashcards onClose={() => setShowCards(false)} />}

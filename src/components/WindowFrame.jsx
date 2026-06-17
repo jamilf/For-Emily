@@ -18,7 +18,7 @@ export default function WindowFrame({
   return (
     <section
       aria-label={title}
-      className={`group overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window transition-transform duration-300 hover:-translate-y-1 ${className}`}
+      className={`group flex flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window transition-transform duration-300 hover:-translate-y-1 ${className}`}
     >
       {/* Title bar — warm wood tone */}
       <div
@@ -40,12 +40,12 @@ export default function WindowFrame({
       </div>
 
       {/* Window body — textured paper with a soft inner top highlight */}
-      <div className={`paper-grain relative p-5 text-brownDark sm:p-6 ${bodyClass}`}>
+      <div className={`paper-grain relative flex flex-1 flex-col p-5 text-brownDark sm:p-6 ${bodyClass}`}>
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-white/40 to-transparent"
         />
-        <div className="relative">{children}</div>
+        <div className="relative flex-1">{children}</div>
       </div>
     </section>
   )
