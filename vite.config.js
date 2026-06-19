@@ -3,10 +3,12 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
-// On `build` we set the base path to the GitHub Pages repo subpath so assets
-// resolve at https://jamilf.github.io/For-Emily/. Local dev stays at root.
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/For-Emily/' : '/',
+// Base path is target-aware so one build serves correctly everywhere:
+//   - Cloudflare Workers / local dev: root (`/`) — the default.
+//   - GitHub Pages: the repo subpath, via DEPLOY_BASE=/For-Emily/ set in the
+//     Pages workflow, so assets resolve at https://jamilf.github.io/For-Emily/.
+export default defineConfig(() => ({
+  base: process.env.DEPLOY_BASE || '/',
   plugins: [
     react(),
     VitePWA({
