@@ -51,6 +51,11 @@ const ENTRIES = [
     how: 'Tap the little sprite for a short letter — encouragement or a verse, chosen to fit the moment (a hard session, a finished one, the start of your day). Tap the heart to keep a letter and reread it later.',
     why: 'A brief, kind, well-timed nudge can reset your mood enough to keep going when a session feels heavy. Saved letters are there for the days you need to hear it again.',
   },
+  {
+    title: 'Sync',
+    how: 'The cloud button signs you in with your email and a 6-digit code (no password). Sign in with the same email on your phone and laptop to share progress.',
+    why: 'Your work is always saved on the device you use it on. Signing in adds a private cloud backup so your flashcards, garden, stats, and kept letters follow you between devices — and survive clearing your browser.',
+  },
 ]
 
 export default function GuideModal({ onClose }) {
