@@ -16,9 +16,9 @@ function trackConsoleErrors(page) {
   return errors
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.clear())
-})
+// Each test runs in a fresh browser context, so localStorage already starts
+// empty — no manual clearing needed (clearing on every navigation would also
+// wipe data we persist mid-test, e.g. before a reload).
 
 test('a finished focus session brings a letter from the sprite', async ({ page }) => {
   const errors = trackConsoleErrors(page)
@@ -30,7 +30,16 @@ test('a finished focus session brings a letter from the sprite', async ({ page }
   await page.clock.fastForward(25 * 60 * 1000 + 2000)
 
   await expect(page.getByText('Session done.')).toBeVisible()
-  await page.getByRole('button', { name: /open a letter from the sprite/i }).click()
+  // A reflection check-in overlay opens on completion — dismiss it (Esc) before
+  // reaching for the sprite.
+  const reflection = page.getByRole('dialog', { name: /session reflection/i })
+  await reflection.waitFor()
+  await page.keyboard.press('Escape')
+  await expect(reflection).toBeHidden()
+
+  // The sprite bobs and the fixed Dock overlaps its strip; force the click to
+  // dispatch straight to the button (handler lives on it).
+  await page.getByRole('button', { name: /open a letter from the sprite/i }).click({ force: true })
   await expect(page.getByRole('dialog', { name: /a letter for you/i })).toBeVisible()
 
   expect(errors).toEqual([])

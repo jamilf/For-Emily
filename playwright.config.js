@@ -15,6 +15,9 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry',
+    // Calm all CSS animations so decorative motion (soot-sprite bob, etc.) can't
+    // make elements "unstable" for the actionability checks.
+    reducedMotion: 'reduce',
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
