@@ -140,10 +140,7 @@ export default function AudioMixerProvider({ children }) {
     g.linearRampToValueAtTime(Math.max(0.0001, target), ctx.currentTime + seconds)
   }, [])
 
-  const restoreMaster = useCallback(
-    (seconds) => rampMaster(userMasterRef.current, seconds),
-    [rampMaster],
-  )
+  const restoreMaster = useCallback((seconds) => rampMaster(userMasterRef.current, seconds), [rampMaster])
 
   // Suspend audio while the tab is hidden; resume if it was playing.
   useEffect(() => {
@@ -157,10 +154,13 @@ export default function AudioMixerProvider({ children }) {
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [mixer.enabled])
 
-  // Tear down on unmount.
+  // Tear down on unmount. Snapshot the refs inside the effect so the cleanup
+  // closes over stable values (per react-hooks/exhaustive-deps).
   useEffect(() => {
+    const disposers = disposersRef
+    const ctx = ctxRef
     return () => {
-      disposersRef.current.forEach((d) => {
+      disposers.current.forEach((d) => {
         try {
           d()
         } catch {
@@ -168,7 +168,7 @@ export default function AudioMixerProvider({ children }) {
         }
       })
       try {
-        ctxRef.current?.close()
+        ctx.current?.close()
       } catch {
         /* ignore */
       }

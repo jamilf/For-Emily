@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
+import useFocusTrap from '../hooks/useFocusTrap.js'
 
 /**
  * A short field guide to the app: what each piece does, how to use it, and the
@@ -60,31 +61,25 @@ const ENTRIES = [
 
 export default function GuideModal({ onClose }) {
   const closeRef = useRef(null)
-
-  useEffect(() => {
-    closeRef.current?.focus()
-    function handleKey(e) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
-  }, [onClose])
+  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
   return (
-    <div
-      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4"
-      onMouseDown={onClose}
-      onTouchEnd={onClose}
-    >
-      <div className="absolute inset-0 bg-bgDim/75 sm:backdrop-blur-sm" />
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
+      />
 
       <div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label="How to use this app"
+        tabIndex={-1}
         className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-        onMouseDown={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
       >
         <div
           className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
@@ -105,8 +100,8 @@ export default function GuideModal({ onClose }) {
 
         <div className="paper-grain space-y-5 overflow-y-auto bg-cream p-6 text-brownDark">
           <p className="text-sm text-brown/80">
-            A quick tour of what each part is for, and why it tends to help. Use what works, skip
-            what doesn&apos;t.
+            A quick tour of what each part is for, and why it tends to help. Use what works, skip what
+            doesn&apos;t.
           </p>
           {ENTRIES.map((e) => (
             <div key={e.title}>

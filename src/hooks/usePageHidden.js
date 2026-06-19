@@ -6,9 +6,7 @@ import { useEffect, useState } from 'react'
  * background, mirroring the weather engine's own visibility pause.
  */
 export default function usePageHidden() {
-  const [hidden, setHidden] = useState(() =>
-    typeof document === 'undefined' ? false : document.hidden,
-  )
+  const [hidden, setHidden] = useState(() => (typeof document === 'undefined' ? false : document.hidden))
   useEffect(() => {
     const onChange = () => setHidden(document.hidden)
     document.addEventListener('visibilitychange', onChange)

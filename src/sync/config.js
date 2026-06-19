@@ -5,8 +5,7 @@
 // Row Level Security (user_id = auth.uid()), so a user can only ever read or
 // write their own data. Values can be overridden at build time via env vars
 // (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY) if you'd rather not commit them.
-export const SUPABASE_URL =
-  import.meta.env.VITE_SUPABASE_URL || 'https://tbaiekqecfqdgeppxmst.supabase.co'
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://tbaiekqecfqdgeppxmst.supabase.co'
 
 export const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_Fsaae7yQeknS_49JapsHDg_vU8H0oCd'

@@ -53,8 +53,8 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   const [intention, setIntention] = useState('') // "the one thing" (session-scoped)
   const [stats, setStats] = usePersistedState('emily.stats', EMPTY_STATS)
   const [spr] = usePersistedState('emily.spr', { seen: [], lastOpenDay: '' })
-  const [reflections, setReflections] = usePersistedState('emily.reflections', [])
-  const [garden, setGarden] = usePersistedState('emily.garden', [])
+  const [, setReflections] = usePersistedState('emily.reflections', [])
+  const [, setGarden] = usePersistedState('emily.garden', [])
   const [showReflection, setShowReflection] = useState(false)
   const [reflectionNote, setReflectionNote] = useState('')
   const [breakTip, setBreakTip] = useState(null)
@@ -150,7 +150,9 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
     setShowReflection(false)
     setPlantDna(null)
     setWithered(false)
-    setBreakTip(next === 'break' ? BREAK_ACTIVITIES[Math.floor(Math.random() * BREAK_ACTIVITIES.length)] : null)
+    setBreakTip(
+      next === 'break' ? BREAK_ACTIVITIES[Math.floor(Math.random() * BREAK_ACTIVITIES.length)] : null,
+    )
     // Starting a break? Arm a playful/cozy/rest letter for the next tap.
     if (next === 'break') pendingContext.current = 'break'
   }
@@ -160,7 +162,8 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
     setReflectionNote('')
     setShowReflection(false)
     // Refine the armed letter context to match how the session felt.
-    if (mood === 'rain') pendingContext.current = 'rough' // comfort / identity / hope
+    if (mood === 'rain')
+      pendingContext.current = 'rough' // comfort / identity / hope
     else if (mood === 'sun') pendingContext.current = 'breeze' // joy / celebration
     // 'cloud' keeps whatever the completion already armed (celebration / rest).
   }
@@ -248,7 +251,9 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
             onClick={() => switchMode('break')}
             aria-pressed={mode === 'break'}
             className={`rounded-full px-5 py-1.5 transition-all duration-200 ${
-              mode === 'break' ? 'scale-[1.04] bg-ever-green text-bg0 shadow-sm' : 'text-brown hover:bg-brown/10'
+              mode === 'break'
+                ? 'scale-[1.04] bg-ever-green text-bg0 shadow-sm'
+                : 'text-brown hover:bg-brown/10'
             }`}
           >
             Rest · 5
@@ -258,7 +263,10 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
         {/* Session intention — "the one thing" */}
         {showIntentionInput ? (
           <div className="w-full max-w-xs">
-            <label htmlFor="intention-input" className="mb-1.5 block text-center font-display text-sm text-brown">
+            <label
+              htmlFor="intention-input"
+              className="mb-1.5 block text-center font-display text-sm text-brown"
+            >
               What&apos;s the one thing?
             </label>
             <input
@@ -284,24 +292,48 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
           <svg className="h-full w-full -rotate-90" viewBox="0 0 300 300" aria-hidden="true">
             <circle cx="150" cy="150" r={RADIUS} fill="none" stroke="rgba(143,94,54,0.12)" strokeWidth="16" />
             <circle
-              cx="150" cy="150" r={RADIUS} fill="none"
-              stroke={glowColour} strokeWidth="22" strokeLinecap="round"
-              strokeDasharray={CIRCUMFERENCE} strokeDashoffset={dashOffset}
+              cx="150"
+              cy="150"
+              r={RADIUS}
+              fill="none"
+              stroke={glowColour}
+              strokeWidth="22"
+              strokeLinecap="round"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={dashOffset}
               opacity={running ? 0.25 : 0.1}
               style={{ filter: 'blur(6px)', transition: 'stroke-dashoffset 1s linear, opacity 0.6s ease' }}
             />
             <circle
-              cx="150" cy="150" r={RADIUS} fill="none"
-              stroke={strokeColour} strokeWidth="16" strokeLinecap="round"
-              strokeDasharray={CIRCUMFERENCE} strokeDashoffset={dashOffset}
+              cx="150"
+              cy="150"
+              r={RADIUS}
+              fill="none"
+              stroke={strokeColour}
+              strokeWidth="16"
+              strokeLinecap="round"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={dashOffset}
               className={running ? 'animate-ring-glow' : ''}
               style={{ transition: 'stroke-dashoffset 1s linear' }}
             />
             {remainingFraction > 0.002 && remainingFraction < 0.999 && (
               <>
-                <circle cx={tip.cx} cy={tip.cy} r="12" fill={glowColour} opacity={running ? 0.55 : 0.3}
-                  style={{ filter: 'blur(4px)', transition: 'opacity 0.4s' }} />
-                <circle cx={tip.cx} cy={tip.cy} r={running ? 6 : 4} fill={strokeColour} style={{ transition: 'r 0.4s' }} />
+                <circle
+                  cx={tip.cx}
+                  cy={tip.cy}
+                  r="12"
+                  fill={glowColour}
+                  opacity={running ? 0.55 : 0.3}
+                  style={{ filter: 'blur(4px)', transition: 'opacity 0.4s' }}
+                />
+                <circle
+                  cx={tip.cx}
+                  cy={tip.cy}
+                  r={running ? 6 : 4}
+                  fill={strokeColour}
+                  style={{ transition: 'r 0.4s' }}
+                />
               </>
             )}
           </svg>
@@ -312,10 +344,16 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
             </span>
             <span className="mt-1.5 text-sm text-brown" aria-live="polite">
               {secondsLeft === 0
-                ? mode === 'focus' ? 'Session done.' : "Break's over."
+                ? mode === 'focus'
+                  ? 'Session done.'
+                  : "Break's over."
                 : running
-                  ? mode === 'focus' ? 'In focus.' : 'Resting.'
-                  : mode === 'focus' ? 'Ready when you are.' : 'Time for a break.'}
+                  ? mode === 'focus'
+                    ? 'In focus.'
+                    : 'Resting.'
+                  : mode === 'focus'
+                    ? 'Ready when you are.'
+                    : 'Time for a break.'}
             </span>
           </div>
         </div>
@@ -324,7 +362,10 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
         <div className="flex gap-3 font-display">
           <div className="relative">
             {showInvitePulse && (
-              <span aria-hidden="true" className="animate-invite-pulse pointer-events-none absolute inset-0 rounded-2xl bg-brown/45" />
+              <span
+                aria-hidden="true"
+                className="animate-invite-pulse pointer-events-none absolute inset-0 rounded-2xl bg-brown/45"
+              />
             )}
             <button
               onClick={handleStartPause}
@@ -368,7 +409,10 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
 
         {/* Break micro-activity */}
         {mode === 'break' && breakTip && (
-          <div className="w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown" aria-live="polite">
+          <div
+            className="w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown"
+            aria-live="polite"
+          >
             <span className="font-display text-brown/70">Try this:</span>
             <br />
             {breakTip}
@@ -387,12 +431,17 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
             >
               <PixelSprite grid={napping ? SOOT_NAP : SOOT_AWAKE} palette={PAL} pixel={5} />
               {hasMail && (
-                <span className="absolute -right-3 -top-3 text-3xl" aria-hidden="true">✉️</span>
+                <span className="absolute -right-3 -top-3 text-3xl" aria-hidden="true">
+                  ✉️
+                </span>
               )}
             </button>
 
             {/* Squish shadow */}
-            <div aria-hidden="true" className="animate-shadow-squish mt-1 h-2 w-12 rounded-full bg-black/25 blur-sm" />
+            <div
+              aria-hidden="true"
+              className="animate-shadow-squish mt-1 h-2 w-12 rounded-full bg-black/25 blur-sm"
+            />
           </div>
 
           <p className="text-center text-xs text-brown/70">

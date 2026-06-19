@@ -3,14 +3,22 @@
  * drawers and Zen Mode. Everything stays behind these buttons by default so the
  * core dashboard reads as uncluttered (progressive disclosure for ADHD).
  */
-export default function Dock({ openDrawer, onToggle, zen, onToggleZen, mixerEnabled, onOpenFlashcards, flashcardsDue = 0 }) {
+export default function Dock({
+  openDrawer,
+  onToggle,
+  zen,
+  onToggleZen,
+  mixerEnabled,
+  onOpenFlashcards,
+  flashcardsDue = 0,
+}) {
   const items = [{ id: 'mixer', icon: '🎚️', label: 'Ambient mixer' }]
 
   const base =
     'relative flex h-11 w-11 items-center justify-center rounded-full border-2 text-lg transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow'
 
   return (
-    <nav
+    <div
       aria-label="Tools"
       role="toolbar"
       className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border-2 border-brownDark/30 bg-cream/85 px-2.5 py-2 shadow-window sm:backdrop-blur-sm"
@@ -67,6 +75,6 @@ export default function Dock({ openDrawer, onToggle, zen, onToggleZen, mixerEnab
       >
         <span aria-hidden="true">🌙</span>
       </button>
-    </nav>
+    </div>
   )
 }

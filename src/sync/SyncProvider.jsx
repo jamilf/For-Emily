@@ -101,19 +101,25 @@ export default function SyncProvider({ children }) {
     }
   }, [userId, doSync])
 
-  const sendCode = useCallback(async (addr) => {
-    const client = await ensureClient()
-    if (!client) throw new Error('Sync is unavailable.')
-    const { error } = await client.auth.signInWithOtp({ email: addr, options: { shouldCreateUser: true } })
-    if (error) throw error
-  }, [ensureClient])
+  const sendCode = useCallback(
+    async (addr) => {
+      const client = await ensureClient()
+      if (!client) throw new Error('Sync is unavailable.')
+      const { error } = await client.auth.signInWithOtp({ email: addr, options: { shouldCreateUser: true } })
+      if (error) throw error
+    },
+    [ensureClient],
+  )
 
-  const verifyCode = useCallback(async (addr, token) => {
-    const client = await ensureClient()
-    if (!client) throw new Error('Sync is unavailable.')
-    const { error } = await client.auth.verifyOtp({ email: addr, token: token.trim(), type: 'email' })
-    if (error) throw error
-  }, [ensureClient])
+  const verifyCode = useCallback(
+    async (addr, token) => {
+      const client = await ensureClient()
+      if (!client) throw new Error('Sync is unavailable.')
+      const { error } = await client.auth.verifyOtp({ email: addr, token: token.trim(), type: 'email' })
+      if (error) throw error
+    },
+    [ensureClient],
+  )
 
   const signOut = useCallback(async () => {
     await clientRef.current?.auth?.signOut()

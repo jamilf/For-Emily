@@ -10,8 +10,7 @@
 // license-required copyright notice — left inert here since no key is configured.
 export const TRANSLATION = 'web'
 
-export const ATTRIBUTION =
-  TRANSLATION === 'web' ? 'World English Bible (public domain)' : ''
+export const ATTRIBUTION = TRANSLATION === 'web' ? 'World English Bible (public domain)' : ''
 
 // bible-api.com returns WEB by default and accepts a ?translation= param.
 function urlFor(ref) {

@@ -38,7 +38,7 @@ class Rain {
       if (i < target) {
         if (!d.active) this._spawn(d, s.w, s.h)
         d.y += fallSpeed * (0.7 + d.len / 22)
-        if (d.y > s.h) this._spawn(d, s.w, s.h), (d.y = -d.len)
+        if (d.y > s.h) (this._spawn(d, s.w, s.h), (d.y = -d.len))
         live++
       } else {
         d.active = false
@@ -74,7 +74,7 @@ class Thunder {
   update(_dt, s, now) {
     if (!this.flashEl) return
     if (s.thunder <= 0) {
-      if (this.peak !== 0) (this.peak = 0), (this.flashEl.style.opacity = '0')
+      if (this.peak !== 0) ((this.peak = 0), (this.flashEl.style.opacity = '0'))
       this.next = 0
       return
     }

@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
+import useFocusTrap from '../hooks/useFocusTrap.js'
 
 const MOODS = [
   { mood: 'rain', icon: '🌧️', label: 'Tough' },
@@ -20,31 +21,25 @@ export default function ReflectionModal({
   onClose,
 }) {
   const firstRef = useRef(null)
-
-  useEffect(() => {
-    firstRef.current?.focus()
-    function handleKey(e) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
-  }, [onClose])
+  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: firstRef })
 
   return (
-    <div
-      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4"
-      onMouseDown={onClose}
-      onTouchEnd={onClose}
-    >
-      <div className="absolute inset-0 bg-bgDim/75 sm:backdrop-blur-sm" />
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
+      />
 
       <div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label="Session reflection"
+        tabIndex={-1}
         className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-        onMouseDown={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
       >
         <div
           className="flex items-center gap-2 border-b-2 border-brownDark/50 px-3 py-2"

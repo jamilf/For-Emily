@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import usePersistedState from '../hooks/useLocalStorage.js'
-import useEscapeKey from '../hooks/useEscapeKey.js'
+import useFocusTrap from '../hooks/useFocusTrap.js'
 import {
   SEED_CARDS,
   RATINGS,
@@ -56,11 +56,7 @@ export default function Flashcards({ onClose }) {
 
   const closeRef = useRef(null)
   const frontRef = useRef(null)
-
-  useEscapeKey(onClose)
-  useEffect(() => {
-    closeRef.current?.focus()
-  }, [])
+  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
   const decks = useMemo(() => decksOf(cards), [cards])
   const dueTotal = useMemo(() => countDue(cards), [cards])
@@ -68,10 +64,7 @@ export default function Flashcards({ onClose }) {
   const retention = retentionPct(stats)
 
   // Preview the queue for the current options (also reused when starting).
-  const preview = useMemo(
-    () => sessionQueue(cards, { cap, shuffle, deck }),
-    [cards, cap, shuffle, deck],
-  )
+  const preview = useMemo(() => sessionQueue(cards, { cap, shuffle, deck }), [cards, cap, shuffle, deck])
   const current = queue[idx]
 
   function pickEncouragement(context) {
@@ -148,7 +141,9 @@ export default function Flashcards({ onClose }) {
       className="flex items-center justify-between gap-2 border-b-2 border-brownDark/40 px-3 py-2"
       style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
     >
-      <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">{label}</span>
+      <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
+        {label}
+      </span>
       <button
         ref={closeRef}
         onClick={onClose}
@@ -160,22 +155,28 @@ export default function Flashcards({ onClose }) {
     </div>
   )
 
-  const chip = 'rounded-xl border-2 px-3 py-2 text-left text-sm transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow'
-  const inputCls = 'w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2 text-sm focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow'
+  const chip =
+    'rounded-xl border-2 px-3 py-2 text-left text-sm transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow'
+  const inputCls =
+    'w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2 text-sm focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow'
 
   return (
-    <div
-      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4"
-      onMouseDown={onClose}
-    >
-      <div className="absolute inset-0 bg-bgDim/80 sm:backdrop-blur-sm" />
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-bgDim/80 sm:backdrop-blur-sm"
+      />
 
       <div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label="Flashcards"
+        tabIndex={-1}
         className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* ── Home / deck picker ─────────────────────────────────────────── */}
         {view === 'home' && (
@@ -185,12 +186,20 @@ export default function Flashcards({ onClose }) {
               {cards.length === 0 ? (
                 <div className="py-6 text-center">
                   <p className="font-display text-xl text-brown">No cards yet.</p>
-                  <p className="mt-2 text-sm text-brown/70">Make your first card or paste a batch to begin.</p>
+                  <p className="mt-2 text-sm text-brown/70">
+                    Make your first card or paste a batch to begin.
+                  </p>
                   <div className="mt-5 flex justify-center gap-2">
-                    <button onClick={() => setView('add')} className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95">
+                    <button
+                      onClick={() => setView('add')}
+                      className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
+                    >
                       ＋ New card
                     </button>
-                    <button onClick={() => setView('bulk')} className="rounded-2xl bg-brown/10 px-5 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95">
+                    <button
+                      onClick={() => setView('bulk')}
+                      className="rounded-2xl bg-brown/10 px-5 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+                    >
                       ⬆ Import
                     </button>
                   </div>
@@ -198,11 +207,13 @@ export default function Flashcards({ onClose }) {
               ) : (
                 <>
                   <p className="font-display text-xl text-brown">
-                    {dueTotal > 0 ? `${dueTotal} card${dueTotal === 1 ? '' : 's'} due today` : 'Nothing due right now'}
+                    {dueTotal > 0
+                      ? `${dueTotal} card${dueTotal === 1 ? '' : 's'} due today`
+                      : 'Nothing due right now'}
                   </p>
                   <p className="mt-1 text-xs text-brown/60">
-                    Recalling from memory — not rereading — is what builds lasting memory. Spacing reviews over days
-                    moves it into long-term storage.
+                    Recalling from memory — not rereading — is what builds lasting memory. Spacing reviews
+                    over days moves it into long-term storage.
                   </p>
 
                   {/* Deck picker */}
@@ -213,7 +224,9 @@ export default function Flashcards({ onClose }) {
                       className={`${chip} ${deck === null ? 'border-sunset-magenta bg-sunset-pink/30' : 'border-brown/15 bg-white/60'}`}
                     >
                       <span className="font-display">All decks</span>
-                      <span className="mt-0.5 block text-xs text-brown/60">{dueTotal} due · {cards.length} total</span>
+                      <span className="mt-0.5 block text-xs text-brown/60">
+                        {dueTotal} due · {cards.length} total
+                      </span>
                     </button>
                     {decks.map((d) => (
                       <button
@@ -223,7 +236,9 @@ export default function Flashcards({ onClose }) {
                         className={`${chip} ${deck === d.deck ? 'border-sunset-magenta bg-sunset-pink/30' : 'border-brown/15 bg-white/60'}`}
                       >
                         <span className="font-display">{d.deck}</span>
-                        <span className="mt-0.5 block text-xs text-brown/60">{d.due} due · {d.total} total</span>
+                        <span className="mt-0.5 block text-xs text-brown/60">
+                          {d.due} due · {d.total} total
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -233,13 +248,30 @@ export default function Flashcards({ onClose }) {
                     <div className="flex items-center gap-2">
                       <span>Session size</span>
                       <div className="flex items-center gap-1.5">
-                        <button onClick={() => setCap((c) => Math.max(4, c - 4))} aria-label="Fewer cards" className="h-7 w-7 rounded-lg bg-brown/10 font-display hover:bg-brown/20 active:scale-95">−</button>
+                        <button
+                          onClick={() => setCap((c) => Math.max(4, c - 4))}
+                          aria-label="Fewer cards"
+                          className="h-7 w-7 rounded-lg bg-brown/10 font-display hover:bg-brown/20 active:scale-95"
+                        >
+                          −
+                        </button>
                         <span className="w-6 text-center font-display tabular-nums">{cap}</span>
-                        <button onClick={() => setCap((c) => Math.min(40, c + 4))} aria-label="More cards" className="h-7 w-7 rounded-lg bg-brown/10 font-display hover:bg-brown/20 active:scale-95">＋</button>
+                        <button
+                          onClick={() => setCap((c) => Math.min(40, c + 4))}
+                          aria-label="More cards"
+                          className="h-7 w-7 rounded-lg bg-brown/10 font-display hover:bg-brown/20 active:scale-95"
+                        >
+                          ＋
+                        </button>
                       </div>
                     </div>
                     <label className="flex cursor-pointer items-center gap-2">
-                      <input type="checkbox" checked={shuffle} onChange={(e) => setShuffle(e.target.checked)} className="h-4 w-4 accent-sunset-magenta" />
+                      <input
+                        type="checkbox"
+                        checked={shuffle}
+                        onChange={(e) => setShuffle(e.target.checked)}
+                        className="h-4 w-4 accent-sunset-magenta"
+                      />
                       Shuffle
                     </label>
                   </div>
@@ -249,13 +281,21 @@ export default function Flashcards({ onClose }) {
                     disabled={preview.length === 0}
                     className="mt-5 w-full rounded-2xl bg-brown px-5 py-3 font-display text-cream transition-colors hover:bg-brownDark active:scale-95 disabled:opacity-40"
                   >
-                    {preview.length > 0 ? `Review ${preview.length} card${preview.length === 1 ? '' : 's'}` : 'Nothing to review'}
+                    {preview.length > 0
+                      ? `Review ${preview.length} card${preview.length === 1 ? '' : 's'}`
+                      : 'Nothing to review'}
                   </button>
 
                   <div className="mt-4 flex justify-center gap-4 font-display text-xs text-brown/70">
-                    <button onClick={() => setView('add')} className="underline-offset-2 hover:underline">＋ New card</button>
-                    <button onClick={() => setView('bulk')} className="underline-offset-2 hover:underline">⬆ Import</button>
-                    <button onClick={() => setView('stats')} className="underline-offset-2 hover:underline">📊 Progress</button>
+                    <button onClick={() => setView('add')} className="underline-offset-2 hover:underline">
+                      ＋ New card
+                    </button>
+                    <button onClick={() => setView('bulk')} className="underline-offset-2 hover:underline">
+                      ⬆ Import
+                    </button>
+                    <button onClick={() => setView('stats')} className="underline-offset-2 hover:underline">
+                      📊 Progress
+                    </button>
                   </div>
                 </>
               )}
@@ -271,7 +311,9 @@ export default function Flashcards({ onClose }) {
               {/* Progress */}
               <div className="mb-1 flex items-center justify-between text-xs text-brown/60">
                 <span>{current.deck}</span>
-                <span>Reviewing {idx + 1} of {queue.length}</span>
+                <span>
+                  Reviewing {idx + 1} of {queue.length}
+                </span>
               </div>
               <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-brown/10">
                 <div
@@ -281,7 +323,10 @@ export default function Flashcards({ onClose }) {
               </div>
 
               {nudge && (
-                <p className="mb-3 rounded-xl bg-ever-green/15 px-3 py-2 text-center text-sm text-brown" aria-live="polite">
+                <p
+                  className="mb-3 rounded-xl bg-ever-green/15 px-3 py-2 text-center text-sm text-brown"
+                  aria-live="polite"
+                >
                   {nudge}
                 </p>
               )}
@@ -298,7 +343,9 @@ export default function Flashcards({ onClose }) {
                     <div className="flip-face flex min-h-[11rem] w-full items-center justify-center rounded-2xl border-2 border-brown/20 bg-white/70 p-6 text-center text-lg leading-relaxed">
                       <span>
                         {current.front}
-                        <span className="mt-3 block font-display text-xs text-brown/45">try to answer from memory first…</span>
+                        <span className="mt-3 block font-display text-xs text-brown/45">
+                          try to answer from memory first…
+                        </span>
                       </span>
                     </div>
                     <div className="flip-back flex min-h-[11rem] w-full items-center justify-center rounded-2xl border-2 border-brown/20 bg-latte p-6 text-center text-lg leading-relaxed">
@@ -329,8 +376,12 @@ export default function Flashcards({ onClose }) {
                         onClick={() => grade(r)}
                         className={`flex min-h-[3.25rem] flex-col items-center justify-center rounded-2xl px-2 py-2 text-sm transition-all active:scale-95 ${RATING_STYLES[r]}`}
                       >
-                        <span>{i + 1}. {RATING_LABELS[r]}</span>
-                        <span className="text-[0.65rem] font-normal opacity-70">{nextIntervalLabel(current, r)}</span>
+                        <span>
+                          {i + 1}. {RATING_LABELS[r]}
+                        </span>
+                        <span className="text-[0.65rem] font-normal opacity-70">
+                          {nextIntervalLabel(current, r)}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -338,7 +389,10 @@ export default function Flashcards({ onClose }) {
               )}
 
               <div className="mt-5 text-center">
-                <button onClick={() => setView('home')} className="font-display text-xs text-brown/60 underline-offset-2 hover:underline">
+                <button
+                  onClick={() => setView('home')}
+                  className="font-display text-xs text-brown/60 underline-offset-2 hover:underline"
+                >
                   End session
                 </button>
               </div>
@@ -359,10 +413,16 @@ export default function Flashcards({ onClose }) {
                 {retention != null && <span>🧠 {retention}% recalled</span>}
               </div>
               <div className="mt-6 flex justify-center gap-2">
-                <button onClick={() => setView('home')} className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95">
+                <button
+                  onClick={() => setView('home')}
+                  className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
+                >
                   Back to decks
                 </button>
-                <button onClick={onClose} className="rounded-2xl bg-brown/10 px-5 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95">
+                <button
+                  onClick={onClose}
+                  className="rounded-2xl bg-brown/10 px-5 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+                >
                   Done
                 </button>
               </div>
@@ -375,7 +435,12 @@ export default function Flashcards({ onClose }) {
           <>
             {titleBar('🃏 New card')}
             <form onSubmit={addCard} className="space-y-3 overflow-y-auto bg-cream p-6 text-brownDark">
-              <input value={newDeck} onChange={(e) => setNewDeck(e.target.value)} placeholder="Deck (e.g. Neuroscience)" className={inputCls} />
+              <input
+                value={newDeck}
+                onChange={(e) => setNewDeck(e.target.value)}
+                placeholder="Deck (e.g. Neuroscience)"
+                className={inputCls}
+              />
               <input
                 ref={frontRef}
                 value={front}
@@ -391,14 +456,23 @@ export default function Flashcards({ onClose }) {
                 className={inputCls}
               />
               <div className="flex gap-2">
-                <button type="submit" className="flex-1 rounded-2xl bg-brown px-4 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95">
+                <button
+                  type="submit"
+                  className="flex-1 rounded-2xl bg-brown px-4 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
+                >
                   Save & add another
                 </button>
-                <button type="button" onClick={() => setView('home')} className="rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95">
+                <button
+                  type="button"
+                  onClick={() => setView('home')}
+                  className="rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+                >
                   Done
                 </button>
               </div>
-              <p className="text-center text-xs text-brown/50">Tip: Front → Tab → Back → Enter to fly through them.</p>
+              <p className="text-center text-xs text-brown/50">
+                Tip: Front → Tab → Back → Enter to fly through them.
+              </p>
             </form>
           </>
         )}
@@ -408,7 +482,12 @@ export default function Flashcards({ onClose }) {
           <>
             {titleBar('🃏 Import cards')}
             <form onSubmit={importBulk} className="space-y-3 overflow-y-auto bg-cream p-6 text-brownDark">
-              <input value={bulkDeck} onChange={(e) => setBulkDeck(e.target.value)} placeholder="Deck for these cards" className={inputCls} />
+              <input
+                value={bulkDeck}
+                onChange={(e) => setBulkDeck(e.target.value)}
+                placeholder="Deck for these cards"
+                className={inputCls}
+              />
               <textarea
                 value={bulk}
                 onChange={(e) => setBulk(e.target.value)}
@@ -418,10 +497,17 @@ export default function Flashcards({ onClose }) {
                 className={`${inputCls} resize-none font-mono text-xs leading-relaxed`}
               />
               <div className="flex gap-2">
-                <button type="submit" className="flex-1 rounded-2xl bg-brown px-4 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95">
+                <button
+                  type="submit"
+                  className="flex-1 rounded-2xl bg-brown px-4 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
+                >
                   Add cards
                 </button>
-                <button type="button" onClick={() => setView('home')} className="rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95">
+                <button
+                  type="button"
+                  onClick={() => setView('home')}
+                  className="rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+                >
                   Cancel
                 </button>
               </div>
@@ -438,12 +524,19 @@ export default function Flashcards({ onClose }) {
                 <Stat icon="🍃" value={stats.reviewedToday || 0} label="reviewed today" />
                 <Stat icon="🔥" value={stats.streak || 0} label="day streak" />
                 <Stat icon="🌳" value={mastered} label="cards mastered" />
-                <Stat icon="🧠" value={retention != null ? `${retention}%` : '—'} label="recalled (retention)" />
+                <Stat
+                  icon="🧠"
+                  value={retention != null ? `${retention}%` : '—'}
+                  label="recalled (retention)"
+                />
               </div>
               <p className="mt-4 text-center text-xs text-brown/55">
                 Missed a day? No worries — the streak just starts again, gently. Showing up is the whole win.
               </p>
-              <button onClick={() => setView('home')} className="mt-5 w-full rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95">
+              <button
+                onClick={() => setView('home')}
+                className="mt-5 w-full rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+              >
                 Back
               </button>
             </div>

@@ -50,7 +50,15 @@ export default function FocusMeter({ className = '' }) {
       <div className="flex flex-col items-center gap-5">
         <div className="relative h-32 w-32 shrink-0 sm:h-36 sm:w-36">
           <svg viewBox="0 0 132 132" className="h-full w-full" aria-hidden="true">
-            <circle cx="66" cy="66" r={R} fill="none" stroke="#8F5E36" strokeOpacity="0.12" strokeWidth="12" />
+            <circle
+              cx="66"
+              cy="66"
+              r={R}
+              fill="none"
+              stroke="#8F5E36"
+              strokeOpacity="0.12"
+              strokeWidth="12"
+            />
             <circle
               cx="66"
               cy="66"

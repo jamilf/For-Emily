@@ -159,12 +159,7 @@ const HILLS = [
 ]
 
 // --- Blocky pixel cloud -------------------------------------------------------
-const CLOUD_CELLS = [
-  '  XXXX  ',
-  ' XXXXXX ',
-  'XXXXXXXX',
-  ' XXXXXX ',
-]
+const CLOUD_CELLS = ['  XXXX  ', ' XXXXXX ', 'XXXXXXXX', ' XXXXXX ']
 
 // --- Ambient particle props (computed once at module load) --------------------
 const STARS = Array.from({ length: 40 }).map((_, i) => ({

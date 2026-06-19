@@ -5,7 +5,14 @@ import { useSync } from '../sync/SyncProvider.jsx'
  * flashcards, guide, and sync controls when their handlers are provided.
  * Ambient sound lives in the dock's mixer, so there's no separate toggle here.
  */
-export default function Toolbar({ focusMode, onToggleFocus, onOpenFlashcards, onOpenGuide, onOpenSync, dueCount = 0 }) {
+export default function Toolbar({
+  focusMode,
+  onToggleFocus,
+  onOpenFlashcards,
+  onOpenGuide,
+  onOpenSync,
+  dueCount = 0,
+}) {
   const sync = useSync()
   const chip =
     'flex items-center gap-2 rounded-full border-2 border-brownDark/30 bg-cream/85 px-4 py-2 font-display text-sm text-brown shadow-sm sm:backdrop-blur-sm transition-all hover:bg-cream active:scale-95'
@@ -26,7 +33,12 @@ export default function Toolbar({ focusMode, onToggleFocus, onOpenFlashcards, on
 
       {/* Flashcards */}
       {onOpenFlashcards && (
-        <button type="button" onClick={onOpenFlashcards} className={`relative ${chip}`} aria-label="Open flashcards">
+        <button
+          type="button"
+          onClick={onOpenFlashcards}
+          className={`relative ${chip}`}
+          aria-label="Open flashcards"
+        >
           🃏 <span className="hidden sm:inline">Flashcards</span>
           {dueCount > 0 && (
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-ever-green px-1.5 text-xs text-bg0">

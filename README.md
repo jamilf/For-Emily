@@ -1,7 +1,7 @@
 # Emily's Study Sanctuary 🌿
 
 A cozy, calm study companion built for focus — designed ADHD-first: low friction
-to start, and progress you can *see* and feel.
+to start, and progress you can _see_ and feel.
 
 A single-page app (Vite + React + Tailwind) with three widgets:
 

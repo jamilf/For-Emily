@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import usePersistedState from '../hooks/useLocalStorage.js'
-import useEscapeKey from '../hooks/useEscapeKey.js'
-import {
-  pickByContext,
-  verseOfDay,
-  randomSignoff,
-  ALL_REFS,
-} from '../data/encouragements.js'
+import useFocusTrap from '../hooks/useFocusTrap.js'
+import { pickByContext, verseOfDay, randomSignoff, ALL_REFS } from '../data/encouragements.js'
 import { fetchVerses, ATTRIBUTION } from '../data/scripture.js'
 
 function today() {
@@ -32,12 +27,7 @@ export default function LetterModal({ context = 'idle', onClose }) {
   const [showKept, setShowKept] = useState(false)
   const [signoff] = useState(() => randomSignoff())
   const closeRef = useRef(null)
-
-  useEscapeKey(onClose)
-
-  useEffect(() => {
-    closeRef.current?.focus()
-  }, [])
+  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
   // Compose the letter once on mount, then warm the verse cache in the
   // background so future letters can include scripture too.
@@ -65,11 +55,18 @@ export default function LetterModal({ context = 'idle', onClose }) {
       let nextSeen = spr.seen
       if (context === 'daily') {
         const vod = verseOfDay(v, day)
-        if (vod && vod.text) chosen = { id: vod.id, type: 'scripture', ref: vod.ref, text: vod.text, tone: 'scripture' }
+        if (vod && vod.text)
+          chosen = { id: vod.id, type: 'scripture', ref: vod.ref, text: vod.text, tone: 'scripture' }
       }
       if (!chosen) {
         const r = pickByContext(context, { seen: spr.seen, verses: v })
-        chosen = { id: r.item.id, type: r.item.type, ref: r.item.ref || null, text: r.text, tone: r.item.tone }
+        chosen = {
+          id: r.item.id,
+          type: r.item.type,
+          ref: r.item.ref || null,
+          text: r.text,
+          tone: r.item.tone,
+        }
         nextSeen = r.nextSeen
       }
 
@@ -104,27 +101,35 @@ export default function LetterModal({ context = 'idle', onClose }) {
   }
 
   function openKept(k) {
-    setMsg({ id: k.id, type: k.type, ref: k.ref || null, text: k.text, tone: k.type === 'scripture' ? 'scripture' : 'original' })
+    setMsg({
+      id: k.id,
+      type: k.type,
+      ref: k.ref || null,
+      text: k.text,
+      tone: k.type === 'scripture' ? 'scripture' : 'original',
+    })
     setShowKept(false)
   }
 
   const isScripture = msg?.type === 'scripture'
 
   return (
-    <div
-      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4"
-      onMouseDown={onClose}
-      onTouchEnd={onClose}
-    >
-      <div className="absolute inset-0 bg-bgDim/75 sm:backdrop-blur-sm" />
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
+      />
 
       <div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label="A letter for you"
+        tabIndex={-1}
         className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-        onMouseDown={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
       >
         {/* Window title bar — warm wood tone */}
         <div
@@ -169,7 +174,9 @@ export default function LetterModal({ context = 'idle', onClose }) {
                         className="w-full rounded-xl border-2 border-brown/15 bg-white/60 px-3 py-2.5 text-left text-sm leading-relaxed transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-ever-yellow"
                       >
                         <span className={isScriptureText(k) ? 'italic' : ''}>{k.text}</span>
-                        {k.ref && <span className="mt-1 block font-display text-xs text-brown/50">— {k.ref}</span>}
+                        {k.ref && (
+                          <span className="mt-1 block font-display text-xs text-brown/50">— {k.ref}</span>
+                        )}
                       </button>
                     </li>
                   ))}

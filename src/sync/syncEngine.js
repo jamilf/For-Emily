@@ -108,11 +108,7 @@ function applyRemote(applied, values, meta) {
 
 /** Pull the remote row, merge into local, and apply anything remote-newer. */
 export async function pull(client, userId) {
-  const { data, error } = await client
-    .from('progress')
-    .select('data')
-    .eq('user_id', userId)
-    .maybeSingle()
+  const { data, error } = await client.from('progress').select('data').eq('user_id', userId).maybeSingle()
   if (error) throw error
   const remote = data?.data || { values: {}, meta: {} }
   const local = snapshotLocal()

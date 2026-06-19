@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import useEscapeKey from '../hooks/useEscapeKey.js'
+import { useRef, useState } from 'react'
+import useFocusTrap from '../hooks/useFocusTrap.js'
 import { useSync } from '../sync/SyncProvider.jsx'
 
 function timeAgo(ts) {
@@ -26,14 +26,12 @@ export default function SyncModal({ onClose }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const closeRef = useRef(null)
+  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
-  useEscapeKey(onClose)
-  useEffect(() => {
-    closeRef.current?.focus()
-  }, [])
-
-  const input = 'w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2.5 text-sm focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow'
-  const primary = 'w-full rounded-2xl bg-brown px-4 py-3 font-display text-cream transition-colors hover:bg-brownDark active:scale-95 disabled:opacity-50'
+  const input =
+    'w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2.5 text-sm focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow'
+  const primary =
+    'w-full rounded-2xl bg-brown px-4 py-3 font-display text-cream transition-colors hover:bg-brownDark active:scale-95 disabled:opacity-50'
 
   async function handleSend(e) {
     e.preventDefault()
@@ -66,35 +64,40 @@ export default function SyncModal({ onClose }) {
     }
   }
 
-  const statusLine = {
-    syncing: 'Syncing…',
-    synced: sync?.lastSyncedAt ? `Synced ${timeAgo(sync.lastSyncedAt)}` : 'Synced',
-    offline: 'Offline — saved on this device, will sync when you reconnect.',
-    error: 'Could not reach the cloud just now. Your progress is safe on this device.',
-    signedOut: '',
-  }[sync?.status] || ''
+  const statusLine =
+    {
+      syncing: 'Syncing…',
+      synced: sync?.lastSyncedAt ? `Synced ${timeAgo(sync.lastSyncedAt)}` : 'Synced',
+      offline: 'Offline — saved on this device, will sync when you reconnect.',
+      error: 'Could not reach the cloud just now. Your progress is safe on this device.',
+      signedOut: '',
+    }[sync?.status] || ''
 
   return (
-    <div
-      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4"
-      onMouseDown={onClose}
-      onTouchEnd={onClose}
-    >
-      <div className="absolute inset-0 bg-bgDim/75 sm:backdrop-blur-sm" />
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
+      />
 
       <div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label="Sync your progress"
+        tabIndex={-1}
         className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-        onMouseDown={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
       >
         <div
           className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
           style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
         >
-          <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">☁ Sync your progress</span>
+          <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
+            ☁ Sync your progress
+          </span>
           <button
             ref={closeRef}
             onClick={onClose}
@@ -107,21 +110,32 @@ export default function SyncModal({ onClose }) {
 
         <div className="paper-grain overflow-y-auto bg-cream p-6 text-brownDark">
           {!sync?.available ? (
-            <p className="text-sm text-brown/80">Sync isn’t configured in this build, but your progress is still saved on this device.</p>
+            <p className="text-sm text-brown/80">
+              Sync isn’t configured in this build, but your progress is still saved on this device.
+            </p>
           ) : sync.signedIn ? (
             // ── Signed in ────────────────────────────────────────────────
             <div className="space-y-4 text-center">
               <p className="font-display text-lg text-brown">You’re synced ☁️</p>
               <p className="text-sm text-brown/80">
-                Signed in as <span className="font-display">{sync.email}</span>. Your progress now follows you to any
-                device you sign in on with this email.
+                Signed in as <span className="font-display">{sync.email}</span>. Your progress now follows you
+                to any device you sign in on with this email.
               </p>
-              <p className="text-xs text-brown/60" aria-live="polite">{statusLine}</p>
+              <p className="text-xs text-brown/60" aria-live="polite">
+                {statusLine}
+              </p>
               <div className="flex justify-center gap-2 pt-1">
-                <button onClick={sync.syncNow} disabled={sync.status === 'syncing'} className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95 disabled:opacity-50">
+                <button
+                  onClick={sync.syncNow}
+                  disabled={sync.status === 'syncing'}
+                  className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95 disabled:opacity-50"
+                >
                   Sync now
                 </button>
-                <button onClick={sync.signOut} className="rounded-2xl bg-brown/10 px-5 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95">
+                <button
+                  onClick={sync.signOut}
+                  className="rounded-2xl bg-brown/10 px-5 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+                >
                   Sign out
                 </button>
               </div>
@@ -130,8 +144,8 @@ export default function SyncModal({ onClose }) {
             // ── Email step ───────────────────────────────────────────────
             <form onSubmit={handleSend} className="space-y-3">
               <p className="text-sm text-brown/80">
-                Sign in with your email to keep your flashcards, garden, stats, and letters in sync across your phone
-                and laptop. We’ll email you a 6-digit code — no password.
+                Sign in with your email to keep your flashcards, garden, stats, and letters in sync across
+                your phone and laptop. We’ll email you a 6-digit code — no password.
               </p>
               <input
                 type="email"
@@ -142,11 +156,17 @@ export default function SyncModal({ onClose }) {
                 autoComplete="email"
                 className={input}
               />
-              {error && <p className="text-sm text-ever-red" aria-live="assertive">{error}</p>}
+              {error && (
+                <p className="text-sm text-ever-red" aria-live="assertive">
+                  {error}
+                </p>
+              )}
               <button type="submit" disabled={busy} className={primary}>
                 {busy ? 'Sending…' : 'Email me a code'}
               </button>
-              <p className="text-center text-xs text-brown/50">Your data is private to your account and never shared.</p>
+              <p className="text-center text-xs text-brown/50">
+                Your data is private to your account and never shared.
+              </p>
             </form>
           ) : (
             // ── Code step ────────────────────────────────────────────────
@@ -163,7 +183,11 @@ export default function SyncModal({ onClose }) {
                 autoFocus
                 className={`${input} text-center font-display text-lg tracking-[0.3em]`}
               />
-              {error && <p className="text-sm text-ever-red" aria-live="assertive">{error}</p>}
+              {error && (
+                <p className="text-sm text-ever-red" aria-live="assertive">
+                  {error}
+                </p>
+              )}
               <button type="submit" disabled={busy} className={primary}>
                 {busy ? 'Verifying…' : 'Verify & sync'}
               </button>

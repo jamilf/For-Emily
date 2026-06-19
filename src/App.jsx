@@ -112,7 +112,9 @@ function Dashboard() {
             <PomodoroTimer onFocusActive={setFocusActive} className="w-full" />
           </div>
 
-          <aside className={`grid grid-cols-1 gap-6 min-[640px]:grid-cols-2 lg:flex lg:flex-col ${railRecede}`}>
+          <aside
+            className={`grid grid-cols-1 gap-6 min-[640px]:grid-cols-2 lg:flex lg:flex-col ${railRecede}`}
+          >
             <div className="focus-dim animate-slide-up flex" style={{ animationDelay: '150ms' }}>
               <FocusMeter className="w-full" />
             </div>

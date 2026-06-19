@@ -79,7 +79,8 @@ function paintCanopy(grid, { shape, pattern, palIdx }, rng, top, h) {
     for (let x = 0; x < W; x++) {
       if (!inCanopy(shape, x, y, top, h)) continue
       let ch = 'C'
-      if (pattern === 1) ch = (x + y) % 2 === 0 ? 'C' : 'c' // dappled
+      if (pattern === 1)
+        ch = (x + y) % 2 === 0 ? 'C' : 'c' // dappled
       else if (y > top + h * 0.6) ch = 'c' // base shading on solid/speckled
       if (pattern === 2 && rng() < 0.16) ch = 'd' // speckle highlights
       if (fol.blossom && rng() < 0.07) ch = 'o' // occasional blossom

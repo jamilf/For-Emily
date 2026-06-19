@@ -24,9 +24,7 @@ export default function WindowFrame({
       <div
         className={`flex items-center gap-2 border-b-2 border-brownDark/50 px-3 py-2 ${barClass}`}
         style={
-          barClass
-            ? undefined
-            : { background: 'linear-gradient(to bottom, #9B3D73, #7C3F76 55%, #5C3A6E)' }
+          barClass ? undefined : { background: 'linear-gradient(to bottom, #9B3D73, #7C3F76 55%, #5C3A6E)' }
         }
       >
         <span className="flex gap-1.5" aria-hidden="true">

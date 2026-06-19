@@ -58,11 +58,17 @@ export default function AmbientMixerDrawer({ onClose }) {
       </div>
 
       <p className="mt-2 text-xs text-brown/60" aria-live="polite">
-        {enabled ? 'Playing' : "Tap Start. Nothing plays on its own."}
+        {enabled ? 'Playing' : 'Tap Start. Nothing plays on its own.'}
       </p>
 
       <div className="mt-3 border-t border-brown/15 pt-3">
-        <VolumeSlider id="__master" label="Master" icon="🔊" value={master} onChange={(_, v) => setMaster(v)} />
+        <VolumeSlider
+          id="__master"
+          label="Master"
+          icon="🔊"
+          value={master}
+          onChange={(_, v) => setMaster(v)}
+        />
       </div>
 
       <div className="mt-2 border-t border-brown/15 pt-2">
