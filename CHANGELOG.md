@@ -45,3 +45,17 @@ file, grouped by the phase that introduced it.
 - `src/storage/StorageManager.js` — registered `emily.flashSession` default (device-local).
 - Tests added: scheduler (16), CSV parse, Flashcards integration (rate→reschedule→resume,
   undo, dedupe import) — 92 total, ~95% coverage on core modules.
+
+## Phase 4 — E2E, Lighthouse & CI
+
+- `playwright.config.js` — new: desktop + mobile (Pixel 5) projects; builds and serves the
+  SPA via `vite preview`.
+- `e2e/sanctuary.spec.js` — new: (1) focus session fast-forwarded with Playwright's clock API
+  → sprite letter; (2) flashcard import → review → reload persistence; (3) backup export →
+  clear → re-import restore; (4) mobile smoke. Each asserts no console errors.
+- `lighthouserc.json` — new: Performance / Accessibility / Best-Practices ≥ 0.90 against `dist/`.
+- `.github/workflows/ci.yml` — new: `check` (lint + format:check + coverage + build), `e2e`
+  (Playwright Chromium), and `lighthouse` jobs on push/PR.
+
+_Note: Playwright + Lighthouse run in CI; the dev sandbox has no browser binaries (download
+CDN network-blocked). All jsdom gates, lint, format, coverage, and build are verified green locally._
