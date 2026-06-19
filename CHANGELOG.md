@@ -59,3 +59,14 @@ file, grouped by the phase that introduced it.
 
 _Note: Playwright + Lighthouse run in CI; the dev sandbox has no browser binaries (download
 CDN network-blocked). All jsdom gates, lint, format, coverage, and build are verified green locally._
+
+## Phase 5 — flashcard deck management, search, swipe & forecast
+
+- `src/components/Flashcards.jsx` — new **Manage** view: search/filter cards (front/back/deck,
+  capped at 100 rows so 1000+ cards never jank), **move a card to another deck**, **delete a card**,
+  and **rename / delete a deck**. Added **swipe gestures** on the flip card (swipe to reveal; when
+  flipped, right = Good, left = Again) with a mobile hint. The Progress view now shows a calm
+  **7-day upcoming-reviews forecast** (`forecast()` from scheduler.js).
+- Tests: search filter, move-deck, delete-card, and forecast render added to `Flashcards.test.jsx`.
+- Deck **reorder** is intentionally omitted — decks auto-sort by due-count then name, which keeps
+  the most relevant deck on top without manual fiddling.

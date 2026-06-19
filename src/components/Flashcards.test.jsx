@@ -81,3 +81,53 @@ describe('Flashcards — review, reschedule, undo, resume', () => {
     expect(cards.filter((c) => c.front === 'axon')).toHaveLength(1)
   })
 })
+
+describe('Flashcards — manage view (search, move, delete) + forecast', () => {
+  const MIXED = [
+    { id: 1, deck: 'Neuro', front: 'hippocampus', back: 'memory', box: 1, due: PAST, reps: 1 },
+    { id: 2, deck: 'Neuro', front: 'amygdala', back: 'fear', box: 1, due: PAST, reps: 1 },
+    { id: 3, deck: 'Philosophy', front: 'qualia', back: 'felt experience', box: 1, due: PAST, reps: 1 },
+  ]
+
+  function openManage() {
+    fireEvent.click(screen.getByRole('button', { name: /🗂 manage/i }))
+  }
+
+  it('filters cards by a search query', () => {
+    seed(MIXED)
+    render(<Flashcards onClose={() => {}} />)
+    openManage()
+    expect(screen.getByText('hippocampus')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/search cards/i), { target: { value: 'qualia' } })
+    expect(screen.getByText('qualia')).toBeInTheDocument()
+    expect(screen.queryByText('hippocampus')).not.toBeInTheDocument()
+  })
+
+  it('moves a card to another deck via the select', () => {
+    seed(MIXED)
+    render(<Flashcards onClose={() => {}} />)
+    openManage()
+    fireEvent.change(screen.getByLabelText(/search cards/i), { target: { value: 'qualia' } })
+    // The qualia card's move-select; change it to Neuro.
+    fireEvent.change(screen.getByLabelText(/move card to deck/i), { target: { value: 'Neuro' } })
+    const moved = JSON.parse(localStorage.getItem('emily.flashcards')).find((c) => c.id === 3)
+    expect(moved.deck).toBe('Neuro')
+  })
+
+  it('deletes a card from the manage list', () => {
+    seed(MIXED)
+    render(<Flashcards onClose={() => {}} />)
+    openManage()
+    fireEvent.change(screen.getByLabelText(/search cards/i), { target: { value: 'amygdala' } })
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }))
+    expect(JSON.parse(localStorage.getItem('emily.flashcards')).some((c) => c.id === 2)).toBe(false)
+  })
+
+  it('shows a 7-day upcoming forecast in the progress view', () => {
+    seed(MIXED)
+    render(<Flashcards onClose={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /📊 progress/i }))
+    expect(screen.getByText(/next 7 days/i)).toBeInTheDocument()
+    expect(screen.getByText('Today')).toBeInTheDocument()
+  })
+})

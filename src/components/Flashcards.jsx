@@ -14,7 +14,7 @@ import {
   recordReview,
   parseBulk,
 } from '../data/flashcards.js'
-import { buildQueue, dueToday, isLeech, dedupeCards } from '../data/scheduler.js'
+import { buildQueue, dueToday, isLeech, dedupeCards, forecast } from '../data/scheduler.js'
 import { pickByContext } from '../data/encouragements.js'
 
 // Gentle ADHD guard: at most this many brand-new cards enter one session.
@@ -62,6 +62,8 @@ export default function Flashcards({ onClose }) {
   const [editing, setEditing] = useState(false)
   const [editFront, setEditFront] = useState('')
   const [editBack, setEditBack] = useState('')
+  const [search, setSearch] = useState('') // manage view filter
+  const touchStart = useRef(null) // swipe tracking on the flip card
 
   const closeRef = useRef(null)
   const frontRef = useRef(null)
@@ -77,6 +79,21 @@ export default function Flashcards({ onClose }) {
     () => buildQueue(cards, { cap, shuffle, deck, newPerDay: NEW_PER_SESSION }),
     [cards, cap, shuffle, deck],
   )
+  // Manage view: cards matching the search box (front/back/deck), capped so a
+  // 1000+ card deck never renders a giant list at once.
+  const MANAGE_LIMIT = 100
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return cards
+    return cards.filter(
+      (c) =>
+        c.front.toLowerCase().includes(q) ||
+        c.back.toLowerCase().includes(q) ||
+        (c.deck || '').toLowerCase().includes(q),
+    )
+  }, [cards, search])
+  // 7-day upcoming-reviews outlook for the stats screen.
+  const upcoming = useMemo(() => forecast(cards, 7), [cards])
   const current = queue[idx]
   // A card resume target exists if a saved session still maps to live cards.
   const resumable = useMemo(() => {
@@ -175,6 +192,44 @@ export default function Flashcards({ onClose }) {
       setFlipped(false)
       setSession((s) => (s ? { ...s, ids: nextQueue.map((c) => c.id) } : s))
     }
+  }
+
+  // ── Deck & card management (manage view) ──────────────────────────────────
+  function moveCard(id, toDeck) {
+    setCards((prev) => prev.map((c) => (c.id === id ? { ...c, deck: toDeck } : c)))
+  }
+  function deleteCardById(id) {
+    setCards((prev) => prev.filter((c) => c.id !== id))
+  }
+  function renameDeck(oldName, nextName) {
+    const name = nextName.trim()
+    if (!name || name === oldName) return
+    setCards((prev) => prev.map((c) => (c.deck === oldName ? { ...c, deck: name } : c)))
+    if (deck === oldName) setDeck(name)
+  }
+  function deleteDeck(name) {
+    setCards((prev) => prev.filter((c) => c.deck !== name))
+    if (deck === name) setDeck(null)
+  }
+
+  // ── Swipe gestures on the flip card (mobile) ──────────────────────────────
+  function onTouchStart(e) {
+    const t = e.changedTouches?.[0]
+    touchStart.current = t ? { x: t.clientX, y: t.clientY } : null
+  }
+  function onTouchEnd(e) {
+    const start = touchStart.current
+    touchStart.current = null
+    const t = e.changedTouches?.[0]
+    if (!start || !t) return
+    const dx = t.clientX - start.x
+    const dy = t.clientY - start.y
+    if (Math.abs(dx) < 50 || Math.abs(dx) <= Math.abs(dy)) return // not a horizontal swipe
+    if (!flipped) {
+      setFlipped(true) // a swipe before flipping just reveals the answer
+      return
+    }
+    grade(dx > 0 ? 'good' : 'again') // swipe right = Good, left = Again
   }
 
   // Keyboard: Space flips; 1–4 rate once the answer is showing; U undoes.
@@ -387,12 +442,21 @@ export default function Flashcards({ onClose }) {
                       : 'Nothing to review'}
                   </button>
 
-                  <div className="mt-4 flex justify-center gap-4 font-display text-xs text-brown/70">
+                  <div className="mt-4 flex flex-wrap justify-center gap-4 font-display text-xs text-brown/70">
                     <button onClick={() => setView('add')} className="underline-offset-2 hover:underline">
                       ＋ New card
                     </button>
                     <button onClick={() => setView('bulk')} className="underline-offset-2 hover:underline">
                       ⬆ Import
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSearch('')
+                        setView('manage')
+                      }}
+                      className="underline-offset-2 hover:underline"
+                    >
+                      🗂 Manage
                     </button>
                     <button onClick={() => setView('stats')} className="underline-offset-2 hover:underline">
                       📊 Progress
@@ -452,7 +516,7 @@ export default function Flashcards({ onClose }) {
               )}
 
               {/* The flip card */}
-              <div className="flip-card">
+              <div className="flip-card" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
                 <button
                   type="button"
                   onClick={() => setFlipped((f) => !f)}
@@ -478,6 +542,12 @@ export default function Flashcards({ onClose }) {
               <p className="sr-only" aria-live="polite">
                 {`Card ${idx + 1} of ${queue.length}. ${flipped ? `Answer: ${current.back}` : `Prompt: ${current.front}`}`}
               </p>
+
+              {flipped && (
+                <p className="mt-2 text-center text-[0.7rem] text-brown/40 sm:hidden" aria-hidden="true">
+                  Swipe → Good · ← Again
+                </p>
+              )}
 
               {!flipped ? (
                 <button
@@ -712,6 +782,108 @@ export default function Flashcards({ onClose }) {
           </>
         )}
 
+        {/* ── Manage: search, move, rename/delete decks ──────────────────── */}
+        {view === 'manage' && (
+          <>
+            {titleBar('🗂 Manage cards')}
+            <div className="space-y-4 overflow-y-auto bg-cream p-6 text-brownDark">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search cards or decks…"
+                aria-label="Search cards"
+                className={inputCls}
+              />
+
+              {/* Per-deck controls: rename / delete */}
+              {decks.length > 0 && (
+                <div className="space-y-2">
+                  <p className="font-display text-xs uppercase tracking-wide text-brown/50">Decks</p>
+                  {decks.map((d) => (
+                    <div key={d.deck} className="flex items-center gap-2 text-sm">
+                      <span className="flex-1 truncate">
+                        {d.deck} <span className="text-brown/50">({d.total})</span>
+                      </span>
+                      <button
+                        onClick={() => {
+                          const next = window.prompt(`Rename deck “${d.deck}” to:`, d.deck)
+                          if (next != null) renameDeck(d.deck, next)
+                        }}
+                        aria-label={`Rename deck ${d.deck}`}
+                        className="rounded-lg bg-brown/10 px-2 py-1 font-display text-xs text-brown hover:bg-brown/20 active:scale-95"
+                      >
+                        Rename
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Delete deck “${d.deck}” and its ${d.total} card(s)?`))
+                            deleteDeck(d.deck)
+                        }}
+                        aria-label={`Delete deck ${d.deck}`}
+                        className="rounded-lg bg-ever-red/15 px-2 py-1 font-display text-xs text-brown hover:bg-ever-red/25 active:scale-95"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Card list (filtered, capped) */}
+              <div className="space-y-2">
+                <p className="font-display text-xs uppercase tracking-wide text-brown/50">
+                  {filtered.length} card{filtered.length === 1 ? '' : 's'}
+                  {search.trim() ? ' matching' : ''}
+                </p>
+                {filtered.slice(0, MANAGE_LIMIT).map((c) => (
+                  <div key={c.id} className="rounded-xl border-2 border-brown/15 bg-white/60 p-2.5 text-sm">
+                    <div className="font-display text-brown">{c.front}</div>
+                    <div className="text-brown/70">{c.back}</div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <label className="sr-only" htmlFor={`move-${c.id}`}>
+                        Move card to deck
+                      </label>
+                      <select
+                        id={`move-${c.id}`}
+                        value={c.deck}
+                        onChange={(e) => moveCard(c.id, e.target.value)}
+                        className="rounded-lg border-2 border-brown/20 bg-white/70 px-2 py-1 text-xs"
+                      >
+                        {decks.map((d) => (
+                          <option key={d.deck} value={d.deck}>
+                            {d.deck}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => deleteCardById(c.id)}
+                        className="ml-auto rounded-lg bg-ever-red/15 px-2 py-1 font-display text-xs text-brown hover:bg-ever-red/25 active:scale-95"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {filtered.length > MANAGE_LIMIT && (
+                  <p className="text-center text-xs text-brown/50">
+                    +{filtered.length - MANAGE_LIMIT} more — refine your search to see them.
+                  </p>
+                )}
+                {filtered.length === 0 && (
+                  <p className="text-center text-sm text-brown/60">No cards match that search.</p>
+                )}
+              </div>
+
+              <button
+                onClick={() => setView('home')}
+                className="w-full rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+              >
+                Back
+              </button>
+            </div>
+          </>
+        )}
+
         {/* ── Progress / stats ───────────────────────────────────────────── */}
         {view === 'stats' && (
           <>
@@ -726,6 +898,27 @@ export default function Flashcards({ onClose }) {
                   value={retention != null ? `${retention}%` : '—'}
                   label="recalled (retention)"
                 />
+              </div>
+              {/* Calm 7-day outlook — what's coming, never a backlog of shame. */}
+              <div className="mt-5">
+                <p className="mb-2 font-display text-xs uppercase tracking-wide text-brown/50">Next 7 days</p>
+                <div className="flex items-end justify-between gap-1">
+                  {upcoming.map(({ offset, count }) => {
+                    const max = Math.max(1, ...upcoming.map((u) => u.count))
+                    const label = offset === 0 ? 'Today' : offset === 1 ? 'Tmrw' : `+${offset}d`
+                    return (
+                      <div key={offset} className="flex flex-1 flex-col items-center gap-1">
+                        <span className="text-[0.7rem] tabular-nums text-brown/60">{count}</span>
+                        <div
+                          className="w-full rounded-t bg-ever-green/50"
+                          style={{ height: `${8 + Math.round((count / max) * 40)}px` }}
+                          aria-hidden="true"
+                        />
+                        <span className="text-[0.6rem] text-brown/50">{label}</span>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
               <p className="mt-4 text-center text-xs text-brown/55">
                 Missed a day? No worries — the streak just starts again, gently. Showing up is the whole win.
