@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import useFocusTrap from '../hooks/useFocusTrap.js'
+import BackupControls from './BackupControls.jsx'
 
 /**
  * A short field guide to the app: what each piece does, how to use it, and the
@@ -110,6 +111,7 @@ export default function GuideModal({ onClose }) {
               <p className="mt-1 text-sm leading-relaxed text-brown/70">{e.why}</p>
             </div>
           ))}
+          <BackupControls />
         </div>
       </div>
     </div>

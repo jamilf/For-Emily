@@ -6,6 +6,8 @@
 //
 // All of this is decorative: the whole scene is aria-hidden + pointer-events-none.
 
+import { memo } from 'react'
+
 // --- Time-of-day palettes (all warmed to sunset; deep starry night) -----------
 // Greeting (Header) still splits at <12 / <18; the scene adds dusk + night.
 function timeOfDay(hour) {
@@ -258,7 +260,9 @@ function PixelCloud({ className = '', style, color }) {
   )
 }
 
-export default function SkyScene() {
+// Decorative and prop-less: it reads the hour once at render, so memo() keeps it
+// from re-rendering on every dashboard state change (e.g. the timer's tick).
+function SkyScene() {
   const hour = new Date().getHours()
   const t = SKIES[timeOfDay(hour)]
   const stepW = 200
@@ -546,3 +550,5 @@ export default function SkyScene() {
     </div>
   )
 }
+
+export default memo(SkyScene)

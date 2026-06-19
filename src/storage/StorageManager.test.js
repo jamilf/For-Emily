@@ -1,5 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { read, write, migrate, DEFAULTS, SCHEMA_VERSION } from './StorageManager.js'
+import {
+  read,
+  write,
+  migrate,
+  exportAll,
+  importAll,
+  validateBackup,
+  DEFAULTS,
+  SCHEMA_VERSION,
+} from './StorageManager.js'
 
 beforeEach(() => localStorage.clear())
 
@@ -64,5 +73,52 @@ describe('migrate', () => {
     migrate()
     expect(localStorage.getItem('emily.schemaVersion')).toBe(String(SCHEMA_VERSION))
     expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
+  })
+})
+
+describe('backup export/import (Sanctuary backup)', () => {
+  it('exports every emily.* key except auth + sync meta', () => {
+    localStorage.setItem('emily.brainDump', JSON.stringify('notes'))
+    localStorage.setItem('emily.garden', JSON.stringify([{ id: 1, ts: 5 }]))
+    localStorage.setItem('emily.auth', JSON.stringify({ token: 'secret' }))
+    localStorage.setItem('emily.sync.meta', JSON.stringify({ 'emily.garden': 5 }))
+    const backup = exportAll()
+    expect(backup.app).toBe('emilys-study-sanctuary')
+    expect(backup.schemaVersion).toBe(SCHEMA_VERSION)
+    expect(backup.data['emily.brainDump']).toBe('notes')
+    expect(backup.data['emily.garden']).toEqual([{ id: 1, ts: 5 }])
+    expect(backup.data).not.toHaveProperty('emily.auth')
+    expect(backup.data).not.toHaveProperty('emily.sync.meta')
+  })
+
+  it('round-trips: export → clear → import restores the data', () => {
+    localStorage.setItem('emily.flashcards', JSON.stringify([{ id: 1, front: 'q', back: 'a' }]))
+    localStorage.setItem('emily.brainDump', JSON.stringify('remember this'))
+    const backup = exportAll()
+
+    localStorage.clear()
+    expect(localStorage.getItem('emily.brainDump')).toBeNull()
+
+    const restored = importAll(backup)
+    expect(restored).toBe(2)
+    expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('remember this')
+    expect(JSON.parse(localStorage.getItem('emily.flashcards'))).toHaveLength(1)
+  })
+
+  it('rejects malformed backups before writing anything', () => {
+    expect(() => validateBackup(null)).toThrow()
+    expect(() => validateBackup({})).toThrow()
+    expect(() => validateBackup({ data: {} })).toThrow()
+    expect(() => importAll('not an object')).toThrow()
+  })
+
+  it('ignores non-emily and excluded keys on import', () => {
+    const restored = importAll({
+      data: { 'emily.brainDump': 'ok', evil: 'x', 'emily.auth': { token: 't' } },
+    })
+    expect(restored).toBe(1)
+    expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('ok')
+    expect(localStorage.getItem('evil')).toBeNull()
+    expect(localStorage.getItem('emily.auth')).toBeNull()
   })
 })

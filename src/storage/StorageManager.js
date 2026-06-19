@@ -5,8 +5,14 @@
 // It is intentionally tiny and dependency-free. All values live under the same
 // `emily.*` namespace so they sync through the existing usePersistedState hook.
 
+import { writeAndBroadcast } from '../hooks/useLocalStorage.js'
+
 const VERSION_KEY = 'emily.schemaVersion'
 export const SCHEMA_VERSION = 2
+const NS = 'emily.'
+// Keys excluded from a portable backup: the auth session token (device/secret)
+// and the internal sync bookkeeping (rebuilt automatically).
+const BACKUP_EXCLUDE = new Set([VERSION_KEY, 'emily.auth', 'emily.sync.meta'])
 
 /** Default values for every new Phase-8 key (single source of truth). */
 export const DEFAULTS = {
@@ -61,25 +67,101 @@ export function write(key, value) {
 }
 
 /**
- * Run once on app boot. Stamps the schema version and provides a seam for
- * future migrations. Today there is nothing to migrate (v1), but the structure
- * is here so later versions can transform old shapes safely.
+ * Run once on app boot. Applies any pending migrations in order, then stamps the
+ * current schema version. Idempotent and non-destructive — re-running it never
+ * changes data, and a failed/partial run leaves existing keys untouched.
  */
 export function migrate() {
   let current = 0
   try {
     current = Number(localStorage.getItem(VERSION_KEY)) || 0
   } catch {
-    /* ignore */
+    current = 0
   }
   if (current === SCHEMA_VERSION) return
 
-  // --- future migrations go here, e.g.:
-  // if (current < 2) { ...transform... }
-
+  // Ordered, additive migrations. Each step only transforms shapes; it never
+  // deletes a key it doesn't understand, so unknown/newer data survives.
   try {
+    // v0/v1 → v2: the Phase-9 keys are all defaults-backed via read(), so no
+    // data transform is required — we just advance the stamp. Future steps:
+    //   if (current < 3) { ...transform emily.* shapes... }
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
+  } catch {
+    /* ignore quota/availability errors — app still works on current data */
+  }
+}
+
+/** List every key currently stored under the `emily.*` namespace. */
+function emilyKeys() {
+  const keys = []
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith(NS)) keys.push(k)
+    }
   } catch {
     /* ignore */
   }
+  return keys
+}
+
+/**
+ * Serialize all of Emily's progress into a portable "Sanctuary backup" object.
+ * Excludes the auth token and internal sync bookkeeping. Values are stored
+ * pre-parsed so the file is human-readable JSON.
+ * @returns {{app:string, schemaVersion:number, exportedAt:string, data:Object}}
+ */
+export function exportAll() {
+  const data = {}
+  for (const key of emilyKeys()) {
+    if (BACKUP_EXCLUDE.has(key)) continue
+    try {
+      const raw = localStorage.getItem(key)
+      data[key] = raw == null ? null : JSON.parse(raw)
+    } catch {
+      /* skip unreadable/corrupt key rather than abort the whole backup */
+    }
+  }
+  return {
+    app: 'emilys-study-sanctuary',
+    schemaVersion: SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    data,
+  }
+}
+
+/**
+ * Validate a parsed backup object without mutating anything. Returns the keys
+ * that would be restored, or throws a friendly Error describing what's wrong.
+ * @param {unknown} payload
+ * @returns {string[]} restorable emily.* keys
+ */
+export function validateBackup(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('That file is not a Sanctuary backup.')
+  }
+  const data = payload.data
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error('This backup has no data to restore.')
+  }
+  const keys = Object.keys(data).filter((k) => k.startsWith(NS) && !BACKUP_EXCLUDE.has(k))
+  if (keys.length === 0) throw new Error('This backup contains no Sanctuary data.')
+  return keys
+}
+
+/**
+ * Restore a parsed backup into localStorage, broadcasting each write so any
+ * mounted screens update live. Validates first and only writes recognised
+ * `emily.*` keys; the auth token and sync meta are ignored. Never partially
+ * corrupts existing data — invalid input throws before any write.
+ * @param {unknown} payload  parsed JSON from a backup file
+ * @returns {number} number of keys restored
+ */
+export function importAll(payload) {
+  const keys = validateBackup(payload)
+  for (const key of keys) {
+    writeAndBroadcast(key, payload.data[key])
+  }
+  return keys.length
 }

@@ -7,6 +7,7 @@ import { SOOT_AWAKE, SOOT_NAP, PAL } from '../pixel/sprites.js'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
+import { endsAtFrom, remainingSeconds, formatClock } from '../utils/timer.js'
 
 // Post-session overlays — loaded on demand, not part of the initial bundle.
 // LetterModal carries the (large) encouragement library, so it stays out of the
@@ -29,12 +30,6 @@ function yesterdayStr() {
   const d = new Date()
   d.setDate(d.getDate() - 1)
   return dayStr(d)
-}
-
-function format(seconds) {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 function tipCoords(fraction) {
@@ -61,6 +56,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   const [plantDna, setPlantDna] = useState(null) // this session's growing tree
   const [withered, setWithered] = useState(false) // tab-away penalty state
   const penaltyTimer = useRef(null)
+  const endsAtRef = useRef(null) // wall-clock deadline while running (timestamp-based)
 
   const { rampMaster, restoreMaster } = useMixer()
 
@@ -68,10 +64,28 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
 
   useEscapeKey(() => setShowReflection(false), showReflection)
 
+  // Timestamp-based countdown: while running we hold a wall-clock deadline and
+  // recompute the remaining seconds from Date.now() — on each tick and whenever
+  // the tab becomes visible again — so a throttled/backgrounded tab can't drift.
   useEffect(() => {
-    if (!running) return
-    const id = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000)
-    return () => clearInterval(id)
+    if (!running) {
+      endsAtRef.current = null
+      return undefined
+    }
+    // Anchor the deadline to the seconds remaining when the run (re)started.
+    endsAtRef.current = endsAtFrom(secondsLeft)
+    const tick = () => setSecondsLeft(remainingSeconds(endsAtRef.current))
+    const id = setInterval(tick, 250)
+    const onVisible = () => {
+      if (!document.hidden) tick()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+    // secondsLeft is intentionally read only at (re)start to anchor the deadline.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running])
 
   useEffect(() => {
@@ -340,7 +354,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <span className="font-sans text-6xl font-bold tabular-nums tracking-tight sm:text-6xl md:text-7xl">
-              {format(secondsLeft)}
+              {formatClock(secondsLeft)}
             </span>
             <span className="mt-1.5 text-sm text-brown" aria-live="polite">
               {secondsLeft === 0

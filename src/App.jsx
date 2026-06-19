@@ -7,6 +7,7 @@ import FocusGarden from './components/FocusGarden.jsx'
 import Dock from './components/Dock.jsx'
 import WeatherCanvas from './components/WeatherCanvas.jsx'
 import SkyScene from './scene/SkyScene.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import AudioMixerProvider, { useMixer } from './audio/AudioMixerProvider.jsx'
 import SyncProvider from './sync/SyncProvider.jsx'
 import usePersistedState from './hooks/useLocalStorage.js'
@@ -165,10 +166,12 @@ export default function App() {
   }, [])
 
   return (
-    <SyncProvider>
-      <AudioMixerProvider>
-        <Dashboard />
-      </AudioMixerProvider>
-    </SyncProvider>
+    <ErrorBoundary>
+      <SyncProvider>
+        <AudioMixerProvider>
+          <Dashboard />
+        </AudioMixerProvider>
+      </SyncProvider>
+    </ErrorBoundary>
   )
 }
