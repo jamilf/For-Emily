@@ -165,6 +165,17 @@ describe('parseBulk', () => {
   it('skips lines with an empty side', () => {
     expect(parseBulk('term — \n — def', 'D')).toHaveLength(0)
   })
+  it('parses CSV (comma) and tab-separated lines, splitting on the first separator', () => {
+    const csv = parseBulk('mitochondria,the powerhouse, of the cell', 'Bio')
+    expect(csv).toHaveLength(1)
+    expect(csv[0]).toMatchObject({ front: 'mitochondria', back: 'the powerhouse, of the cell' })
+    const tab = parseBulk('axon\tcarries signals away', 'Bio')
+    expect(tab[0]).toMatchObject({ front: 'axon', back: 'carries signals away' })
+  })
+  it('prefers a dash over a later comma', () => {
+    const cards = parseBulk('a, b — c', 'D')
+    expect(cards[0]).toMatchObject({ front: 'a, b', back: 'c' })
+  })
 })
 
 describe('recordReview / retentionPct — kind stats', () => {

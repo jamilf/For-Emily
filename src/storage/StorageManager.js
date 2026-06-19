@@ -36,6 +36,7 @@ export const DEFAULTS = {
   // Phase-9: flashcard stats, sprite-letter state, kept letters, verse cache.
   'emily.flashcardStats': { day: '', reviewedToday: 0, streak: 0, lastReviewDay: null, correct: 0, total: 0 },
   'emily.spr': { seen: [], lastOpenDay: '' },
+  'emily.flashSession': null, // in-progress review (device-local; resumed on reopen)
   'emily.keepsakes': [], // [{ id, text, ref, type, signoff, ts }]
   'emily.verses': {}, // { [reference]: text } cached from the Bible API
 }

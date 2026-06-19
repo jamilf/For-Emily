@@ -163,7 +163,10 @@ export function masteredCount(cards) {
 
 /**
  * Parse a bulk paste into cards. One card per line as `term — definition`.
- * Also accepts an en dash, a spaced hyphen, or a colon as the separator.
+ * Accepts (in priority order) an em/en dash, a spaced hyphen, a bare em/en dash,
+ * a tab, a colon, or a comma (CSV) as the separator — whichever appears first.
+ * Split is on the FIRST separator occurrence, so the answer may itself contain
+ * commas/colons.
  */
 export function parseBulk(text, deck) {
   const out = []
@@ -172,7 +175,7 @@ export function parseBulk(text, deck) {
     if (!line) continue
     let sep = -1
     let sepLen = 1
-    for (const token of [' — ', ' – ', ' - ', '—', '–', ':']) {
+    for (const token of [' — ', ' – ', ' - ', '—', '–', '\t', ':', ',']) {
       const i = line.indexOf(token)
       if (i > 0) {
         sep = i

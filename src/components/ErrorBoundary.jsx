@@ -18,7 +18,6 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     // Surface in the console for debugging; no remote logging by design.
-    // eslint-disable-next-line no-console
     console.error('Sanctuary caught an error:', error, info)
   }
 

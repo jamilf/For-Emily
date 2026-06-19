@@ -8,15 +8,17 @@ import {
   makeStats,
   gradeCard,
   nextIntervalLabel,
-  sessionQueue,
   decksOf,
-  countDue,
   masteredCount,
   retentionPct,
   recordReview,
   parseBulk,
 } from '../data/flashcards.js'
+import { buildQueue, dueToday, isLeech, dedupeCards } from '../data/scheduler.js'
 import { pickByContext } from '../data/encouragements.js'
+
+// Gentle ADHD guard: at most this many brand-new cards enter one session.
+const NEW_PER_SESSION = 10
 
 const RATING_STYLES = {
   again: 'bg-ever-red/20 text-brown hover:bg-ever-red/30',
@@ -36,6 +38,8 @@ export default function Flashcards({ onClose }) {
   const [cards, setCards] = usePersistedState('emily.flashcards', SEED_CARDS)
   const [stats, setStats] = usePersistedState('emily.flashcardStats', makeStats())
   const [verses] = usePersistedState('emily.verses', {})
+  // In-progress review, persisted so closing + reopening resumes exactly.
+  const [session, setSession] = usePersistedState('emily.flashSession', null)
 
   const [view, setView] = useState('home') // home | study | done | add | bulk | stats
   const [deck, setDeck] = useState(null) // selected deck (null = All)
@@ -47,42 +51,75 @@ export default function Flashcards({ onClose }) {
   const [flipped, setFlipped] = useState(false)
   const [nudge, setNudge] = useState(null)
   const [doneMsg, setDoneMsg] = useState('')
+  const undoStack = useRef([]) // [{ cardBefore, statsBefore, idx }] for misclick recovery
 
   const [front, setFront] = useState('')
   const [back, setBack] = useState('')
   const [newDeck, setNewDeck] = useState('')
   const [bulk, setBulk] = useState('')
   const [bulkDeck, setBulkDeck] = useState('')
+  const [importMsg, setImportMsg] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [editFront, setEditFront] = useState('')
+  const [editBack, setEditBack] = useState('')
 
   const closeRef = useRef(null)
   const frontRef = useRef(null)
   const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
   const decks = useMemo(() => decksOf(cards), [cards])
-  const dueTotal = useMemo(() => countDue(cards), [cards])
+  const dueTotal = useMemo(() => dueToday(cards).length, [cards])
   const mastered = useMemo(() => masteredCount(cards), [cards])
   const retention = retentionPct(stats)
 
   // Preview the queue for the current options (also reused when starting).
-  const preview = useMemo(() => sessionQueue(cards, { cap, shuffle, deck }), [cards, cap, shuffle, deck])
+  const preview = useMemo(
+    () => buildQueue(cards, { cap, shuffle, deck, newPerDay: NEW_PER_SESSION }),
+    [cards, cap, shuffle, deck],
+  )
   const current = queue[idx]
+  // A card resume target exists if a saved session still maps to live cards.
+  const resumable = useMemo(() => {
+    if (!session?.ids?.length) return null
+    const byId = new Map(cards.map((c) => [c.id, c]))
+    const q = session.ids.map((id) => byId.get(id)).filter(Boolean)
+    return q.length > session.idx ? { q, idx: session.idx } : null
+  }, [session, cards])
 
   function pickEncouragement(context) {
     const r = pickByContext(context, { seen: [], verses })
     return r.text || 'Well done, Emily. That counted.'
   }
 
-  function startSession() {
-    if (preview.length === 0) return
-    setQueue(preview)
-    setIdx(0)
+  function beginQueue(q, startIdx = 0) {
+    setQueue(q)
+    setIdx(startIdx)
     setFlipped(false)
     setNudge(null)
+    undoStack.current = []
     setView('study')
+  }
+
+  function startSession() {
+    if (preview.length === 0) return
+    beginQueue(preview, 0)
+    setSession({ ids: preview.map((c) => c.id), idx: 0, deck })
+  }
+
+  function resumeSession() {
+    if (!resumable) return
+    beginQueue(resumable.q, resumable.idx)
+  }
+
+  function endSession() {
+    setSession(null)
+    setView('home')
   }
 
   function grade(rating) {
     if (!current) return
+    // Snapshot for undo (misclick recovery): the pre-grade card + stats + index.
+    undoStack.current.push({ cardBefore: current, statsBefore: stats, idx })
     const updated = gradeCard(current, rating)
     setCards((prev) => prev.map((c) => (c.id === current.id ? updated : c)))
     setStats((prev) => recordReview(prev, rating))
@@ -93,19 +130,65 @@ export default function Flashcards({ onClose }) {
       // A gentle soot-sprite nudge every few cards (celebration/strength lean).
       setNudge(nextIdx % 5 === 0 ? pickEncouragement('complete') : null)
       setIdx(nextIdx)
+      setSession((s) => (s ? { ...s, idx: nextIdx } : s))
     } else {
       setDoneMsg(pickEncouragement('complete'))
+      setSession(null) // session complete — nothing to resume
       setView('done')
     }
   }
 
-  // Keyboard: Space flips; 1–4 rate once the answer is showing.
+  // Undo the last rating: restore the card's prior schedule, the stats, and the
+  // position. Works mid-session and from the completion screen.
+  function undo() {
+    const snap = undoStack.current.pop()
+    if (!snap) return
+    setCards((prev) => prev.map((c) => (c.id === snap.cardBefore.id ? snap.cardBefore : c)))
+    setStats(snap.statsBefore)
+    setIdx(snap.idx)
+    setFlipped(true) // they were looking at the answer when they rated
+    setNudge(null)
+    setView('study')
+    setSession((s) => (s ? { ...s, idx: snap.idx } : s))
+  }
+
+  // Edit or delete the card currently under review (forgiving, mid-session).
+  function saveEditCurrent(nextFront, nextBack) {
+    if (!current || !nextFront.trim() || !nextBack.trim()) return
+    const edited = { ...current, front: nextFront.trim(), back: nextBack.trim() }
+    setCards((prev) => prev.map((c) => (c.id === current.id ? edited : c)))
+    setQueue((prev) => prev.map((c) => (c.id === current.id ? edited : c)))
+  }
+
+  function deleteCurrent() {
+    if (!current) return
+    const id = current.id
+    setCards((prev) => prev.filter((c) => c.id !== id))
+    const nextQueue = queue.filter((c) => c.id !== id)
+    if (idx >= nextQueue.length) {
+      setSession(null)
+      setDoneMsg(pickEncouragement('complete'))
+      setQueue(nextQueue)
+      setView(nextQueue.length === 0 ? 'home' : 'done')
+    } else {
+      setQueue(nextQueue)
+      setFlipped(false)
+      setSession((s) => (s ? { ...s, ids: nextQueue.map((c) => c.id) } : s))
+    }
+  }
+
+  // Keyboard: Space flips; 1–4 rate once the answer is showing; U undoes.
   useEffect(() => {
-    if (view !== 'study') return
+    if (view !== 'study' || editing) return
     function onKey(e) {
       if (e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault()
         setFlipped((f) => !f)
+        return
+      }
+      if (e.key === 'u' || e.key === 'U') {
+        e.preventDefault()
+        undo()
         return
       }
       if (flipped && ['1', '2', '3', '4'].includes(e.key)) {
@@ -116,7 +199,7 @@ export default function Flashcards({ onClose }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, flipped, idx, queue])
+  }, [view, flipped, idx, queue, editing])
 
   function addCard(e) {
     e.preventDefault()
@@ -130,10 +213,19 @@ export default function Flashcards({ onClose }) {
   function importBulk(e) {
     e.preventDefault()
     const parsed = parseBulk(bulk, bulkDeck)
-    if (parsed.length === 0) return
-    setCards((prev) => [...prev, ...parsed])
+    if (parsed.length === 0) {
+      setImportMsg('No cards found — use “term — definition”, one per line.')
+      return
+    }
+    // Validate + de-duplicate against existing cards and within the batch.
+    const { added, duplicates } = dedupeCards(cards, parsed)
+    if (added.length > 0) setCards((prev) => [...prev, ...added])
     setBulk('')
-    setView('home')
+    setImportMsg(
+      `Added ${added.length} card${added.length === 1 ? '' : 's'}` +
+        (duplicates ? `, skipped ${duplicates} duplicate${duplicates === 1 ? '' : 's'}.` : '.'),
+    )
+    if (added.length > 0) setView('home')
   }
 
   const titleBar = (label) => (
@@ -206,6 +298,15 @@ export default function Flashcards({ onClose }) {
                 </div>
               ) : (
                 <>
+                  {/* Resume an interrupted review exactly where she left off. */}
+                  {resumable && view === 'home' && (
+                    <button
+                      onClick={resumeSession}
+                      className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-ever-green/50 bg-ever-green/15 px-4 py-2.5 font-display text-sm text-brown transition-colors hover:bg-ever-green/25 active:scale-[0.99]"
+                    >
+                      ▶ Resume your review — card {resumable.idx + 1} of {resumable.q.length}
+                    </button>
+                  )}
                   <p className="font-display text-xl text-brown">
                     {dueTotal > 0
                       ? `${dueTotal} card${dueTotal === 1 ? '' : 's'} due today`
@@ -331,6 +432,25 @@ export default function Flashcards({ onClose }) {
                 </p>
               )}
 
+              {/* Gentle leech care — never punitive, just an offer to reword. */}
+              {isLeech(current) && !editing && (
+                <div className="mb-3 rounded-xl bg-ever-orange/15 px-3 py-2 text-center text-sm text-brown">
+                  This one keeps slipping away — that&apos;s normal. Want to{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditFront(current.front)
+                      setEditBack(current.back)
+                      setEditing(true)
+                    }}
+                    className="font-display underline underline-offset-2"
+                  >
+                    reword it
+                  </button>{' '}
+                  so it clicks?
+                </div>
+              )}
+
               {/* The flip card */}
               <div className="flip-card">
                 <button
@@ -388,11 +508,72 @@ export default function Flashcards({ onClose }) {
                 </div>
               )}
 
-              <div className="mt-5 text-center">
+              {/* Inline edit of the current card (also reached via leech reword). */}
+              {editing && (
+                <div className="mt-4 space-y-2 rounded-2xl border-2 border-brown/15 bg-white/60 p-3">
+                  <label className="block text-xs text-brown/60" htmlFor="edit-front">
+                    Front
+                  </label>
+                  <input
+                    id="edit-front"
+                    value={editFront}
+                    onChange={(e) => setEditFront(e.target.value)}
+                    className={inputCls}
+                  />
+                  <label className="block text-xs text-brown/60" htmlFor="edit-back">
+                    Back
+                  </label>
+                  <input
+                    id="edit-back"
+                    value={editBack}
+                    onChange={(e) => setEditBack(e.target.value)}
+                    className={inputCls}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        saveEditCurrent(editFront, editBack)
+                        setEditing(false)
+                      }}
+                      className="flex-1 rounded-xl bg-brown px-3 py-2 font-display text-sm text-cream hover:bg-brownDark active:scale-95"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="rounded-xl bg-brown/10 px-3 py-2 font-display text-sm text-brown hover:bg-brown/20 active:scale-95"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Forgiving controls: undo a misclick, edit/delete this card. */}
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 font-display text-xs text-brown/60">
                 <button
-                  onClick={() => setView('home')}
-                  className="font-display text-xs text-brown/60 underline-offset-2 hover:underline"
+                  onClick={undo}
+                  disabled={undoStack.current.length === 0}
+                  className="underline-offset-2 hover:underline disabled:opacity-40 disabled:no-underline"
                 >
+                  ↩ Undo last
+                </button>
+                {!editing && (
+                  <button
+                    onClick={() => {
+                      setEditFront(current.front)
+                      setEditBack(current.back)
+                      setEditing(true)
+                    }}
+                    className="underline-offset-2 hover:underline"
+                  >
+                    ✎ Edit
+                  </button>
+                )}
+                <button onClick={deleteCurrent} className="underline-offset-2 hover:underline">
+                  🗑 Delete
+                </button>
+                <button onClick={endSession} className="underline-offset-2 hover:underline">
                   End session
                 </button>
               </div>
@@ -426,6 +607,14 @@ export default function Flashcards({ onClose }) {
                   Done
                 </button>
               </div>
+              {undoStack.current.length > 0 && (
+                <button
+                  onClick={undo}
+                  className="mt-4 font-display text-xs text-brown/60 underline-offset-2 hover:underline"
+                >
+                  ↩ Undo last rating
+                </button>
+              )}
             </div>
           </>
         )}
@@ -511,6 +700,14 @@ export default function Flashcards({ onClose }) {
                   Cancel
                 </button>
               </div>
+              {importMsg && (
+                <p className="text-center text-xs text-brown/70" aria-live="polite">
+                  {importMsg}
+                </p>
+              )}
+              <p className="text-center text-xs text-brown/50">
+                Accepts dash, colon, tab, or comma (CSV). Duplicates are skipped automatically.
+              </p>
             </form>
           </>
         )}
