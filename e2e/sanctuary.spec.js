@@ -37,9 +37,10 @@ test('a finished focus session brings a letter from the sprite', async ({ page }
   await page.keyboard.press('Escape')
   await expect(reflection).toBeHidden()
 
-  // The sprite bobs and the fixed Dock overlaps its strip; force the click to
-  // dispatch straight to the button (handler lives on it).
-  await page.getByRole('button', { name: /open a letter from the sprite/i }).click({ force: true })
+  // The sprite bobs and the fixed Dock can overlap its strip; dispatch the click
+  // event straight to the button so it always reaches the handler regardless of
+  // overlay or scroll position (force-click coordinates can miss off-screen).
+  await page.getByRole('button', { name: /open a letter from the sprite/i }).dispatchEvent('click')
   await expect(page.getByRole('dialog', { name: /a letter for you/i })).toBeVisible()
 
   expect(errors).toEqual([])
@@ -49,12 +50,18 @@ test('flashcards: import, review, reload — schedule + progress persist', async
   const errors = trackConsoleErrors(page)
   await page.goto('/')
 
-  await page.getByRole('button', { name: /flashcards/i }).first().click()
+  await page
+    .getByRole('button', { name: /flashcards/i })
+    .first()
+    .click()
   const dialog = page.getByRole('dialog', { name: 'Flashcards' })
   await expect(dialog).toBeVisible()
 
   // Import a small deck.
-  await dialog.getByRole('button', { name: /import/i }).first().click()
+  await dialog
+    .getByRole('button', { name: /import/i })
+    .first()
+    .click()
   await dialog.getByPlaceholder(/deck for these cards/i).fill('E2E')
   await dialog.getByPlaceholder(/one card per line/i).fill('alpha — first\nbeta — second')
   await dialog.getByRole('button', { name: /add cards/i }).click()
@@ -76,7 +83,10 @@ test('backup: export, clear, re-import restores progress', async ({ page }) => {
   // Seed some data, then open the Guide which hosts the backup controls.
   await page.evaluate(() => localStorage.setItem('emily.brainDump', JSON.stringify('keep me safe')))
   await page.reload()
-  await page.getByRole('button', { name: /how to use this app|guide/i }).first().click()
+  await page
+    .getByRole('button', { name: /how to use this app|guide/i })
+    .first()
+    .click()
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
