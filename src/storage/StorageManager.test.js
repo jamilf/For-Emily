@@ -90,6 +90,46 @@ describe('migrate', () => {
     expect(grove.unlocked['first-sprout']).toBeTruthy()
     expect(grove.unlocked['quiet-pine']).toBeTruthy()
   })
+
+  it('backfills the Firefly Calendar from the garden on the v3→v4 upgrade', () => {
+    localStorage.setItem('emily.schemaVersion', '3')
+    // Two sessions on one local day, one on the next.
+    localStorage.setItem(
+      'emily.garden',
+      JSON.stringify([
+        { id: 0, ts: new Date(2026, 5, 18, 9, 0).getTime() },
+        { id: 1, ts: new Date(2026, 5, 18, 15, 0).getTime() },
+        { id: 2, ts: new Date(2026, 5, 19, 10, 0).getTime() },
+      ]),
+    )
+    migrate()
+    const log = JSON.parse(localStorage.getItem('emily.focusLog'))
+    expect(log['2026-06-18']).toEqual({ sessions: 2, minutes: null })
+    expect(log['2026-06-19']).toEqual({ sessions: 1, minutes: null })
+  })
+
+  it('re-running the v3→v4 backfill is a no-op and never overwrites a live day', () => {
+    localStorage.setItem('emily.schemaVersion', '3')
+    localStorage.setItem(
+      'emily.garden',
+      JSON.stringify([{ id: 0, ts: new Date(2026, 5, 18, 9, 0).getTime() }]),
+    )
+    // A live day already carries real minutes — backfill must not clobber it.
+    localStorage.setItem('emily.focusLog', JSON.stringify({ '2026-06-18': { sessions: 1, minutes: 25 } }))
+    migrate()
+    migrate()
+    const log = JSON.parse(localStorage.getItem('emily.focusLog'))
+    expect(log['2026-06-18']).toEqual({ sessions: 1, minutes: 25 }) // preserved
+  })
+
+  it('does not mutate unrelated keys during the v3→v4 upgrade', () => {
+    localStorage.setItem('emily.schemaVersion', '3')
+    localStorage.setItem('emily.brainDump', JSON.stringify('keep me'))
+    localStorage.setItem('emily.garden', JSON.stringify([{ id: 0, ts: 1 }]))
+    migrate()
+    expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
+    expect(JSON.parse(localStorage.getItem('emily.garden'))).toEqual([{ id: 0, ts: 1 }])
+  })
 })
 
 describe('backup export/import (Sanctuary backup)', () => {
@@ -119,6 +159,18 @@ describe('backup export/import (Sanctuary backup)', () => {
     expect(restored).toBe(2)
     expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('remember this')
     expect(JSON.parse(localStorage.getItem('emily.flashcards'))).toHaveLength(1)
+  })
+
+  it('includes emily.focusLog in a backup and round-trips it', () => {
+    localStorage.setItem('emily.focusLog', JSON.stringify({ '2026-06-18': { sessions: 3, minutes: 75 } }))
+    const backup = exportAll()
+    expect(backup.data['emily.focusLog']).toEqual({ '2026-06-18': { sessions: 3, minutes: 75 } })
+
+    localStorage.clear()
+    importAll(backup)
+    expect(JSON.parse(localStorage.getItem('emily.focusLog'))).toEqual({
+      '2026-06-18': { sessions: 3, minutes: 75 },
+    })
   })
 
   it('rejects malformed backups before writing anything', () => {

@@ -136,3 +136,34 @@ Supporting modules: `pixel/` (PixelSprite, PlantGenerator, sprites), `data/`
    export, leech care, kind analytics, swipe + SR announcements, 1k-card perf.
 4. **E2E + Lighthouse + CI:** Playwright specs + Lighthouse wired to GitHub Actions
    (cannot run in this sandbox — no browser binaries); jsdom gates run locally.
+
+## 6. Phase 11 audit — Firefly Calendar (focus-consistency map)
+
+Read-only audit before building the calendar. Where the feature prompt disagreed with the
+codebase, **the codebase won** — noted here.
+
+- **Schema version.** `SCHEMA_VERSION` was **3** (`storage/StorageManager.js`), bumped to **4**
+  with an additive `if (current < 4)` block mirroring the v2→v3 Grove seed. Idempotent +
+  non-destructive (only adds garden-derived days absent from `emily.focusLog`; never overwrites a
+  live day; mutates no other key).
+- **Streak source.** The prompt said `emily.meter`/`emily.stats`; in reality the streak lives in
+  **`emily.stats.streak`** (`emily.meter` is only `{ dailyGoalMin }`). It is computed once in
+  `PomodoroTimer.recordFocusSession()`. The calendar **reuses** `stats.streak` via
+  `summarize(log, { streak })` — never recomputed, so it can't diverge from the Focus Meter.
+- **Local-day helper already existed.** No new `utils/localDay.js` was added — `data/focusLog.js`
+  reuses **`localDayStr`** from `data/scheduler.js` (local, wall-clock; `utils/day.js` stays UTC for
+  streak bookkeeping). DST-safe: `localDayStr` reads calendar fields (year/month/date).
+- **Focus length is not user-configurable.** The prompt asked for "the configured focus length"; the
+  app has no per-session duration setting — it's the module constant `FOCUS_MINUTES = DURATIONS.focus /
+60` in `PomodoroTimer.jsx`. `recordSession` is given that constant (derived from `DURATIONS.focus`,
+  not a literal `25`), so it stays correct if the focus duration ever changes.
+- **Backup auto-covers the new key.** `exportAll`/`importAll` iterate all `emily.*` keys (excluding only
+  auth + sync meta), so `emily.focusLog` is backed up/restored with no StorageManager change. Asserted
+  in tests anyway. `emily.focusLog` was added to `SYNC_KEYS` (per-key LWW).
+- **Modal pattern reused verbatim.** `useFocusTrap(true, { onEscape, initialFocus })` + aria-hidden
+  backdrop `<button>` + `animate-modal-in` + `role="dialog"` + lazy import — mirrors `GuideModal.jsx`.
+- **Art constraints respected.** Fireflies/cells are pure CSS (`box-shadow`/Tailwind tokens) + emoji —
+  no image/audio assets. No new palette hexes: dusk uses existing `bg*` tokens, glow uses the existing
+  `ever-green`/`ever-yellow` tokens.
+- **Optional secondary entry (FocusGarden) skipped** to keep scope tight; the Focus Meter entry point is
+  the single launch surface, matching the prompt's primary requirement.

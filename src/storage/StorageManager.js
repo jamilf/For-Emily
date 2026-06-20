@@ -7,9 +7,10 @@
 
 import { writeAndBroadcast } from '../hooks/useLocalStorage.js'
 import { groveMetrics, reconcile } from '../data/grove.js'
+import { backfillFromGarden } from '../data/focusLog.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -42,6 +43,8 @@ export const DEFAULTS = {
   'emily.verses': {}, // { [reference]: text } cached from the Bible API
   // Phase-10: Grove Almanac — sticky unlocked varietals + an optional queued seed.
   'emily.grove': { unlocked: {}, plantNext: null }, // { unlocked: { [id]: 'YYYY-MM-DD' }, plantNext }
+  // Phase-11: Firefly Calendar — per-local-day focus time-series.
+  'emily.focusLog': {}, // { 'YYYY-MM-DD': { sessions, minutes|null } }
 }
 
 /** Safe read with a defaults fallback; never throws. */
@@ -100,6 +103,14 @@ export function migrate() {
         reflections: read('emily.reflections', []),
       })
       write('emily.grove', reconcile(existing, metrics).grove)
+    }
+    // v3 → v4: seed the Firefly Calendar retroactively so it opens populated on
+    // day one. Backfill days from the garden, but never overwrite a day already
+    // present in focusLog (live days carry real minutes) — only add absent days.
+    if (current < 4) {
+      const backfilled = backfillFromGarden(read('emily.garden', []))
+      const existingLog = read('emily.focusLog', {})
+      write('emily.focusLog', { ...backfilled, ...existingLog })
     }
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
   } catch {

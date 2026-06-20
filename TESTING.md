@@ -19,13 +19,20 @@ How to run every quality gate, and how the suite is organised.
 - Run in **jsdom**; setup in `src/test/setup.js` (jest-dom + `vitest-axe` matchers,
   `localStorage` reset between tests, canvas/matchMedia stubs).
 - **Unit** (pure logic): `src/data/flashcards.test.js`,
-  `src/data/encouragements.test.js`, `src/storage/StorageManager.test.js`
-  (scheduler/parser, no-repeat selection bag, storage + migration).
+  `src/data/encouragements.test.js`, `src/data/focusLog.test.js`,
+  `src/storage/StorageManager.test.js`, `src/sync/syncEngine.test.js`
+  (scheduler/parser, no-repeat selection bag, Firefly Calendar time-series incl.
+  local-midnight edge cases, storage + migration, sync-key membership).
 - **Component / a11y:** `src/components/*.test.jsx` — render, keyboard, focus trap,
-  and `axe` assertions.
+  and `axe` assertions. `FireflyCalendar.test.jsx` covers the accessible grid
+  (roving-tabindex arrow navigation, Enter/Space selection updating the `aria-live`
+  detail region, the reduced-motion variant, and zero axe violations).
+- **Migration:** `StorageManager.test.js` asserts the **v3 → v4** backfill seeds
+  `emily.focusLog` from `emily.garden`, is a no-op on re-run (never clobbering a live
+  day), mutates no other key, and that `exportAll`/`importAll` round-trip the new key.
 - **Coverage gate:** ≥80% lines/functions/statements (≥75% branches) on the modules
-  in `vitest.config.js` `coverage.include` (flashcards/scheduler, encouragements,
-  StorageManager, utils). Current: ~92% statements.
+  in `vitest.config.js` `coverage.include` (flashcards/scheduler, grove, focusLog,
+  encouragements, StorageManager, utils). Current: ~96% statements.
 
 ## End-to-end (Playwright) — runs in CI
 

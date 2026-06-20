@@ -102,3 +102,38 @@ CDN network-blocked). All jsdom gates, lint, format, coverage, and build are ver
   added to `SYNC_KEYS` so unlocks follow Emily across devices.
 - Tests: grove unit suite (18) + Almanac component/axe suite (6) + v2→v3 migration test +
   `e2e/grove.spec.js` (CI screenshots, desktop + mobile). 121 tests; ~97% coverage on core modules.
+
+## Phase 11 — Firefly Calendar (focus-consistency map)
+
+- `src/data/focusLog.js` — new: the pure, deterministic time-series behind the dusk-meadow
+  consistency map. Buckets completed focus sessions by **LOCAL** day (reusing the scheduler's
+  `localDayStr`, never UTC). Exports `localYMD`, `backfillFromGarden` (reconstruct history from
+  `emily.garden` timestamps, `minutes: null`), `recordSession` (immutable; null→real minutes merge),
+  `lastNWeeks` (7-lane × N-week grid, future cells inert), `activeWithin`, `summarize` (reuses the
+  passed-in streak — never recomputed), and `bucketFor` (0–4+). Fully unit-tested incl. local-midnight
+  edge cases.
+- `src/components/FireflyCalendar.jsx` — new: lazy, focus-trapped modal (same shell as every dialog).
+  A dusk meadow where each completed focus session lights one firefly on its day. Intensity is conveyed
+  three ways — firefly count, a numeric badge, and the accessible label — **never colour alone**. Empty
+  days stay calm (never red/failure); future days are inert. Accessible grid: roving tabindex with
+  arrow/Home/End navigation, Enter/Space selects a day into an `aria-live` detail region. Header summary
+  (sessions, known focus time, active days, **reused** streak, brightest day) + 1–3 gentle, original,
+  non-shaming insights (incl. a "welcome back" line after a gap — never "you lost your streak"). Honors
+  `prefers-reduced-motion` (static fireflies). All copy original; no scripture/encouragement-library text.
+- `src/components/FocusMeter.jsx` — adds the pixel-font "✨ Firefly Calendar" entry point (lazy + Suspense).
+- `src/components/PomodoroTimer.jsx` — at focus-session completion, also logs to `emily.focusLog` via
+  `recordSession` with the real focus length (`FOCUS_MINUTES`) and the same `ts` used for the garden tree.
+  Breaks never log. No existing timer behavior changed.
+- `src/storage/StorageManager.js` — `emily.focusLog` default + schema **v3 → v4** migration that
+  backfills the calendar retroactively from `emily.garden` (idempotent, non-destructive: never overwrites
+  a live day, mutates no other key). `src/sync/syncEngine.js` — `emily.focusLog` added to `SYNC_KEYS`
+  (per-key LWW). Sanctuary backup covers it automatically (all `emily.*` keys).
+- `vitest.config.js` — `src/data/focusLog.js` added to the coverage `include` set.
+- Tests: focusLog unit suite (18) + FireflyCalendar component/axe suite (7) + v3→v4 migration & backup
+  tests + `SYNC_KEYS` assertion + `e2e/firefly.spec.js` (CI screenshots + mobile scroll, desktop + mobile).
+  149 tests; ~96% coverage on core modules.
+
+### Future idea (not built)
+
+- Naming notable "constellations" of fireflies on milestones — deliberately deferred; it overlaps the
+  Grove Almanac's unlock/naming model and risks scope creep.

@@ -1,7 +1,11 @@
+import { lazy, Suspense, useState } from 'react'
 import WindowFrame from './WindowFrame.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import { DEFAULTS } from '../storage/StorageManager.js'
 import { dayStr } from '../utils/day.js'
+
+// The calendar carries the whole meadow grid; load it only when opened.
+const FireflyCalendar = lazy(() => import('./FireflyCalendar.jsx'))
 
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 const R = 52
@@ -17,6 +21,7 @@ export default function FocusMeter({ className = '' }) {
   const [stats] = usePersistedState('emily.stats', EMPTY_STATS)
   const [garden] = usePersistedState('emily.garden', [])
   const [meter] = usePersistedState('emily.meter', DEFAULTS['emily.meter'])
+  const [calendarOpen, setCalendarOpen] = useState(false)
 
   const today = dayStr()
   const minutes = stats.day === today ? stats.minutesToday : 0
@@ -85,7 +90,20 @@ export default function FocusMeter({ className = '' }) {
         <p className="text-center text-sm text-brown/70" aria-live="polite">
           {message}
         </p>
+
+        <button
+          onClick={() => setCalendarOpen(true)}
+          className="rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+        >
+          ✨ Firefly Calendar
+        </button>
       </div>
+
+      {calendarOpen && (
+        <Suspense fallback={null}>
+          <FireflyCalendar onClose={() => setCalendarOpen(false)} />
+        </Suspense>
+      )}
     </WindowFrame>
   )
 }

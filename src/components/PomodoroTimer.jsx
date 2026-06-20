@@ -9,6 +9,7 @@ import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
 import { endsAtFrom, remainingSeconds, formatClock } from '../utils/timer.js'
 import { dayStr, yesterdayStr } from '../utils/day.js'
+import { recordSession } from '../data/focusLog.js'
 
 // Post-session overlays — loaded on demand, not part of the initial bundle.
 // LetterModal carries the (large) encouragement library, so it stays out of the
@@ -42,6 +43,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   const [spr] = usePersistedState('emily.spr', { seen: [], lastOpenDay: '' })
   const [, setReflections] = usePersistedState('emily.reflections', [])
   const [, setGarden] = usePersistedState('emily.garden', [])
+  const [, setFocusLog] = usePersistedState('emily.focusLog', {})
   const [showReflection, setShowReflection] = useState(false)
   const [reflectionNote, setReflectionNote] = useState('')
   const [breakTip, setBreakTip] = useState(null)
@@ -89,10 +91,16 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
     if (mode === 'focus') {
       recordFocusSession()
       setShowReflection(true)
+      // One timestamp shared by the garden + the Firefly Calendar so they stay
+      // consistent for the same completed session.
+      const ts = Date.now()
       // Harvest the grown tree into the persistent garden.
       if (plantDna != null && !withered) {
-        setGarden((prev) => [...prev, { id: plantDna, ts: Date.now() }])
+        setGarden((prev) => [...prev, { id: plantDna, ts }])
       }
+      // Log this completed focus session to the Firefly Calendar time-series with
+      // its real focus length. Breaks never reach this branch, so they never log.
+      setFocusLog((prev) => recordSession(prev, { ts, minutes: FOCUS_MINUTES }))
       // Arm the sprite's next letter: celebration normally, but after a few
       // sessions today lean toward rest/peace to counter ADHD hyperfocus.
       // (Reflection mood, chosen next, may refine this to 'rough' / 'breeze'.)
