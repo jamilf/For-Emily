@@ -3,10 +3,7 @@ import usePersistedState from '../hooks/useLocalStorage.js'
 import useFocusTrap from '../hooks/useFocusTrap.js'
 import { pickByContext, verseOfDay, randomSignoff, ALL_REFS } from '../data/encouragements.js'
 import { fetchVerses, ATTRIBUTION } from '../data/scripture.js'
-
-function today() {
-  return new Date().toISOString().slice(0, 10)
-}
+import { dayStr as today } from '../utils/day.js'
 
 /**
  * The soot sprite's letter. A context-aware note addressed to Emily, drawn from

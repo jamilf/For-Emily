@@ -8,7 +8,6 @@ import {
   normalizeCard,
   makeCard,
   nextIntervalLabel,
-  sessionQueue,
   decksOf,
   masteredCount,
   parseBulk,
@@ -95,32 +94,7 @@ describe('normalizeCard', () => {
   })
 })
 
-describe('sessionQueue', () => {
-  it('prefers due cards, caps the queue, and surfaces struggling cards first', () => {
-    const cards = [
-      { id: 1, deck: 'D', due: NOW - 1, struggling: 0 },
-      { id: 2, deck: 'D', due: NOW - 1, struggling: 5 },
-      { id: 3, deck: 'D', due: NOW + DAY, struggling: 0 }, // not due
-    ]
-    const q = sessionQueue(cards, { cap: 12, shuffle: false })
-    expect(q.map((c) => c.id)).toEqual([2, 1]) // struggling first, not-due excluded
-  })
-
-  it('falls back to the whole deck when nothing is due', () => {
-    const cards = [{ id: 1, deck: 'D', due: NOW + DAY }]
-    expect(sessionQueue(cards, { shuffle: false }).length).toBe(1)
-  })
-
-  it('filters by deck and always returns at least one card', () => {
-    const cards = [
-      { id: 1, deck: 'A', due: NOW - 1 },
-      { id: 2, deck: 'B', due: NOW - 1 },
-    ]
-    const q = sessionQueue(cards, { deck: 'B', shuffle: false })
-    expect(q).toHaveLength(1)
-    expect(q[0].deck).toBe('B')
-  })
-})
+// Session-queue building now lives in scheduler.buildQueue (see scheduler.test.js).
 
 describe('decksOf / masteredCount', () => {
   it('aggregates totals and due counts per deck, sorted by due desc then name', () => {

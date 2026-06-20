@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { exportAll, importAll } from '../storage/StorageManager.js'
+import { dayStr } from '../utils/day.js'
 
 /**
  * "Sanctuary backup" — download every bit of saved progress as a JSON file, or
@@ -17,7 +18,7 @@ export default function BackupControls() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `sanctuary-backup-${new Date().toISOString().slice(0, 10)}.json`
+      a.download = `sanctuary-backup-${dayStr()}.json`
       document.body.appendChild(a)
       a.click()
       a.remove()

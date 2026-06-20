@@ -11,20 +11,14 @@
 // leans on both. Older saved cards (which only had box/due) are upgraded safely
 // by normalizeCard, so there is no risky migration.
 
+import { dayStr, yesterdayStr } from '../utils/day.js'
+
 const DAY = 24 * 60 * 60 * 1000
 
 // Review interval (days) per Leitner box. Box 0 / lapses are due "today".
 export const BOX_DAYS = [0, 1, 3, 7, 16, 35]
 export const MAX_BOX = BOX_DAYS.length - 1 // 5
 export const MASTERED_BOX = MAX_BOX
-
-// Kept for backward-compat with the original simple scheduler.
-export const SPACING_DAYS = BOX_DAYS
-
-export function nextDue(box) {
-  const days = BOX_DAYS[Math.min(box, MAX_BOX)]
-  return Date.now() + days * DAY
-}
 
 export function isDue(card) {
   return (card.due ?? 0) <= Date.now()
@@ -118,32 +112,6 @@ export function nextIntervalLabel(card, rating) {
   return days === 1 ? '1 day' : `${days} days`
 }
 
-function shuffle(arr) {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
-
-/**
- * Build a capped review queue for a session: due cards first (or the whole deck
- * if none are due so Emily can still study), struggling cards nudged earlier,
- * optionally shuffled, then capped so the session always has a visible end.
- */
-export function sessionQueue(cards, { cap = 12, shuffle: doShuffle = true, deck = null } = {}) {
-  let pool = cards.map(normalizeCard)
-  if (deck) pool = pool.filter((c) => c.deck === deck)
-
-  const due = pool.filter(isDue)
-  let base = due.length > 0 ? due : pool
-  base = doShuffle ? shuffle(base) : base
-  // Stable bias: cards Emily keeps missing surface earlier (struggling desc).
-  base = [...base].sort((a, b) => (b.struggling || 0) - (a.struggling || 0))
-  return base.slice(0, Math.max(1, cap))
-}
-
 /** Decks present, each with total + due counts (for the picker). */
 export function decksOf(cards) {
   const map = new Map()
@@ -199,15 +167,6 @@ const EMPTY_STATS = {
   lastReviewDay: null,
   correct: 0,
   total: 0,
-}
-
-function dayStr(d = new Date()) {
-  return d.toISOString().slice(0, 10)
-}
-function yesterdayStr() {
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  return dayStr(d)
 }
 
 export function makeStats() {

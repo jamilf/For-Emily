@@ -1,10 +1,7 @@
 import WindowFrame from './WindowFrame.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import { DEFAULTS } from '../storage/StorageManager.js'
-
-function todayStr() {
-  return new Date().toISOString().slice(0, 10)
-}
+import { dayStr } from '../utils/day.js'
 
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 const R = 52
@@ -21,7 +18,7 @@ export default function FocusMeter({ className = '' }) {
   const [garden] = usePersistedState('emily.garden', [])
   const [meter] = usePersistedState('emily.meter', DEFAULTS['emily.meter'])
 
-  const today = todayStr()
+  const today = dayStr()
   const minutes = stats.day === today ? stats.minutesToday : 0
   const sessions = stats.day === today ? stats.sessionsToday : 0
   const goal = meter.dailyGoalMin || 100

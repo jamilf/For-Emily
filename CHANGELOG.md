@@ -70,3 +70,14 @@ CDN network-blocked). All jsdom gates, lint, format, coverage, and build are ver
 - Tests: search filter, move-deck, delete-card, and forecast render added to `Flashcards.test.jsx`.
 - Deck **reorder** is intentionally omitted — decks auto-sort by due-count then name, which keeps
   the most relevant deck on top without manual fiddling.
+
+## Cleanup pass — dedupe & dead code
+
+- Removed dead exports from `src/data/flashcards.js`: `nextDue`, `SPACING_DAYS`, and
+  `sessionQueue` (superseded by `scheduler.buildQueue`) — which also dropped its now-unused local
+  `shuffle`. Flashcards-chunk logic coverage rose to ~99%.
+- New `src/utils/day.js` (`dayStr`/`yesterdayStr`, UTC) replaces the duplicated copies in
+  `flashcards.js` + `PomodoroTimer.jsx` and the inline `toISOString().slice(0,10)` in
+  `LetterModal`, `FocusMeter`, `BackupControls`, and `encouragements.verseOfDay`. A clarifying note
+  distinguishes these UTC stat helpers from scheduler's deliberately LOCAL day boundaries.
+- Pruned the redundant `sessionQueue` tests; added `src/utils/day.test.js`. 97 tests, ~97% coverage.

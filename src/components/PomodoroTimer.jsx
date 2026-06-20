@@ -8,6 +8,7 @@ import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
 import { endsAtFrom, remainingSeconds, formatClock } from '../utils/timer.js'
+import { dayStr, yesterdayStr } from '../utils/day.js'
 
 // Post-session overlays — loaded on demand, not part of the initial bundle.
 // LetterModal carries the (large) encouragement library, so it stays out of the
@@ -22,15 +23,6 @@ const RADIUS = 130
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
-
-function dayStr(d = new Date()) {
-  return d.toISOString().slice(0, 10)
-}
-function yesterdayStr() {
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  return dayStr(d)
-}
 
 function tipCoords(fraction) {
   const angle = fraction * 2 * Math.PI

@@ -12,6 +12,8 @@
 // resolveText / withVerses); entries with no cached text are skipped by the
 // picker so the sprite always has something kind to say (graceful fallback).
 
+import { dayStr } from '../utils/day.js'
+
 // ── Original encouragements ────────────────────────────────────────────────
 // Authored in Emily's voice: warm, ADHD-affirming, Gen-Z but not cringe, a mix
 // of playful / faith / nerdy / cozy. Hard rules: worth is never tied to grades;
@@ -2506,7 +2508,7 @@ function hashDate(dateStr) {
  * @param {Record<string,string>} verses  cached { ref: text } map
  * @param {string} dateStr  YYYY-MM-DD (defaults to today, local)
  */
-export function verseOfDay(verses = {}, dateStr = new Date().toISOString().slice(0, 10)) {
+export function verseOfDay(verses = {}, dateStr = dayStr()) {
   const cached = scriptureItems.filter((s) => verses[s.ref])
   const pool = cached.length > 0 ? cached : scriptureItems
   if (pool.length === 0) return null
