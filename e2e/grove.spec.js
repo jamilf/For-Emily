@@ -28,8 +28,8 @@ test('Grove Almanac opens, shows locked silhouettes, and screenshots', async ({ 
 
   await page.screenshot({ path: `playwright-report/grove-${testInfo.project.name}.png`, fullPage: true })
 
-  // Filter to Locked, then open a detail view.
-  await dialog.getByRole('button', { name: 'locked' }).click()
+  // Filter to Locked (exact — card labels also contain "locked"), then open a detail view.
+  await dialog.getByRole('button', { name: 'locked', exact: true }).click()
   await dialog.getByRole('button', { name: /First Sprout, locked/i }).click()
   await expect(dialog.getByRole('button', { name: /back to the grove/i })).toBeVisible()
 
