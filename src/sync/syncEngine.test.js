@@ -7,6 +7,11 @@ describe('SYNC_KEYS', () => {
     expect(isSyncKey('emily.focusLog')).toBe(true)
   })
 
+  it('syncs Forest Spirits across devices', () => {
+    expect(SYNC_KEYS).toContain('emily.spirits')
+    expect(isSyncKey('emily.spirits')).toBe(true)
+  })
+
   it('leaves device-local caches out of sync', () => {
     expect(isSyncKey('emily.mixer')).toBe(false)
     expect(isSyncKey('emily.zen')).toBe(false)

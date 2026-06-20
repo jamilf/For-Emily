@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import { generate } from '../pixel/PlantGenerator.js'
+
+// The spirits collection loads on demand, not in the initial bundle.
+const ForestSpiritsModal = lazy(() => import('./ForestSpiritsModal.jsx'))
 
 /**
  * Feature 3 (display) — My Garden. A responsive grid of trees harvested from
@@ -13,6 +16,16 @@ import { generate } from '../pixel/PlantGenerator.js'
 export default function FocusGarden({ className = '', onOpenAlmanac }) {
   const [garden, setGarden] = usePersistedState('emily.garden', [])
   const [confirming, setConfirming] = useState(false)
+  const [spiritsOpen, setSpiritsOpen] = useState(false)
+
+  const spiritsButton = (
+    <button
+      onClick={() => setSpiritsOpen(true)}
+      className="rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+    >
+      🌲 Forest Spirits
+    </button>
+  )
 
   // Generate each tree's sprite once per garden change — not on every re-render
   // (e.g. toggling the clear-confirm), since generate() is deterministic by DNA.
@@ -29,14 +42,17 @@ export default function FocusGarden({ className = '', onOpenAlmanac }) {
           <p className="mt-1 max-w-xs text-sm text-brown/60">
             Finish a focus session and a tree shows up here. One per session.
           </p>
-          {onOpenAlmanac && (
-            <button
-              onClick={onOpenAlmanac}
-              className="mt-4 rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-            >
-              🌿 Open the Grove Almanac
-            </button>
-          )}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            {onOpenAlmanac && (
+              <button
+                onClick={onOpenAlmanac}
+                className="rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+              >
+                🌿 Open the Grove Almanac
+              </button>
+            )}
+            {spiritsButton}
+          </div>
         </div>
       ) : (
         <div className="flex h-full flex-col">
@@ -51,14 +67,24 @@ export default function FocusGarden({ className = '', onOpenAlmanac }) {
               </div>
             ))}
           </div>
-          {onOpenAlmanac && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {onOpenAlmanac && (
+              <button
+                onClick={onOpenAlmanac}
+                className="rounded-2xl bg-brown/10 px-3 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+              >
+                🌿 Grove Almanac
+              </button>
+            )}
             <button
-              onClick={onOpenAlmanac}
-              className="mt-3 w-full rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+              onClick={() => setSpiritsOpen(true)}
+              className={`rounded-2xl bg-brown/10 px-3 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow ${
+                onOpenAlmanac ? '' : 'col-span-2'
+              }`}
             >
-              🌿 Open the Grove Almanac
+              🌲 Forest Spirits
             </button>
-          )}
+          </div>
           <div className="mt-3 flex items-center justify-between gap-2">
             <p className="text-xs text-brown/60">
               {garden.length} {garden.length === 1 ? 'tree' : 'trees'} so far
@@ -92,6 +118,12 @@ export default function FocusGarden({ className = '', onOpenAlmanac }) {
             )}
           </div>
         </div>
+      )}
+
+      {spiritsOpen && (
+        <Suspense fallback={null}>
+          <ForestSpiritsModal onClose={() => setSpiritsOpen(false)} />
+        </Suspense>
       )}
     </WindowFrame>
   )

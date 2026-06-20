@@ -20,19 +20,25 @@ How to run every quality gate, and how the suite is organised.
   `localStorage` reset between tests, canvas/matchMedia stubs).
 - **Unit** (pure logic): `src/data/flashcards.test.js`,
   `src/data/encouragements.test.js`, `src/data/focusLog.test.js`,
+  `src/data/spirits.test.js`, `src/pixel/SpiritGenerator.test.js`,
   `src/storage/StorageManager.test.js`, `src/sync/syncEngine.test.js`
   (scheduler/parser, no-repeat selection bag, Firefly Calendar time-series incl.
-  local-midnight edge cases, storage + migration, sync-key membership).
+  local-midnight edge cases, Forest Spirits unlock derivation incl. the `>=20 || <5`
+  night-boundary edges + retroactive/sticky/dated + double-run no-op, spirit-generator
+  determinism, storage + migration, sync-key membership).
 - **Component / a11y:** `src/components/*.test.jsx` — render, keyboard, focus trap,
   and `axe` assertions. `FireflyCalendar.test.jsx` covers the accessible grid
   (roving-tabindex arrow navigation, Enter/Space selection updating the `aria-live`
-  detail region, the reduced-motion variant, and zero axe violations).
-- **Migration:** `StorageManager.test.js` asserts the **v3 → v4** backfill seeds
-  `emily.focusLog` from `emily.garden`, is a no-op on re-run (never clobbering a live
-  day), mutates no other key, and that `exportAll`/`importAll` round-trip the new key.
+  detail region, reduced-motion, zero axe). `ForestSpiritsModal.test.jsx` covers
+  reconcile-on-open, unlocked/locked state by text+shape, the "new!" badge via `seen`,
+  the locked detail hint+progress, the reduced-motion static idle, and zero axe.
+- **Migration:** `StorageManager.test.js` asserts the **v3 → v4** focusLog backfill and
+  the **v4 → v5** Forest Spirits seed each run retroactively, are a no-op on re-run
+  (never clobbering live data / fabricating dates), mutate no other key, and that
+  `exportAll`/`importAll` round-trip both `emily.focusLog` and `emily.spirits`.
 - **Coverage gate:** ≥80% lines/functions/statements (≥75% branches) on the modules
   in `vitest.config.js` `coverage.include` (flashcards/scheduler, grove, focusLog,
-  encouragements, StorageManager, utils). Current: ~96% statements.
+  spirits, encouragements, SpiritGenerator, StorageManager, utils). Current: ~97% statements.
 
 ## End-to-end (Playwright) — runs in CI
 

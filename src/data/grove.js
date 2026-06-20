@@ -235,27 +235,16 @@ export function groveMetrics({ garden = [], stats = {}, flashcardStats = {}, ref
 const numProgress = (cur, target) => ({ current: Math.min(cur, target), target, done: cur >= target })
 const boolProgress = (b) => ({ current: b ? 1 : 0, target: 1, done: !!b })
 
-/** Live progress toward a species' unlock, as { current, target, done }. */
+/**
+ * Live progress toward an item's unlock, as { current, target, done }.
+ * Catalogue-agnostic: a rule with a numeric `n` reads `metrics[rule.metric]` as a
+ * count; a rule without `n` reads it as a boolean. This same evaluator drives both
+ * the Grove varietals and the Forest Spirits (which add count metrics) — one engine.
+ */
 export function progressFor(species, metrics) {
   const r = species.rule
-  switch (r.metric) {
-    case 'grown':
-      return numProgress(metrics.grown, r.n)
-    case 'minutes':
-      return numProgress(metrics.minutes, r.n)
-    case 'streak':
-      return numProgress(metrics.streak, r.n)
-    case 'reviews':
-      return numProgress(metrics.reviews, r.n)
-    case 'reflections':
-      return numProgress(metrics.reflections, r.n)
-    case 'beforeNoon':
-      return boolProgress(metrics.beforeNoon)
-    case 'afterDark':
-      return boolProgress(metrics.afterDark)
-    default:
-      return numProgress(metrics.grown, r.n || 1)
-  }
+  const value = metrics[r.metric]
+  return r.n != null ? numProgress(value || 0, r.n) : boolProgress(value)
 }
 
 /** A short, kind unlock hint (hidden for mystery species). */
@@ -298,13 +287,14 @@ export function unlockedCount(grove) {
 
 /**
  * Reconcile sticky unlock state against live metrics. Adds any newly-earned
- * species (stamped with today's date) without ever removing one. Pure.
+ * item (stamped with `today`) without ever removing one. Pure. The catalogue is
+ * pluggable so the Forest Spirits can reuse this exact sticky+retroactive engine.
  * @returns {{ grove: {unlocked: Object, plantNext: number|null}, newlyUnlocked: object[] }}
  */
-export function reconcile(grove, metrics, today = dayStr()) {
+export function reconcile(grove, metrics, today = dayStr(), catalogue = SPECIES) {
   const unlocked = { ...(grove?.unlocked || {}) }
   const newlyUnlocked = []
-  for (const species of SPECIES) {
+  for (const species of catalogue) {
     if (unlocked[species.id]) continue
     if (progressFor(species, metrics).done) {
       unlocked[species.id] = today

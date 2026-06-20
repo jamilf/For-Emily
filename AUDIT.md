@@ -167,3 +167,31 @@ codebase, **the codebase won** — noted here.
   `ever-green`/`ever-yellow` tokens.
 - **Optional secondary entry (FocusGarden) skipped** to keep scope tight; the Focus Meter entry point is
   the single launch surface, matching the prompt's primary requirement.
+
+## 7. Phase 12 audit — Forest Spirits (collectible companions, +persisted state)
+
+Read-only audit before building. Resolved flags from the prompt:
+
+- **`flashcardStats.total` is a true cumulative lifetime counter** (incremented every `recordReview`
+  in `src/data/flashcards.js`, never reset) → Scholar (200 reviews) is derivable retroactively with
+  **no forward-only counter needed**. This is the only data point the prompt flagged as possibly missing.
+- **`emily.spr`** (`{seen, lastOpenDay}`, sprite-letter state) is unrelated to `emily.spirits` → no collision.
+- **`SCHEMA_VERSION` was 4** → bumped to **5** with an additive `if (current < 5)` guard.
+- **Night Owl "after 8pm" boundary (confirmed with the user):** local hour `>= 20 || < 5` (8pm–4:59am),
+  matching the Grove's existing `afterDark` lower bound. The before-noon (`h<12`) and after-8pm windows
+  intentionally overlap for after-midnight hours.
+
+Design decisions:
+
+- **One unlock engine, not a parallel one.** `src/data/grove.js`'s `progressFor` and `reconcile` were
+  generalized backward-compatibly (`progressFor` reads `metrics[rule.metric]` generically; `reconcile`
+  takes an optional `catalogue`). The Spirits reuse this exact sticky+retroactive engine via
+  `reconcileSpirits`; the Grove's existing behaviour and tests are unchanged.
+- **Persisted shape `emily.spirits = { unlocked, seen, discoveredAt }`** (the only new key this feature
+  adds). Retroactively seeded spirits get `discoveredAt = null` (UI shows "—") — history is never
+  fabricated. Added to `SYNC_KEYS`; backup auto-covers all `emily.*`.
+- **Art reuses the pixel primitive** (`PixelSprite` + a new deterministic `SpiritGenerator` mirroring
+  PlantGenerator's `mulberry32`+`decode`), recoloured to a single silhouette tone when locked — no tree
+  fork, no image assets, no new palette hexes.
+- **Entry point** is a self-hosted lazy modal in `FocusGarden.jsx` (mirrors how `FocusMeter` hosts the
+  Firefly Calendar), so no Dashboard wiring was required.

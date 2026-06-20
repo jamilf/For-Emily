@@ -8,9 +8,10 @@
 import { writeAndBroadcast } from '../hooks/useLocalStorage.js'
 import { groveMetrics, reconcile } from '../data/grove.js'
 import { backfillFromGarden } from '../data/focusLog.js'
+import { spiritMetrics, reconcileSpirits } from '../data/spirits.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -45,6 +46,8 @@ export const DEFAULTS = {
   'emily.grove': { unlocked: {}, plantNext: null }, // { unlocked: { [id]: 'YYYY-MM-DD' }, plantNext }
   // Phase-11: Firefly Calendar — per-local-day focus time-series.
   'emily.focusLog': {}, // { 'YYYY-MM-DD': { sessions, minutes|null } }
+  // Phase-12: Forest Spirits — sticky collectible companions.
+  'emily.spirits': { unlocked: {}, seen: {}, discoveredAt: {} },
 }
 
 /** Safe read with a defaults fallback; never throws. */
@@ -111,6 +114,19 @@ export function migrate() {
       const backfilled = backfillFromGarden(read('emily.garden', []))
       const existingLog = read('emily.focusLog', {})
       write('emily.focusLog', { ...backfilled, ...existingLog })
+    }
+    // v4 → v5: seed Forest Spirits retroactively from existing metrics (same sticky
+    // reconcile engine as the Grove). Backfilled unlocks carry no discovery date
+    // (null) so we never fabricate history. Additive: never re-locks or overwrites.
+    if (current < 5) {
+      const existing = read('emily.spirits', { unlocked: {}, seen: {}, discoveredAt: {} })
+      const metrics = spiritMetrics({
+        garden: read('emily.garden', []),
+        stats: read('emily.stats', {}),
+        flashcardStats: read('emily.flashcardStats', {}),
+        reflections: read('emily.reflections', []),
+      })
+      write('emily.spirits', reconcileSpirits(existing, metrics, null).state)
     }
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
   } catch {

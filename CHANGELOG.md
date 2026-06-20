@@ -137,3 +137,33 @@ CDN network-blocked). All jsdom gates, lint, format, coverage, and build are ver
 
 - Naming notable "constellations" of fireflies on milestones — deliberately deferred; it overlaps the
   Grove Almanac's unlock/naming model and risks scope creep.
+
+## Phase 12 — Forest Spirits (collectible companions)
+
+- `src/data/spirits.js` — new: the `SPIRITS` catalogue (Curiosity, Dawn, Night Owl, Persistence,
+  Reflection, Scholar) + `spiritMetrics` (count-based before-noon / after-8pm, streak, reflections,
+  reviews — all derived from existing stores), `progressForSpirit`/`hintForSpirit`, and
+  `reconcileSpirits` (sticky + retroactive; live unlocks stamp `discoveredAt`, retroactive seeds stay
+  `null` so no history is fabricated). Pure + fully unit-tested.
+- `src/data/grove.js` — generalized the unlock engine (backward-compatibly) so it powers BOTH the Grove
+  and the Spirits: `progressFor` now evaluates any `metrics[rule.metric]` generically, and `reconcile`
+  takes an optional `catalogue` param (defaults to `SPECIES`). Existing Grove behaviour/tests unchanged.
+- `src/pixel/SpiritGenerator.js` — new: a deterministic creature generator that reuses the shared pixel
+  primitive (mirrors PlantGenerator's seeded `mulberry32` + `decode`; NOT a tree fork). `generate(seed,
+paletteKey)` → original silhouettes (body × ears × accent) painted only from existing palette tokens.
+- `src/components/ProceduralSpirit.jsx` — new: shared renderer mirroring `ProceduralTree` (memoized,
+  `aria-hidden`, `state="locked"` → single-tone silhouette).
+- `src/components/ForestSpiritsModal.jsx` — new: lazy, focus-trapped modal (same chrome as the Almanac).
+  Reconciles on open with an `aria-live` "a spirit found you" celebration; grid of unlocked companions
+  (idle float, discovery date, "new!" via `seen`) and locked silhouettes (🔒 + hint + progress); All/
+  Found/Locked filter; detail view. State conveyed by text + shape, never colour alone; honors
+  `prefers-reduced-motion` (static idle). Original art + copy.
+- `src/components/FocusGarden.jsx` — adds a "🌲 Forest Spirits" entry point (self-hosted lazy modal).
+- `src/storage/StorageManager.js` — `emily.spirits` default + schema **v4 → v5** migration that seeds
+  spirits retroactively from existing metrics (idempotent, non-destructive, undated). `src/sync/syncEngine.js`
+  — `emily.spirits` added to `SYNC_KEYS`; Sanctuary backup covers it automatically.
+- `vitest.config.js` — `src/data/spirits.js` + `src/pixel/SpiritGenerator.js` added to coverage `include`.
+- Tests: spirits unit suite (incl. local-time boundary edges, retroactive/sticky/dated, double-run no-op)
+  - generator determinism + v4→v5 migration & backup + `SYNC_KEYS` + ForestSpirits component/axe suite
+    (keyboard, "new!", reduced-motion) + `e2e/spirits.spec.js` (desktop + mobile screenshots). 177 tests;
+    ~97% coverage on core modules.

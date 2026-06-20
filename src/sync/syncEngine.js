@@ -18,6 +18,7 @@ export const SYNC_KEYS = [
   'emily.keepsakes',
   'emily.grove', // unlocked varietals (sticky) follow Emily across devices
   'emily.focusLog', // Firefly Calendar time-series (real progress; per-key LWW)
+  'emily.spirits', // Forest Spirits — sticky collectible companions
 ]
 const SYNC_SET = new Set(SYNC_KEYS)
 const META_KEY = 'emily.sync.meta' // { [key]: epochMs of last local change }

@@ -130,6 +130,44 @@ describe('migrate', () => {
     expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
     expect(JSON.parse(localStorage.getItem('emily.garden'))).toEqual([{ id: 0, ts: 1 }])
   })
+
+  it('seeds Forest Spirits retroactively (undated) on the v4→v5 upgrade', () => {
+    localStorage.setItem('emily.schemaVersion', '4')
+    // A 7-day streak earns Persistence; one session earns Curiosity.
+    localStorage.setItem('emily.stats', JSON.stringify({ streak: 7 }))
+    localStorage.setItem('emily.garden', JSON.stringify([{ id: 0, ts: new Date(2026, 5, 18, 13).getTime() }]))
+    migrate()
+    const spirits = JSON.parse(localStorage.getItem('emily.spirits'))
+    expect(spirits.unlocked.persistence).toBe(true)
+    expect(spirits.unlocked.curiosity).toBe(true)
+    // Retroactive unlocks carry no fabricated discovery date.
+    expect(spirits.discoveredAt.persistence).toBeNull()
+  })
+
+  it('re-running the v4→v5 spirits seed is a no-op (idempotent)', () => {
+    localStorage.setItem('emily.schemaVersion', '4')
+    localStorage.setItem('emily.stats', JSON.stringify({ streak: 7 }))
+    migrate()
+    const first = localStorage.getItem('emily.spirits')
+    localStorage.setItem('emily.schemaVersion', '4') // force the guard to run again
+    migrate()
+    expect(localStorage.getItem('emily.spirits')).toBe(first)
+  })
+
+  it('does not mutate unrelated keys during the v4→v5 upgrade', () => {
+    localStorage.setItem('emily.schemaVersion', '4')
+    localStorage.setItem('emily.brainDump', JSON.stringify('keep me'))
+    localStorage.setItem(
+      'emily.grove',
+      JSON.stringify({ unlocked: { 'first-sprout': '2026-01-01' }, plantNext: null }),
+    )
+    migrate()
+    expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
+    expect(JSON.parse(localStorage.getItem('emily.grove'))).toEqual({
+      unlocked: { 'first-sprout': '2026-01-01' },
+      plantNext: null,
+    })
+  })
 })
 
 describe('backup export/import (Sanctuary backup)', () => {
@@ -171,6 +209,21 @@ describe('backup export/import (Sanctuary backup)', () => {
     expect(JSON.parse(localStorage.getItem('emily.focusLog'))).toEqual({
       '2026-06-18': { sessions: 3, minutes: 75 },
     })
+  })
+
+  it('includes emily.spirits in a backup and round-trips it', () => {
+    const spirits = {
+      unlocked: { curiosity: true },
+      seen: { curiosity: true },
+      discoveredAt: { curiosity: null },
+    }
+    localStorage.setItem('emily.spirits', JSON.stringify(spirits))
+    const backup = exportAll()
+    expect(backup.data['emily.spirits']).toEqual(spirits)
+
+    localStorage.clear()
+    importAll(backup)
+    expect(JSON.parse(localStorage.getItem('emily.spirits'))).toEqual(spirits)
   })
 
   it('rejects malformed backups before writing anything', () => {
