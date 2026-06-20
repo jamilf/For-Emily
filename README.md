@@ -30,3 +30,35 @@ Then open the printed local URL (default http://localhost:5173/).
 ```bash
 npm run build && npm run preview
 ```
+
+## Cloud sync & email sign-in (Supabase)
+
+Sign-in uses a **6-digit email code** (OTP) — type the code from the email into
+the app. No password, no link to click.
+
+If the email shows a **link pointing at `http://localhost:3000`**, that comes from
+the **Supabase project settings**, not this app (the code never references
+`localhost:3000`). Fix it in the Supabase dashboard for project
+`tbaiekqecfqdgeppxmst`:
+
+1. **Authentication → URL Configuration**
+   - **Site URL:** `https://foremilytran.com`
+   - **Redirect URLs:** add `https://foremilytran.com/**` and `http://localhost:5173/**`
+2. **Authentication → Email Templates → "Magic Link"** — show the code instead of
+   a link, e.g.:
+
+   ```
+   <h2>Your sign-in code</h2>
+   <p>Enter this code in Emily's Study Sanctuary:</p>
+   <p style="font-size:24px;font-weight:bold;letter-spacing:3px">{{ .Token }}</p>
+   ```
+
+   `{{ .Token }}` is the 6-digit OTP the app asks for.
+
+On the app side, `signInWithOtp` already sends `emailRedirectTo: window.location.origin`,
+so once the redirect allow-list above includes the site, any link also lands on
+the real origin (never `localhost:3000`), and `detectSessionInUrl` completes
+sign-in if the link is clicked.
+
+Optional overrides via env (see `.env.example`): `VITE_SUPABASE_URL`,
+`VITE_SUPABASE_ANON_KEY`.

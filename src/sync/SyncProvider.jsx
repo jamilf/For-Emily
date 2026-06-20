@@ -105,7 +105,16 @@ export default function SyncProvider({ children }) {
     async (addr) => {
       const client = await ensureClient()
       if (!client) throw new Error('Sync is unavailable.')
-      const { error } = await client.auth.signInWithOtp({ email: addr, options: { shouldCreateUser: true } })
+      // Point any link in the email at THIS app's origin (foremilytran.com in
+      // production, localhost:5173 in dev) instead of the Supabase project's
+      // default Site URL (localhost:3000). The origin must also be in the
+      // project's Auth → URL Configuration redirect allow-list for it to take
+      // effect; the typed 6-digit code path works regardless.
+      const emailRedirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
+      const { error } = await client.auth.signInWithOtp({
+        email: addr,
+        options: { shouldCreateUser: true, emailRedirectTo },
+      })
       if (error) throw error
     },
     [ensureClient],

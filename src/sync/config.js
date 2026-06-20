@@ -23,7 +23,11 @@ export async function getClient() {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false, // we use email one-time codes, not redirects
+      // Primary flow is a typed 6-digit code (verifyOtp). We also detect auth
+      // params in the URL so that if the emailed link is clicked instead, it
+      // completes sign-in on arrival (it lands on this app's origin, never the
+      // Supabase default localhost:3000 — see emailRedirectTo in SyncProvider).
+      detectSessionInUrl: true,
       storageKey: 'emily.auth',
     },
   })
