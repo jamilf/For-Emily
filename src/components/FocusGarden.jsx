@@ -10,7 +10,7 @@ import { generate } from '../pixel/PlantGenerator.js'
  * looks the same. Persists forever unless cleared. Tuned to sit in the narrow
  * side rail.
  */
-export default function FocusGarden({ className = '' }) {
+export default function FocusGarden({ className = '', onOpenAlmanac }) {
   const [garden, setGarden] = usePersistedState('emily.garden', [])
   const [confirming, setConfirming] = useState(false)
 
@@ -29,6 +29,14 @@ export default function FocusGarden({ className = '' }) {
           <p className="mt-1 max-w-xs text-sm text-brown/60">
             Finish a focus session and a tree shows up here. One per session.
           </p>
+          {onOpenAlmanac && (
+            <button
+              onClick={onOpenAlmanac}
+              className="mt-4 rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+            >
+              🌿 Open the Grove Almanac
+            </button>
+          )}
         </div>
       ) : (
         <div className="flex h-full flex-col">
@@ -43,7 +51,15 @@ export default function FocusGarden({ className = '' }) {
               </div>
             ))}
           </div>
-          <div className="mt-4 flex items-center justify-between gap-2">
+          {onOpenAlmanac && (
+            <button
+              onClick={onOpenAlmanac}
+              className="mt-3 w-full rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+            >
+              🌿 Open the Grove Almanac
+            </button>
+          )}
+          <div className="mt-3 flex items-center justify-between gap-2">
             <p className="text-xs text-brown/60">
               {garden.length} {garden.length === 1 ? 'tree' : 'trees'} so far
             </p>

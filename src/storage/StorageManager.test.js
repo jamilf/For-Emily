@@ -74,6 +74,22 @@ describe('migrate', () => {
     expect(localStorage.getItem('emily.schemaVersion')).toBe(String(SCHEMA_VERSION))
     expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
   })
+
+  it('seeds the Grove retroactively from existing stats on the v2→v3 upgrade', () => {
+    localStorage.setItem('emily.schemaVersion', '2')
+    // Two grown trees already → first-sprout (≥1) and quiet-pine (≥2) earned.
+    localStorage.setItem(
+      'emily.garden',
+      JSON.stringify([
+        { id: 0, ts: 1 },
+        { id: 1, ts: 2 },
+      ]),
+    )
+    migrate()
+    const grove = JSON.parse(localStorage.getItem('emily.grove'))
+    expect(grove.unlocked['first-sprout']).toBeTruthy()
+    expect(grove.unlocked['quiet-pine']).toBeTruthy()
+  })
 })
 
 describe('backup export/import (Sanctuary backup)', () => {

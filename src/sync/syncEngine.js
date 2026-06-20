@@ -16,6 +16,7 @@ export const SYNC_KEYS = [
   'emily.meter',
   'emily.brainDump',
   'emily.keepsakes',
+  'emily.grove', // unlocked varietals (sticky) follow Emily across devices
 ]
 const SYNC_SET = new Set(SYNC_KEYS)
 const META_KEY = 'emily.sync.meta' // { [key]: epochMs of last local change }

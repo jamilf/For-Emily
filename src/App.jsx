@@ -21,6 +21,7 @@ const Flashcards = lazy(() => import('./components/Flashcards.jsx'))
 const AmbientMixerDrawer = lazy(() => import('./components/AmbientMixerDrawer.jsx'))
 const GuideModal = lazy(() => import('./components/GuideModal.jsx'))
 const SyncModal = lazy(() => import('./components/SyncModal.jsx'))
+const GroveAlmanac = lazy(() => import('./components/GroveAlmanac.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
@@ -28,6 +29,7 @@ function Dashboard() {
   const [showCards, setShowCards] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
   const [showSync, setShowSync] = useState(false)
+  const [showGrove, setShowGrove] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
@@ -120,7 +122,7 @@ function Dashboard() {
               <FocusMeter className="w-full" />
             </div>
             <div className="animate-slide-up flex lg:flex-1" style={{ animationDelay: '260ms' }}>
-              <FocusGarden className="w-full" />
+              <FocusGarden className="w-full" onOpenAlmanac={() => setShowGrove(true)} />
             </div>
           </aside>
         </div>
@@ -154,6 +156,9 @@ function Dashboard() {
 
         {/* Cross-device sync */}
         {showSync && <SyncModal onClose={() => setShowSync(false)} />}
+
+        {/* Grove Almanac — tree collection */}
+        {showGrove && <GroveAlmanac onClose={() => setShowGrove(false)} />}
       </Suspense>
     </div>
   )

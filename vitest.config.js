@@ -21,6 +21,7 @@ export default defineConfig({
       include: [
         'src/data/flashcards.js',
         'src/data/scheduler.js',
+        'src/data/grove.js',
         'src/data/encouragements.js',
         'src/storage/StorageManager.js',
         'src/utils/**/*.js',

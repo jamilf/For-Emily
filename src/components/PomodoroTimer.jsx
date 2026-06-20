@@ -47,6 +47,8 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
   const [breakTip, setBreakTip] = useState(null)
   const [plantDna, setPlantDna] = useState(null) // this session's growing tree
   const [withered, setWithered] = useState(false) // tab-away penalty state
+  // A varietal queued from the Grove Almanac's "Grow this one next" (else random).
+  const [grove, setGrove] = usePersistedState('emily.grove', { unlocked: {}, plantNext: null })
   const penaltyTimer = useRef(null)
   const endsAtRef = useRef(null) // wall-clock deadline while running (timestamp-based)
 
@@ -180,9 +182,15 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
     setRunning((r) => !r)
     setHasMail(false)
     if (starting && mode === 'focus') {
-      // Plant a fresh seedling when a focus session begins from full.
+      // Plant a fresh seedling when a focus session begins from full — the one
+      // queued from the Almanac if any, otherwise a random varietal.
       if (secondsLeft === total) {
-        setPlantDna(randomDNA())
+        if (grove?.plantNext != null) {
+          setPlantDna(grove.plantNext)
+          setGrove((g) => ({ ...g, plantNext: null }))
+        } else {
+          setPlantDna(randomDNA())
+        }
         setWithered(false)
       }
       restoreMaster(2) // ensure audio is back to normal during focus

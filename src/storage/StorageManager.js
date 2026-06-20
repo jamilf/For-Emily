@@ -6,9 +6,10 @@
 // `emily.*` namespace so they sync through the existing usePersistedState hook.
 
 import { writeAndBroadcast } from '../hooks/useLocalStorage.js'
+import { groveMetrics, reconcile } from '../data/grove.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -39,6 +40,8 @@ export const DEFAULTS = {
   'emily.flashSession': null, // in-progress review (device-local; resumed on reopen)
   'emily.keepsakes': [], // [{ id, text, ref, type, signoff, ts }]
   'emily.verses': {}, // { [reference]: text } cached from the Bible API
+  // Phase-10: Grove Almanac — sticky unlocked varietals + an optional queued seed.
+  'emily.grove': { unlocked: {}, plantNext: null }, // { unlocked: { [id]: 'YYYY-MM-DD' }, plantNext }
 }
 
 /** Safe read with a defaults fallback; never throws. */
@@ -85,8 +88,19 @@ export function migrate() {
   // deletes a key it doesn't understand, so unknown/newer data survives.
   try {
     // v0/v1 → v2: the Phase-9 keys are all defaults-backed via read(), so no
-    // data transform is required — we just advance the stamp. Future steps:
-    //   if (current < 3) { ...transform emily.* shapes... }
+    // data transform is required.
+    // v2 → v3: seed the Grove Almanac retroactively from existing stats so Emily
+    // opens an already-populated collection (sticky unlocks; no data touched).
+    if (current < 3) {
+      const existing = read('emily.grove', { unlocked: {}, plantNext: null })
+      const metrics = groveMetrics({
+        garden: read('emily.garden', []),
+        stats: read('emily.stats', {}),
+        flashcardStats: read('emily.flashcardStats', {}),
+        reflections: read('emily.reflections', []),
+      })
+      write('emily.grove', reconcile(existing, metrics).grove)
+    }
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
   } catch {
     /* ignore quota/availability errors — app still works on current data */

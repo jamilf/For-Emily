@@ -81,3 +81,24 @@ CDN network-blocked). All jsdom gates, lint, format, coverage, and build are ver
   `LetterModal`, `FocusMeter`, `BackupControls`, and `encouragements.verseOfDay`. A clarifying note
   distinguishes these UTC stat helpers from scheduler's deliberately LOCAL day boundaries.
 - Pruned the redundant `sessionQueue` tests; added `src/utils/day.test.js`. 97 tests, ~97% coverage.
+
+## Phase 10 — Grove Almanac (tree collection / unlocks)
+
+- `src/data/grove.js` — new: a finite catalogue of ~20 named tree varietals as fixed presets of
+  the existing deterministic generator (`dna = shape + trunk*4 + pattern*12 + palette*36`), plus a
+  pure unlock model derived ENTIRELY from existing stores (garden length/timestamps, stats.streak,
+  flashcardStats.total, reflections.length). Sticky, retroactive, never punitive. Fully unit-tested.
+- `src/components/ProceduralTree.jsx` — new: the single shared renderer (generator + PixelSprite),
+  memoised; `state="locked"` recolours the same geometry to one faded silhouette tone.
+- `src/components/GroveAlmanac.jsx` — new: lazy modal (focus-trap + backdrop + Esc) — progress
+  header, "next bloom" goal, All/Grown/Locked filter, responsive card grid (full render vs locked
+  silhouette + lock + hint + progress, triple-encoded), detail sheet, "grow this one next", and a
+  reduced-motion-friendly unlock celebration.
+- `src/components/FocusGarden.jsx` — adds the "Open the Grove Almanac" entry point.
+- `src/components/PomodoroTimer.jsx` — a session consumes a queued `grove.plantNext` seed if set
+  (else random); no other behavior change.
+- `src/storage/StorageManager.js` — `emily.grove` default + schema **v3** migration that seeds the
+  collection retroactively from existing stats (no data loss). `src/sync/syncEngine.js` — `emily.grove`
+  added to `SYNC_KEYS` so unlocks follow Emily across devices.
+- Tests: grove unit suite (18) + Almanac component/axe suite (6) + v2→v3 migration test +
+  `e2e/grove.spec.js` (CI screenshots, desktop + mobile). 121 tests; ~97% coverage on core modules.
