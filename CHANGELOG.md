@@ -167,3 +167,24 @@ paletteKey)` → original silhouettes (body × ears × accent) painted only from
   - generator determinism + v4→v5 migration & backup + `SYNC_KEYS` + ForestSpirits component/axe suite
     (keyboard, "new!", reduced-motion) + `e2e/spirits.spec.js` (desktop + mobile screenshots). 177 tests;
     ~97% coverage on core modules.
+
+## Phase 13 — Memory Grove (dedicated-tree keepsakes)
+
+- `src/data/memories.js` — new: pure helpers for the `emily.memories` list —
+  `createMemory` (trimmed fields, `Date.now()+Math.random()` id, immutable), `updateMemory`,
+  `deleteMemory`, `searchMemories` (case-insensitive over title + note). Fully unit-tested.
+- `src/data/grove.js` — adds `speciesForDna(dna)` (reverse of `dnaOf`) so a memory card can name its
+  tree's varietal + flavor; falls back to "Wild varietal" for un-named DNA. Existing behaviour unchanged.
+- `src/components/MemoryGroveModal.jsx` — new: lazy, focus-trapped modal (same chrome as the Almanac)
+  with three keyboard-accessible views — a **searchable list** of memories (each rendered via the shared
+  `ProceduralTree`, with title, note, species, and grown-date), a **tree picker** (undedicated garden
+  trees, deduped by `ts`), and a **create/edit form** (title input + note textarea, Save disabled until a
+  title). Inline delete confirm, `aria-live` status, state by text + shape (never colour alone).
+- `src/components/FocusGarden.jsx` — adds a "🌳 Memory Grove" entry point (self-hosted lazy modal).
+- `src/storage/StorageManager.js` — `emily.memories` default + schema **v5 → v6** additive guard that
+  ensures the key exists (user-authored — nothing to backfill; idempotent, non-destructive).
+  `src/sync/syncEngine.js` — `emily.memories` added to `SYNC_KEYS`; backup covers it automatically.
+- `vitest.config.js` — `src/data/memories.js` added to coverage `include`.
+- Tests: memories unit suite (create/update/delete/search) + `speciesForDna` + v5→v6 migration & backup
+  round-trip + `SYNC_KEYS` + MemoryGrove component/axe suite (search, dedicate flow, edit, delete,
+  keyboard) + `e2e/memories.spec.js` (desktop + mobile screenshots). 201 tests; ~97% coverage on core.

@@ -168,6 +168,29 @@ describe('migrate', () => {
       plantNext: null,
     })
   })
+
+  it('ensures emily.memories exists on the v5→v6 upgrade (empty)', () => {
+    localStorage.setItem('emily.schemaVersion', '5')
+    migrate()
+    expect(JSON.parse(localStorage.getItem('emily.memories'))).toEqual([])
+  })
+
+  it('never overwrites existing memories on the v5→v6 upgrade, and double-runs as a no-op', () => {
+    const mem = [{ id: 1, dna: 5, ts: 9, title: 'Passed exam', note: '' }]
+    localStorage.setItem('emily.schemaVersion', '5')
+    localStorage.setItem('emily.memories', JSON.stringify(mem))
+    migrate()
+    localStorage.setItem('emily.schemaVersion', '5') // force the guard to run again
+    migrate()
+    expect(JSON.parse(localStorage.getItem('emily.memories'))).toEqual(mem)
+  })
+
+  it('does not mutate unrelated keys during the v5→v6 upgrade', () => {
+    localStorage.setItem('emily.schemaVersion', '5')
+    localStorage.setItem('emily.brainDump', JSON.stringify('keep me'))
+    migrate()
+    expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
+  })
 })
 
 describe('backup export/import (Sanctuary backup)', () => {
@@ -224,6 +247,17 @@ describe('backup export/import (Sanctuary backup)', () => {
     localStorage.clear()
     importAll(backup)
     expect(JSON.parse(localStorage.getItem('emily.spirits'))).toEqual(spirits)
+  })
+
+  it('includes emily.memories in a backup and round-trips it', () => {
+    const memories = [{ id: 1, dna: 42, ts: 9, title: 'Passed exam', note: 'biology final' }]
+    localStorage.setItem('emily.memories', JSON.stringify(memories))
+    const backup = exportAll()
+    expect(backup.data['emily.memories']).toEqual(memories)
+
+    localStorage.clear()
+    importAll(backup)
+    expect(JSON.parse(localStorage.getItem('emily.memories'))).toEqual(memories)
   })
 
   it('rejects malformed backups before writing anything', () => {

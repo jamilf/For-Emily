@@ -11,6 +11,7 @@ import {
   reconcile,
   pickPlantableDna,
   nextBloom,
+  speciesForDna,
 } from './grove.js'
 import { generate } from '../pixel/PlantGenerator.js'
 
@@ -164,5 +165,16 @@ describe('timesGrown / pickPlantableDna / nextBloom / unlockedCount', () => {
   })
   it('unlockedCount tallies the map', () => {
     expect(unlockedCount({ unlocked: { a: 'x', b: 'y' } })).toBe(2)
+  })
+})
+
+describe('speciesForDna', () => {
+  it('resolves the catalogued species a DNA maps to', () => {
+    const known = SPECIES[0]
+    expect(speciesForDna(dnaOf(known))).toBe(known)
+  })
+
+  it('returns null for an un-named (wild) DNA', () => {
+    expect(speciesForDna(99999)).toBeNull()
   })
 })

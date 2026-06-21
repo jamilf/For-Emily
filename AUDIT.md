@@ -195,3 +195,23 @@ Design decisions:
   fork, no image assets, no new palette hexes.
 - **Entry point** is a self-hosted lazy modal in `FocusGarden.jsx` (mirrors how `FocusMeter` hosts the
   Firefly Calendar), so no Dashboard wiring was required.
+
+## 8. Phase 13 audit — Memory Grove (dedicate a harvested tree, +persisted state)
+
+Read-only audit before building. Confirmed conventions, all reused:
+
+- **Garden / tree identity:** `emily.garden = [{ id, ts }]`; `tree.id` IS the DNA passed to the shared
+  `ProceduralTree` (`{ dna, stage='mature', pixel, state, className }`). Memories render through that same
+  component — **no alternate tree renderer**.
+- **New-item id:** `Date.now() + Math.random()` (matches `flashcards.js` `makeCard`).
+- **UI patterns reused:** search box (trim+lowercase substring, `Flashcards.jsx`), labelled textarea
+  (`BrainDump.jsx`), inline edit form Save/Cancel (`Flashcards.jsx`), inline delete confirm "Yes/Keep"
+  (`FocusGarden.jsx` — chosen over `window.confirm` to keep focus inside the modal trap).
+- **No `dna → species` reverse lookup existed** → added `speciesForDna(dna)` to `src/data/grove.js`
+  (reuses `SPECIES` + `dnaOf`); `PlantGenerator.decode` is private and wasn't needed.
+- **`SCHEMA_VERSION` was 5** → bumped to **6** with an additive ensure-exists guard (Memory Grove is
+  user-authored, so nothing is backfilled; re-running is a no-op and never overwrites real memories).
+- **Persisted shape `emily.memories = [{ id, dna, ts, title, note }]`** — the only new key. Added to
+  `SYNC_KEYS` (per-key LWW, like `emily.keepsakes`/`emily.garden`); Sanctuary backup auto-covers it.
+- **Entry point** is a self-hosted lazy modal in `FocusGarden.jsx` (sibling to the Almanac / Forest
+  Spirits buttons), so no Dashboard wiring was required.

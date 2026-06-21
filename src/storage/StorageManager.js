@@ -11,7 +11,7 @@ import { backfillFromGarden } from '../data/focusLog.js'
 import { spiritMetrics, reconcileSpirits } from '../data/spirits.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 5
+export const SCHEMA_VERSION = 6
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -48,6 +48,8 @@ export const DEFAULTS = {
   'emily.focusLog': {}, // { 'YYYY-MM-DD': { sessions, minutes|null } }
   // Phase-12: Forest Spirits — sticky collectible companions.
   'emily.spirits': { unlocked: {}, seen: {}, discoveredAt: {} },
+  // Phase-13: Memory Grove — dedicated trees with a title + note.
+  'emily.memories': [], // [{ id, dna, ts, title, note }]
 }
 
 /** Safe read with a defaults fallback; never throws. */
@@ -127,6 +129,11 @@ export function migrate() {
         reflections: read('emily.reflections', []),
       })
       write('emily.spirits', reconcileSpirits(existing, metrics, null).state)
+    }
+    // v5 → v6: Memory Grove is user-authored, so there is nothing to backfill —
+    // just ensure the key exists. Non-destructive: never overwrites real memories.
+    if (current < 6) {
+      if (localStorage.getItem('emily.memories') == null) write('emily.memories', [])
     }
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
   } catch {

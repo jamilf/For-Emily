@@ -12,6 +12,11 @@ describe('SYNC_KEYS', () => {
     expect(isSyncKey('emily.spirits')).toBe(true)
   })
 
+  it('syncs Memory Grove across devices', () => {
+    expect(SYNC_KEYS).toContain('emily.memories')
+    expect(isSyncKey('emily.memories')).toBe(true)
+  })
+
   it('leaves device-local caches out of sync', () => {
     expect(isSyncKey('emily.mixer')).toBe(false)
     expect(isSyncKey('emily.zen')).toBe(false)

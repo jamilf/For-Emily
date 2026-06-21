@@ -217,6 +217,11 @@ export const SPECIES = [
 
 export const SPECIES_BY_ID = Object.fromEntries(SPECIES.map((s) => [s.id, s]))
 
+/** The catalogued species a tree's DNA maps to, or null for an un-named wild tree. */
+export function speciesForDna(dna) {
+  return SPECIES.find((s) => dnaOf(s) === dna) || null
+}
+
 const hourOf = (ts) => new Date(ts).getHours()
 
 /** Derive unlock metrics from the existing stores. */

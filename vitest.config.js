@@ -24,6 +24,7 @@ export default defineConfig({
         'src/data/grove.js',
         'src/data/focusLog.js',
         'src/data/spirits.js',
+        'src/data/memories.js',
         'src/data/encouragements.js',
         'src/pixel/SpiritGenerator.js',
         'src/storage/StorageManager.js',

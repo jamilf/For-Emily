@@ -20,25 +20,30 @@ How to run every quality gate, and how the suite is organised.
   `localStorage` reset between tests, canvas/matchMedia stubs).
 - **Unit** (pure logic): `src/data/flashcards.test.js`,
   `src/data/encouragements.test.js`, `src/data/focusLog.test.js`,
-  `src/data/spirits.test.js`, `src/pixel/SpiritGenerator.test.js`,
-  `src/storage/StorageManager.test.js`, `src/sync/syncEngine.test.js`
-  (scheduler/parser, no-repeat selection bag, Firefly Calendar time-series incl.
-  local-midnight edge cases, Forest Spirits unlock derivation incl. the `>=20 || <5`
-  night-boundary edges + retroactive/sticky/dated + double-run no-op, spirit-generator
-  determinism, storage + migration, sync-key membership).
+  `src/data/spirits.test.js`, `src/data/memories.test.js`,
+  `src/pixel/SpiritGenerator.test.js`, `src/storage/StorageManager.test.js`,
+  `src/sync/syncEngine.test.js` (scheduler/parser, no-repeat selection bag, Firefly
+  Calendar time-series incl. local-midnight edge cases, Forest Spirits unlock
+  derivation incl. the `>=20 || <5` night-boundary edges + retroactive/sticky/dated +
+  double-run no-op, spirit-generator determinism, Memory Grove CRUD + search +
+  `speciesForDna`, storage + migration, sync-key membership).
 - **Component / a11y:** `src/components/*.test.jsx` — render, keyboard, focus trap,
   and `axe` assertions. `FireflyCalendar.test.jsx` covers the accessible grid
   (roving-tabindex arrow navigation, Enter/Space selection updating the `aria-live`
   detail region, reduced-motion, zero axe). `ForestSpiritsModal.test.jsx` covers
   reconcile-on-open, unlocked/locked state by text+shape, the "new!" badge via `seen`,
   the locked detail hint+progress, the reduced-motion static idle, and zero axe.
-- **Migration:** `StorageManager.test.js` asserts the **v3 → v4** focusLog backfill and
-  the **v4 → v5** Forest Spirits seed each run retroactively, are a no-op on re-run
-  (never clobbering live data / fabricating dates), mutate no other key, and that
-  `exportAll`/`importAll` round-trip both `emily.focusLog` and `emily.spirits`.
+  `MemoryGroveModal.test.jsx` covers the searchable list, the dedicate (pick → form →
+  save) flow, edit-in-place, inline-confirm delete, keyboard, and zero axe.
+- **Migration:** `StorageManager.test.js` asserts the **v3 → v4** focusLog backfill, the
+  **v4 → v5** Forest Spirits seed, and the **v5 → v6** Memory Grove ensure-exists guard
+  each run as specified, are a no-op on re-run (never clobbering live data / fabricating
+  dates), mutate no other key, and that `exportAll`/`importAll` round-trip
+  `emily.focusLog`, `emily.spirits`, and `emily.memories`.
 - **Coverage gate:** ≥80% lines/functions/statements (≥75% branches) on the modules
   in `vitest.config.js` `coverage.include` (flashcards/scheduler, grove, focusLog,
-  spirits, encouragements, SpiritGenerator, StorageManager, utils). Current: ~97% statements.
+  spirits, memories, encouragements, SpiritGenerator, StorageManager, utils). Current:
+  ~97% statements.
 
 ## End-to-end (Playwright) — runs in CI
 
