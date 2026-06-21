@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import Header from './components/Header.jsx'
 import PomodoroTimer from './components/PomodoroTimer.jsx'
 import BrainDump from './components/BrainDump.jsx'
@@ -6,7 +6,9 @@ import FocusMeter from './components/FocusMeter.jsx'
 import FocusGarden from './components/FocusGarden.jsx'
 import Dock from './components/Dock.jsx'
 import WeatherCanvas from './components/WeatherCanvas.jsx'
+import SeasonLayer from './components/SeasonLayer.jsx'
 import SkyScene from './scene/SkyScene.jsx'
+import { seasonForHarvest } from './data/seasons.js'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import AudioMixerProvider, { useMixer } from './audio/AudioMixerProvider.jsx'
 import SyncProvider from './sync/SyncProvider.jsx'
@@ -24,6 +26,7 @@ const SyncModal = lazy(() => import('./components/SyncModal.jsx'))
 const GroveAlmanac = lazy(() => import('./components/GroveAlmanac.jsx'))
 const Journal = lazy(() => import('./components/Journal.jsx'))
 const Constellations = lazy(() => import('./components/Constellations.jsx'))
+const SeasonsModal = lazy(() => import('./components/SeasonsModal.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
@@ -34,10 +37,14 @@ function Dashboard() {
   const [showGrove, setShowGrove] = useState(false)
   const [showJournal, setShowJournal] = useState(false)
   const [showConstellations, setShowConstellations] = useState(false)
+  const [showSeasons, setShowSeasons] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
+  const [garden] = usePersistedState('emily.garden', [])
   const dueCount = countDue(cards)
+  // The sanctuary's season is derived from the total trees grown — nothing new is stored.
+  const season = useMemo(() => seasonForHarvest(garden.length), [garden.length])
   const { enabled: mixerEnabled } = useMixer()
   const pageHidden = usePageHidden()
 
@@ -65,6 +72,7 @@ function Dashboard() {
     focusActive ? 'focus-active' : '',
     zen ? 'zen' : '',
     pageHidden ? 'anims-paused' : '', // freeze decorative animations when tab is hidden
+    `season-${season.id}`,
   ]
     .filter(Boolean)
     .join(' ')
@@ -80,6 +88,9 @@ function Dashboard() {
 
       {/* Painterly Ghibli landscape (fixed; content scrolls over it) */}
       <SkyScene />
+
+      {/* Seasonal tint + ambient drift, behind the content (decorative) */}
+      <SeasonLayer season={season} />
 
       {/* Dynamic weather, above the scene and below the UI */}
       <WeatherCanvas />
@@ -97,6 +108,8 @@ function Dashboard() {
           onOpenSync={() => setShowSync(true)}
           onOpenJournal={() => setShowJournal(true)}
           onOpenConstellations={() => setShowConstellations(true)}
+          season={season}
+          onOpenSeasons={() => setShowSeasons(true)}
           dueCount={dueCount}
         />
 
@@ -171,6 +184,9 @@ function Dashboard() {
 
         {/* Constellations — a derived night-sky view of progress */}
         {showConstellations && <Constellations onClose={() => setShowConstellations(false)} />}
+
+        {/* Sanctuary Seasons — a derived field guide to the growing world */}
+        {showSeasons && <SeasonsModal onClose={() => setShowSeasons(false)} />}
       </Suspense>
     </div>
   )

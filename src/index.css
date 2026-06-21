@@ -605,6 +605,30 @@ body {
   transform: rotateY(180deg);
 }
 
+/* Sanctuary Seasons — a single gentle keyframe for the ambient drift (petals /
+ * motes / leaves / snow). Decorative only; the global reduced-motion rule below
+ * zeroes it, and SeasonLayer also renders no particles when motion is reduced. */
+@keyframes seasonFall {
+  0% {
+    transform: translateY(-8vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--season-opacity, 0.55);
+  }
+  100% {
+    transform: translateY(108vh) translateX(var(--season-sway, 12px)) rotate(300deg);
+    opacity: 0;
+  }
+}
+.season-particle {
+  position: fixed;
+  top: 0;
+  will-change: transform, opacity;
+  animation: seasonFall var(--season-dur, 14s) linear infinite;
+  animation-delay: var(--season-delay, 0s);
+}
+
 /* Freeze decorative animations while the tab is hidden (paired with the
  * usePageHidden hook). Pausing — not stopping — resumes seamlessly with no
  * reflow when the user returns. */

@@ -233,3 +233,28 @@ memories, spirits})` derives non-decreasing counts (sessions, active days, morni
   safety) + Constellations component/axe suite (summary, formed/partial text, decorative sky aria-hidden,
   reduced-motion, keyboard) + `e2e/constellations.spec.js` (desktop + mobile screenshots). 231 tests; ~97%
   coverage on core.
+
+## Phase 16 — Sanctuary Seasons (derived world-shift)
+
+- `src/data/seasons.js` — new: pure, DERIVED season logic. `SEASON_THRESHOLDS = { summer: 8, autumn: 20,
+winter: 40 }` (a single tunable constant, tuned gentle for the gift), `SEASONS` (Spring→Winter, each with
+  name/emoji/blurb + a subtle low-opacity tint token), `seasonForHarvest(total)` (boundary-correct: reaching
+  a threshold advances), and `seasonProgress(total)` ("N more trees until Winter"). Derived from
+  `emily.garden.length`; nothing new is persisted. Fully unit-tested incl. boundary values.
+- `src/components/SeasonLayer.jsx` — new: a decorative `aria-hidden`, `pointer-events-none` overlay placed
+  behind the content. A **bottom-weighted** tint (transparent at the top so header text contrast is
+  untouched) + ~8 gentle drifting particles (petals/motes/leaves/snow, tokenized colours). Honors
+  `prefers-reduced-motion` by rendering no particles (the static tint + label still convey the season).
+- `src/components/SeasonsModal.jsx` — new: a lazy, focus-trapped field guide listing all four seasons, the
+  current one marked in text (`✦ Now`), and a friendly progress line. State by name + text, never colour
+  alone; zero axe.
+- `src/index.css` — one small `seasonFall` keyframe (decorative; covered by the global reduced-motion rule).
+- `src/App.jsx` / `src/components/Header.jsx` — Dashboard derives `season` from the garden count, adds a
+  `season-<id>` root class (semantic hook), renders `<SeasonLayer/>` behind the scene, and the header shows
+  a season label button ("🍂 Autumn") that opens the lazy `SeasonsModal`.
+- `vitest.config.js` — `src/data/seasons.js` added to coverage `include` (measured at 100%).
+- **No new persistence, no sync, no migration** — purely derived (locked-decision compliant). Effects are
+  subtle and preserve AA text contrast; the season is conveyed by name; reduced-motion honored.
+- Tests: seasons unit suite (threshold/boundary mapping, progress-to-next, name-not-colour + tint-subtlety
+  guarantees) + SeasonLayer (aria-hidden/pointer-events-none, particles gated on reduced-motion) +
+  SeasonsModal component/axe suite + `e2e/seasons.spec.js`. 248 tests; ~97% coverage on core.

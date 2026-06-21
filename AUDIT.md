@@ -252,3 +252,22 @@ persisted key, no `SYNC_KEYS` change, and no migration** — it only reads exist
   fallback), in addition to the global reduced-motion CSS rule.
 - Entry point: a global "🌌 Constellations" chip in the header `Toolbar`, threaded from `App.jsx` and lazy
   mounted in the shared top-level `<Suspense>` (same pattern as the Journal).
+
+## 11. Phase 16 audit — Sanctuary Seasons (derived world-shift, no new state)
+
+Read-only audit before building. The third **DERIVED** feature: **no new persisted key, no `SYNC_KEYS`
+change, no migration** — it only reads `emily.garden.length`.
+
+- **Thresholds (flagged decision, confirmed with user):** gentle pace **Summer 8 / Autumn 20 / Winter 40**,
+  living in one tunable constant `SEASON_THRESHOLDS`. The original 100/250/500 were too steep for a gift.
+- **Scene:** `src/scene/SkyScene.jsx` is a memoized SVG with hardcoded per-time-of-day palettes — its
+  internals are NOT tinted. Instead a separate decorative `SeasonLayer` overlay sits between `<SkyScene/>`
+  and the content (z-[1], below `<main>` z-10). Because the content cards are opaque cream, and the tint is
+  **bottom-weighted** (transparent at the top where the header text lives) and very low opacity (≤ 0.14),
+  **AA text contrast is preserved everywhere**.
+- **Conveyed by name, not colour:** a header label button ("🍂 Autumn", with an `aria-label`) plus the
+  SeasonsModal list (current season marked `✦ Now`) carry the state in text — the tint is purely decorative.
+- **Reduced motion:** the global `@media (prefers-reduced-motion: reduce)` rule zeroes the one added
+  `seasonFall` keyframe, and `SeasonLayer` additionally renders no particles when motion is reduced
+  (testable static fallback), mirroring `WeatherCanvas`'s `matchMedia` approach.
+- Root-class hook `season-<id>` is added to `rootClass` (semantic only; visuals come from the overlay).
