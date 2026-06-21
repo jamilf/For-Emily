@@ -21,7 +21,7 @@ export default function Dock({
     <div
       aria-label="Tools"
       role="toolbar"
-      className="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border-2 border-brownDark/30 bg-cream/85 px-2.5 py-2 shadow-window sm:backdrop-blur-sm"
+      className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 mx-auto flex w-fit items-center gap-2 rounded-full border-2 border-brownDark/30 bg-cream/85 px-2.5 py-2 shadow-window sm:backdrop-blur-sm"
     >
       {items.map((it) => {
         const active = openDrawer === it.id

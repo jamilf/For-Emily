@@ -70,7 +70,9 @@ function Dashboard() {
   const closeDrawer = () => setOpenDrawer(null)
 
   const rootClass = [
-    'app-root relative min-h-screen overflow-hidden',
+    // 100dvh (not 100vh) so the iOS URL bar showing/hiding can't clip the page; a
+    // top safe-area inset keeps flow content clear of the notch (0 on other devices).
+    'app-root relative min-h-[100dvh] overflow-hidden pt-[env(safe-area-inset-top)]',
     focusActive ? 'focus-active' : '',
     zen ? 'zen' : '',
     pageHidden ? 'anims-paused' : '', // freeze decorative animations when tab is hidden

@@ -49,7 +49,10 @@ export default function BrainDump() {
   const hasText = text.trim().length > 0
 
   return (
-    <div ref={popRef} className="fixed bottom-5 right-5 z-40 font-sans">
+    <div
+      ref={popRef}
+      className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-[calc(1.25rem+env(safe-area-inset-right))] z-40 font-sans"
+    >
       {open && (
         <div
           role="dialog"

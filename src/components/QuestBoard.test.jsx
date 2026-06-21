@@ -85,6 +85,14 @@ describe('QuestBoard', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('locks background scroll while open and restores it on close', () => {
+    expect(document.body.style.position).toBe('')
+    const { unmount } = render(<QuestBoard onClose={() => {}} />)
+    expect(document.body.style.position).toBe('fixed') // body pinned via useFocusTrap
+    unmount()
+    expect(document.body.style.position).toBe('')
+  })
+
   it('has no axe-detectable accessibility violations', async () => {
     seedAllDone()
     const { container } = render(<QuestBoard onClose={() => {}} />)

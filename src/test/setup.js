@@ -59,3 +59,9 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
     dispatchEvent: () => false,
   })
 }
+
+// jsdom doesn't implement window.scrollTo; the scroll-lock hook calls it on restore.
+// Provide a no-op so the body-scroll-lock used by every modal stays silent in tests.
+if (typeof window !== 'undefined') {
+  window.scrollTo = () => {}
+}

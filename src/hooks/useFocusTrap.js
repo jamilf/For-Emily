@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import useScrollLock from './useScrollLock.js'
 
 const FOCUSABLE = [
   'a[href]',
@@ -30,6 +31,10 @@ const FOCUSABLE = [
  */
 export default function useFocusTrap(active = true, { onEscape, initialFocus } = {}) {
   const containerRef = useRef(null)
+
+  // Every focus-trapped overlay also locks background scrolling (with restore on
+  // close), so the page can't scroll behind the modal on mobile.
+  useScrollLock(active)
 
   useEffect(() => {
     if (!active) return undefined

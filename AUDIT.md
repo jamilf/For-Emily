@@ -291,3 +291,27 @@ Read-only audit before building. The fourth and final **DERIVED** feature: **no 
 - **Accessible:** state by text + icon (never colour alone), `aria-live` summary/celebration, focus-trapped
   modal, reduced-motion honored. Entry: a "📜 Quests" chip in the header `Toolbar`, lazy-mounted in the shared
   `<Suspense>` (same pattern as Journal/Constellations).
+
+## 13. Phase 18 audit — verification + responsive/scroll hardening
+
+Read-only audit of the finished expansion, then surgical mobile-scroll fixes. **Feature matrix: all six
+PASS** (Forest Spirits, Memory Grove, Journal, Constellations, Seasons, Quests) — correct stores/derivation,
+retroactive+sticky/deterministic logic, lazy focus-trapped axe-clean modals, state by text not colour,
+reduced-motion honored, unit/component/axe/e2e present. No feature absent; no re-implementation.
+
+Invariants re-confirmed: `SYNC_KEYS` adds exactly `emily.spirits` + `emily.memories` over the pre-existing
+keys (`emily.focusLog` belongs to the earlier Firefly Calendar, not the six); `SCHEMA_VERSION = 6` with
+idempotent, non-destructive guards; Journal/Constellations/Seasons/Quests read-only (persist nothing);
+`emily.spr` vs `emily.spirits` no collision; `exportAll/importAll` covers all `emily.*`.
+
+Responsive gaps found + fixed (mobile scroll was the priority):
+
+- **No body scroll lock** → `useScrollLock` (ref-counted, iOS `position:fixed` + restore) inside `useFocusTrap`.
+- **Inputs < 16px** (iOS auto-zoom) → 16px on form controls under 640px.
+- **Missing `viewport-fit=cover`** → added; **no safe-area insets** → `env(safe-area-inset-*)` on Dock,
+  BrainDump, and the root/`<main>` top.
+- **Root `min-h-screen` (100vh)** → `min-h-[100dvh]` (no URL-bar clip).
+- **Firefly horizontal scroll region** → `overscroll-x-contain`. No horizontal page overflow elsewhere
+  (asserted in e2e). Tap targets: Dock ≥44px; chips/close controls ~36px with spacing (acceptable; left
+  to avoid layout regressions). The animation-rich scene was intentionally preserved (Performance is a
+  warning, not a gate); smoothness comes from the scroll-lock + composited animations, not from gutting it.

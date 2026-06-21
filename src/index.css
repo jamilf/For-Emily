@@ -16,6 +16,26 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Stop iOS Safari from auto-zooming when a form control is focused: any control
+ * below 16px triggers it. Bump to 16px on small screens only, so the desktop
+ * sizing (text-sm etc.) is unchanged. */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Safe-area helpers for fixed/floating chrome on notched devices (paired with
+ * viewport-fit=cover). Composes with existing spacing utilities. */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
 :focus-visible {
   outline: 2px solid theme('colors.ever.yellow');
   outline-offset: 2px;

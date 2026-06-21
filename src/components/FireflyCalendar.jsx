@@ -226,9 +226,10 @@ export default function FireflyCalendar({ onClose }) {
             ))}
           </dl>
 
-          {/* The meadow grid */}
+          {/* The meadow grid (horizontal scroll contained so it can't rubber-band
+              the page; vertical page scroll still passes through). */}
           <div
-            className="room-vignette overflow-x-auto rounded-xl bg-bgDim/60 p-3"
+            className="room-vignette overflow-x-auto overscroll-x-contain rounded-xl bg-bgDim/60 p-3"
             style={{ background: 'linear-gradient(to bottom, #2D353B, #232A2E)' }}
           >
             <div role="group" aria-label="Your focus meadow — the most recent weeks, by day">

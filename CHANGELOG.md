@@ -288,3 +288,31 @@ winter: 40 }` (a single tunable constant, tuned gentle for the gift), `SEASONS` 
 This is the sixth and final feature of the Sanctuary expansion (Forest Spirits, Memory Grove, Journal,
 Constellations, Sanctuary Seasons, Focus Quest Board). Persisted+synced state added across the whole set:
 **only `emily.spirits` and `emily.memories`** — everything else is derived.
+
+## Phase 18 — Verification + responsive / mobile-scroll hardening (no new features)
+
+A non-destructive QA + responsive pass over the completed expansion. Invariants verified intact
+(persisted+synced = `emily.spirits` + `emily.memories` only; `SCHEMA_VERSION` 6 coherent + idempotent;
+derived features persist nothing; `emily.spr` ≠ `emily.spirits`; backup round-trips). Surgical fixes:
+
+- `src/hooks/useScrollLock.js` — new: ref-counted, iOS-safe body scroll lock (pins the body, captures +
+  restores scroll position, compensates for the scrollbar, `overscroll-behavior: contain`). Wired into
+  `src/hooks/useFocusTrap.js` so **every** focus-trapped modal locks the background in one place (the
+  non-modal ambient Drawer is intentionally left scrollable).
+- `index.html` — viewport meta gains `viewport-fit=cover`.
+- `src/index.css` — `@media (max-width:640px){ input,textarea,select{ font-size:16px } }` prevents iOS
+  focus auto-zoom (desktop sizing unchanged); `.pb-safe`/`.pt-safe` safe-area helpers.
+- Safe-area insets via `env(safe-area-inset-*)`: `src/App.jsx` (root → `min-h-[100dvh]` + top inset),
+  `src/components/Dock.jsx` and `BrainDump.jsx` (bottom/right insets clear the home indicator).
+- `src/components/FireflyCalendar.jsx` — the horizontal meadow scroll region gains `overscroll-x-contain`
+  so it can't rubber-band the page.
+- `src/test/setup.js` — stubs `window.scrollTo` (jsdom) for the scroll-lock restore.
+- Tests: `src/hooks/useScrollLock.test.jsx` (lock/restore + ref-count), a body-lock assertion in
+  `QuestBoard.test.jsx`, and `e2e/responsive.spec.js` (desktop + mobile: per-modal opens, **no horizontal
+  page overflow**, **background scroll-locked**, internal scroll region, Esc closes + returns focus,
+  screenshots). 267 tests; ~97% coverage on core.
+
+### Living World expansion — complete (6 features + hardening)
+
+Forest Spirits, Memory Grove, Journal, Constellations, Sanctuary Seasons, Focus Quest Board — plus this
+verification/responsive pass. Schema 3→6; the suite grew 122 → 267 tests, all green.

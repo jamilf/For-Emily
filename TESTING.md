@@ -49,7 +49,10 @@ How to run every quality gate, and how the suite is organised.
   current-season `✦ Now` text marker, the progress-to-next line, keyboard, and zero axe.
   `QuestBoard.test.jsx` covers the no-fail framing (no failed/expired wording), the
   three-quest board with text/icon state, the all-done cosmetic celebration, the
-  reduced-motion variant (no `animate-pixel-pop`), keyboard, and zero axe.
+  reduced-motion variant (no `animate-pixel-pop`), keyboard, and zero axe (plus a body
+  scroll-lock assertion proving the `useFocusTrap` integration).
+- **Hooks:** `useScrollLock.test.jsx` checks the ref-counted body scroll lock pins the
+  body on mount, only releases on the last overlay's unmount, and restores fully.
 - **Migration:** `StorageManager.test.js` asserts the **v3 → v4** focusLog backfill, the
   **v4 → v5** Forest Spirits seed, and the **v5 → v6** Memory Grove ensure-exists guard
   each run as specified, are a no-op on re-run (never clobbering live data / fabricating
@@ -59,6 +62,16 @@ How to run every quality gate, and how the suite is organised.
   in `vitest.config.js` `coverage.include` (flashcards/scheduler, grove, focusLog,
   spirits, memories, encouragements, SpiritGenerator, StorageManager, utils). Current:
   ~97% statements.
+
+## Responsive / mobile-scroll (Playwright, CI)
+
+`e2e/responsive.spec.js` runs on both the **desktop** and **mobile (Pixel 5)** projects. For each modal
+(Journal, Constellations, Quests, Seasons, Forest Spirits, Memory Grove) it asserts: opens, **no
+horizontal page overflow** (`documentElement.scrollWidth ≤ clientWidth`), the **background is scroll-locked**
+(`body` pinned `position: fixed`), an internal `.overflow-y-auto` scroll region exists, and Esc closes +
+returns focus to the opener — capturing a screenshot per modal per viewport. iOS-specific hardening (16px
+inputs, `viewport-fit=cover`, `env(safe-area-inset-*)`, `100dvh`) ships in `index.html` / `index.css` /
+the fixed chrome and is exercised by these runs.
 
 ## End-to-end (Playwright) — runs in CI
 
