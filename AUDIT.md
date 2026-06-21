@@ -215,3 +215,21 @@ Read-only audit before building. Confirmed conventions, all reused:
   `SYNC_KEYS` (per-key LWW, like `emily.keepsakes`/`emily.garden`); Sanctuary backup auto-covers it.
 - **Entry point** is a self-hosted lazy modal in `FocusGarden.jsx` (sibling to the Almanac / Forest
   Spirits buttons), so no Dashboard wiring was required.
+
+## 9. Phase 14 audit — Journal (derived timeline, no new state)
+
+Read-only audit before building. The Journal is the first **DERIVED** feature of the expansion, so per the
+locked decision it adds **no new persisted key, no `SYNC_KEYS` change, and no migration** — it only reads
+existing stores. Confirmed shapes reused as-is:
+
+- `emily.memories` `[{id,dna,ts,title,note}]` · `emily.garden` `[{id,ts}]` · `emily.keepsakes`
+  `[{id,text,ref,type,signoff,ts}]` · `emily.reflections` `[{ts,mood,note}]` (mood rain/cloud/sun) — ts epoch ms.
+- `emily.spirits.discoveredAt` `{[id]: ts|null}` (null = retroactive → shown undated, never dated).
+- `emily.grove.unlocked` `{[id]: 'YYYY-MM-DD'}` — a date STRING; converted to a sortable local-midnight ts.
+- Reused `SPIRITS_BY_ID` (spirits.js) and `SPECIES_BY_ID`/`dnaOf` (grove.js) for names + tree DNA; rendered
+  via the shared `ProceduralTree`/`ProceduralSpirit` (no new art).
+- Entry point: a global "📔 Journal" chip in the header `Toolbar` (threaded `onOpenJournal` from `App.jsx`),
+  matching the existing Guide/Sync chips — the modal lazy-loads in the shared top-level `<Suspense>`.
+- Curation choices documented in code: reflections without a note are skipped (a mood alone isn't a journal
+  entry); growth milestones are emitted only at `MILESTONES` thresholds (1, 10, 25, 50, 100, …) to avoid
+  flooding the timeline with every session.

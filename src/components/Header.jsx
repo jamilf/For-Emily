@@ -15,6 +15,7 @@ export default function Header({
   onOpenFlashcards,
   onOpenGuide,
   onOpenSync,
+  onOpenJournal,
   dueCount,
 }) {
   const { greeting, dateLabel } = useMemo(() => {
@@ -64,6 +65,7 @@ export default function Header({
             onOpenFlashcards={onOpenFlashcards}
             onOpenGuide={onOpenGuide}
             onOpenSync={onOpenSync}
+            onOpenJournal={onOpenJournal}
             dueCount={dueCount}
           />
         </div>

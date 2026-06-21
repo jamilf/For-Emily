@@ -188,3 +188,25 @@ paletteKey)` → original silhouettes (body × ears × accent) painted only from
 - Tests: memories unit suite (create/update/delete/search) + `speciesForDna` + v5→v6 migration & backup
   round-trip + `SYNC_KEYS` + MemoryGrove component/axe suite (search, dedicate flow, edit, delete,
   keyboard) + `e2e/memories.spec.js` (desktop + mobile screenshots). 201 tests; ~97% coverage on core.
+
+## Phase 14 — Journal (derived timeline)
+
+- `src/data/journal.js` — new: pure, DERIVED timeline builder. `buildJournal({memories, spirits, grove,
+garden, keepsakes, reflections})` weaves existing data into one reverse-chronological list — dedicated
+  memories, dated spirit discoveries, varietal unlocks (grove 'YYYY-MM-DD' → local-midnight ts), kept
+  letters, written reflections (note-bearing only), and growth milestones (the Nth harvested tree). Returns
+  `{ entries (newest-first), undated }`; retroactively-met spirits (`discoveredAt: null`) go to `undated`
+  with no fabricated date. `searchJournal` filters title+detail. Fully unit-tested.
+- `src/components/Journal.jsx` — new: lazy, focus-trapped modal (same chrome as the rest). A derived
+  summary (memories / spirits / varietals / letters / days studied / streak), a search box with an
+  `aria-live` count, and the timeline grouped under month headings — each entry shown with its emoji icon
+  - the shared `ProceduralTree`/`ProceduralSpirit` art + title + date + detail (conveyed by text + icon +
+    shape, never colour alone). Undated group at the end ("From before your journal began", shown with "—").
+    Warm empty state; reduced-motion safe; zero axe violations.
+- `src/App.jsx` / `src/components/Header.jsx` / `src/components/Toolbar.jsx` — a global "📔 Journal" toolbar
+  chip (threaded `onOpenJournal`); the modal lazy-loads + renders in the existing top-level `<Suspense>`.
+- `vitest.config.js` — `src/data/journal.js` added to coverage `include`.
+- **No new persistence, no sync, no migration** — the Journal is purely derived (locked-decision compliant).
+- Tests: journal unit suite (each entry kind, sort, grove date→ts, reflection note-filter, milestones,
+  search) + Journal component/axe suite (summary, month grouping, undated "—", search, empty state,
+  keyboard) + `e2e/journal.spec.js` (desktop + mobile screenshots). 218 tests; ~97% coverage on core.

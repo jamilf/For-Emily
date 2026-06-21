@@ -22,6 +22,7 @@ const AmbientMixerDrawer = lazy(() => import('./components/AmbientMixerDrawer.js
 const GuideModal = lazy(() => import('./components/GuideModal.jsx'))
 const SyncModal = lazy(() => import('./components/SyncModal.jsx'))
 const GroveAlmanac = lazy(() => import('./components/GroveAlmanac.jsx'))
+const Journal = lazy(() => import('./components/Journal.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
@@ -30,6 +31,7 @@ function Dashboard() {
   const [showGuide, setShowGuide] = useState(false)
   const [showSync, setShowSync] = useState(false)
   const [showGrove, setShowGrove] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
@@ -91,6 +93,7 @@ function Dashboard() {
           onOpenFlashcards={() => setShowCards(true)}
           onOpenGuide={() => setShowGuide(true)}
           onOpenSync={() => setShowSync(true)}
+          onOpenJournal={() => setShowJournal(true)}
           dueCount={dueCount}
         />
 
@@ -159,6 +162,9 @@ function Dashboard() {
 
         {/* Grove Almanac — tree collection */}
         {showGrove && <GroveAlmanac onClose={() => setShowGrove(false)} />}
+
+        {/* Journal — a derived timeline of meaningful moments */}
+        {showJournal && <Journal onClose={() => setShowJournal(false)} />}
       </Suspense>
     </div>
   )

@@ -11,6 +11,7 @@ export default function Toolbar({
   onOpenFlashcards,
   onOpenGuide,
   onOpenSync,
+  onOpenJournal,
   dueCount = 0,
 }) {
   const sync = useSync()
@@ -45,6 +46,13 @@ export default function Toolbar({
               {dueCount}
             </span>
           )}
+        </button>
+      )}
+
+      {/* Journal */}
+      {onOpenJournal && (
+        <button type="button" onClick={onOpenJournal} className={chip} aria-label="Open your journal">
+          📔 <span className="hidden sm:inline">Journal</span>
         </button>
       )}
 
