@@ -26,6 +26,7 @@ export default defineConfig({
         'src/data/spirits.js',
         'src/data/memories.js',
         'src/data/journal.js',
+        'src/data/constellations.js',
         'src/data/encouragements.js',
         'src/pixel/SpiritGenerator.js',
         'src/storage/StorageManager.js',

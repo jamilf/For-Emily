@@ -210,3 +210,26 @@ garden, keepsakes, reflections})` weaves existing data into one reverse-chronolo
 - Tests: journal unit suite (each entry kind, sort, grove date→ts, reflection note-filter, milestones,
   search) + Journal component/axe suite (summary, month grouping, undated "—", search, empty state,
   keyboard) + `e2e/journal.spec.js` (desktop + mobile screenshots). 218 tests; ~97% coverage on core.
+
+## Phase 15 — Constellations (derived night-sky)
+
+- `src/data/constellations.js` — new: pure, DERIVED catalogue of nine original constellations, each with a
+  star shape + a cumulative `rule`. `constellationMetrics({garden, focusLog, flashcardStats, reflections,
+memories, spirits})` derives non-decreasing counts (sessions, active days, mornings `<12`, nights
+  `>=20||<5`, reviews, reflections, memories, spirits). `buildSky` resolves each constellation via the
+  reused grove `progressFor`, lighting `litStars` in proportion to progress and flagging `formed` at the
+  threshold. Because every metric only grows, constellations never dim. Fully unit-tested.
+- `src/components/Constellations.jsx` — new: lazy, focus-trapped modal. A decorative dusk-sky `<svg>`
+  (`aria-hidden`) draws each constellation — lit stars (twinkle unless reduced-motion) + connecting lines +
+  a name label once formed, over deterministic ambient stars — and an equivalent accessible `<ul>` carries
+  all state in text + shape (`✦ Formed` vs `N of M stars lit`, with `current / target`), plus an
+  `aria-live` "N of M formed" summary. State never by colour alone; SVG-only (no assets); zero axe.
+- `src/App.jsx` / `src/components/Header.jsx` / `src/components/Toolbar.jsx` — a global "🌌 Constellations"
+  toolbar chip (threaded `onOpenConstellations`); the modal lazy-loads in the existing top-level `<Suspense>`.
+- `vitest.config.js` — `src/data/constellations.js` added to coverage `include`.
+- **No new persistence, no sync, no migration** — purely derived (locked-decision compliant). Reuses the
+  grove `progressFor` engine and the `.animate-twinkle` keyframe.
+- Tests: constellations unit suite (metric boundaries, proportional star lighting, threshold forming, empty
+  safety) + Constellations component/axe suite (summary, formed/partial text, decorative sky aria-hidden,
+  reduced-motion, keyboard) + `e2e/constellations.spec.js` (desktop + mobile screenshots). 231 tests; ~97%
+  coverage on core.

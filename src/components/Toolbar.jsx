@@ -12,6 +12,7 @@ export default function Toolbar({
   onOpenGuide,
   onOpenSync,
   onOpenJournal,
+  onOpenConstellations,
   dueCount = 0,
 }) {
   const sync = useSync()
@@ -53,6 +54,18 @@ export default function Toolbar({
       {onOpenJournal && (
         <button type="button" onClick={onOpenJournal} className={chip} aria-label="Open your journal">
           📔 <span className="hidden sm:inline">Journal</span>
+        </button>
+      )}
+
+      {/* Constellations */}
+      {onOpenConstellations && (
+        <button
+          type="button"
+          onClick={onOpenConstellations}
+          className={chip}
+          aria-label="Open your constellations"
+        >
+          🌌 <span className="hidden sm:inline">Constellations</span>
         </button>
       )}
 

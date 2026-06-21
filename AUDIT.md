@@ -233,3 +233,22 @@ existing stores. Confirmed shapes reused as-is:
 - Curation choices documented in code: reflections without a note are skipped (a mood alone isn't a journal
   entry); growth milestones are emitted only at `MILESTONES` thresholds (1, 10, 25, 50, 100, …) to avoid
   flooding the timeline with every session.
+
+## 10. Phase 15 audit — Constellations (derived night-sky, no new state)
+
+Read-only audit before building. The second **DERIVED** feature of the expansion: it adds **no new
+persisted key, no `SYNC_KEYS` change, and no migration** — it only reads existing stores.
+
+- Reused the Grove's generalized `progressFor(item, metrics)` (`src/data/grove.js`) so there's one
+  derivation engine; a new `constellationMetrics` derives the counts from `emily.garden` (sessions +
+  time-of-day), `emily.focusLog` (active days), `emily.flashcardStats.total`, `emily.reflections`,
+  `emily.memories`, and `emily.spirits.unlocked`.
+- **All metrics are cumulative / non-decreasing**, so a constellation only ever lights up more — it never
+  dims. This keeps the surface gentle and avoids any "you lost progress" framing.
+- The sky is a single inline `<svg>` (SVG-only, no assets, tokens only), marked `aria-hidden`; the
+  authoritative state lives in an accessible `<ul>` (name + `✦ Formed`/`N of M stars lit` + `current/target`),
+  satisfying "visual-only surfaces get a text equivalent" and "state never by colour alone".
+- Reduced motion: lit-star twinkle (`.animate-twinkle`) is gated on a `matchMedia` read (testable static
+  fallback), in addition to the global reduced-motion CSS rule.
+- Entry point: a global "🌌 Constellations" chip in the header `Toolbar`, threaded from `App.jsx` and lazy
+  mounted in the shared top-level `<Suspense>` (same pattern as the Journal).

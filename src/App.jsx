@@ -23,6 +23,7 @@ const GuideModal = lazy(() => import('./components/GuideModal.jsx'))
 const SyncModal = lazy(() => import('./components/SyncModal.jsx'))
 const GroveAlmanac = lazy(() => import('./components/GroveAlmanac.jsx'))
 const Journal = lazy(() => import('./components/Journal.jsx'))
+const Constellations = lazy(() => import('./components/Constellations.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
@@ -32,6 +33,7 @@ function Dashboard() {
   const [showSync, setShowSync] = useState(false)
   const [showGrove, setShowGrove] = useState(false)
   const [showJournal, setShowJournal] = useState(false)
+  const [showConstellations, setShowConstellations] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
@@ -94,6 +96,7 @@ function Dashboard() {
           onOpenGuide={() => setShowGuide(true)}
           onOpenSync={() => setShowSync(true)}
           onOpenJournal={() => setShowJournal(true)}
+          onOpenConstellations={() => setShowConstellations(true)}
           dueCount={dueCount}
         />
 
@@ -165,6 +168,9 @@ function Dashboard() {
 
         {/* Journal — a derived timeline of meaningful moments */}
         {showJournal && <Journal onClose={() => setShowJournal(false)} />}
+
+        {/* Constellations — a derived night-sky view of progress */}
+        {showConstellations && <Constellations onClose={() => setShowConstellations(false)} />}
       </Suspense>
     </div>
   )

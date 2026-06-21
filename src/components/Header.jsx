@@ -16,6 +16,7 @@ export default function Header({
   onOpenGuide,
   onOpenSync,
   onOpenJournal,
+  onOpenConstellations,
   dueCount,
 }) {
   const { greeting, dateLabel } = useMemo(() => {
@@ -66,6 +67,7 @@ export default function Header({
             onOpenGuide={onOpenGuide}
             onOpenSync={onOpenSync}
             onOpenJournal={onOpenJournal}
+            onOpenConstellations={onOpenConstellations}
             dueCount={dueCount}
           />
         </div>
