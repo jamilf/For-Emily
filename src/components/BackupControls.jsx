@@ -56,8 +56,8 @@ export default function BackupControls() {
     <div className="rounded-xl border-2 border-brown/15 bg-white/50 p-4">
       <h3 className="font-display text-base text-brown">Sanctuary backup</h3>
       <p className="mt-1 text-sm leading-relaxed text-brown/70">
-        Save everything — decks, garden, stats, kept letters — to a file you can keep, or restore it on
-        another device. Works even when you&apos;re signed out.
+        Save everything (decks, garden, stats, kept letters) to a file you can keep, or restore it on another
+        device. Works even when you&apos;re signed out.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button

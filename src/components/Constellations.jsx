@@ -107,8 +107,8 @@ export default function Constellations({ onClose }) {
 
         <div className="space-y-4 overflow-y-auto bg-bg0 p-5 text-fg">
           <p className="text-sm text-fg/80">
-            Every constellation lights up as you study — sessions, days, cards, the spirits that find you.
-            They only ever grow brighter.
+            Every constellation lights up as you study: sessions, days, cards, the spirits that find you. They
+            only ever grow brighter.
           </p>
 
           {/* Decorative sky — the list below carries the real state. */}
@@ -188,7 +188,7 @@ export default function Constellations({ onClose }) {
               <li key={c.id} className="rounded-2xl bg-bg2/50 p-3">
                 <p className="font-display text-sm text-fg">
                   {c.name}
-                  {' — '}
+                  {': '}
                   {c.formed ? (
                     <span className="text-ever-green">✦ Formed</span>
                   ) : (

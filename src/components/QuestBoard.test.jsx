@@ -33,7 +33,7 @@ describe('QuestBoard', () => {
     render(<QuestBoard onClose={() => {}} />)
     expect(screen.getByRole('dialog', { name: /focus quests/i })).toBeInTheDocument()
     expect(screen.getByText(/0 of 3 quests tended today/i)).toBeInTheDocument()
-    expect(screen.getByText(/nothing to fail here and no streak to break/i)).toBeInTheDocument()
+    expect(screen.getByText(/nothing to fail here, no streak to break/i)).toBeInTheDocument()
     // Never any failed / expired status wording (the gentle "nothing to fail" copy
     // is fine; what we forbid is a fail/expire state).
     expect(screen.queryByText(/failed/i)).toBeNull()

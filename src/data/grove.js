@@ -87,7 +87,7 @@ export const SPECIES = [
     shape: 2,
     palette: 0,
     rule: { metric: 'streak', n: 3 },
-    flavor: 'Three days running — look at you.',
+    flavor: 'Three days running. Look at you.',
   },
   {
     id: 'night-cedar',
@@ -180,7 +180,7 @@ export const SPECIES = [
     palette: 3,
     pattern: 2,
     rule: { metric: 'minutes', n: 200 },
-    flavor: 'Rare and luminous — you earned the shimmer.',
+    flavor: 'Rare and luminous. You earned the shimmer.',
   },
   {
     id: 'aurora-larch',
@@ -254,7 +254,7 @@ export function progressFor(species, metrics) {
 
 /** A short, kind unlock hint (hidden for mystery species). */
 export function hintFor(species) {
-  if (species.mystery) return 'A mystery seed — keep going.'
+  if (species.mystery) return 'A mystery seed, still hidden. Keep going.'
   const r = species.rule
   switch (r.metric) {
     case 'grown':

@@ -316,3 +316,24 @@ derived features persist nothing; `emily.spr` ≠ `emily.spirits`; backup round-
 
 Forest Spirits, Memory Grove, Journal, Constellations, Sanctuary Seasons, Focus Quest Board — plus this
 verification/responsive pass. Schema 3→6; the suite grew 122 → 267 tests, all green.
+
+## Phase 19 — copy cleanup: de-AI the voice + remove em dashes
+
+A non-destructive copy pass. Authored, user-facing strings were rephrased to read like warm, human
+writing and every em dash (U+2014) in displayed copy was removed by rewriting, never by character
+swaps. No behaviour, store keys, data shapes, migrations, sync, or selection logic changed — only
+string values. Scripture/Bible-API/quoted content was left untouched (verse text and the `— {ref}`
+citations in `LetterModal.jsx` are deliberately preserved), as was the `parseBulk` em-dash separator
+(parsing behaviour) and the `For Emily Tran. You've got this.` dedication.
+
+- `src/data/encouragements.js` — ~36 message strings rephrased to drop em-dash asides; the rotating
+  `SIGNOFFS` lost their leading "— " (e.g. `your soot friend, always`).
+- `src/data/{grove,seasons,constellations,journal}.js` — varietal flavor/hints, season + constellation
+  blurbs, and the kept-verse journal title reworded without em dashes.
+- `src/components/{QuestBoard,MemoryGroveModal,ForestSpiritsModal,GroveAlmanac,FireflyCalendar,Flashcards,SeasonsModal,Constellations,Journal,SyncModal,Header,GuideModal,BackupControls}.jsx`
+  — displayed copy, aria-labels, and live-region strings reworded; standalone "—" placeholders became
+  short words (`undated`, `none yet`, `n/a`). Bulk-import hints now teach `term - definition`.
+- `src/copy-noemdash.test.js` — new guardrail: strips comments, then fails if an em dash appears in any
+  authored copy under `src/data` / `src/components` (allowlisting the parse separator + scripture refs).
+- Tests updated for changed copy: `src/data/journal.test.js`, `src/components/{Flashcards,Journal,QuestBoard}.test.jsx`.
+- Gates green: lint, format, full suite + the new guardrail, ~97% coverage, build.

@@ -46,7 +46,7 @@ const ORIGINALS = [
     ['idle', 'rough'],
   ],
   [
-    'you do not have to do it all today — just the next small thing, bb.',
+    'you do not have to do it all today. just the next small thing, bb.',
     'playful',
     ['focus', 'rest'],
     ['idle', 'break'],
@@ -220,7 +220,7 @@ const ORIGINALS = [
     ['rough', 'daily', 'idle'],
   ],
   [
-    'He is not asking you to be perfect — just to trust Him with the next hour.',
+    'He is not asking you to be perfect. just to trust Him with the next hour.',
     'faith',
     ['faith', 'peace'],
     ['idle', 'rough'],
@@ -250,7 +250,7 @@ const ORIGINALS = [
     ['rough', 'idle'],
   ],
   [
-    'rest is not quitting — even God rested. you are allowed to close your eyes.',
+    'rest is not quitting. even God rested, and you are allowed to close your eyes.',
     'faith',
     ['rest', 'faith'],
     ['break', 'night'],
@@ -286,7 +286,7 @@ const ORIGINALS = [
     ['rough', 'idle'],
   ],
   [
-    'peace is not a personality trait you lack — it is a Person you can lean on.',
+    'peace is not a personality trait you lack. it is a Person you can lean on.',
     'faith',
     ['peace', 'faith'],
     ['rough', 'idle'],
@@ -310,7 +310,7 @@ const ORIGINALS = [
     ['rough', 'night'],
   ],
   [
-    'He gives strength to the weary — and yes, that includes burnt-out students.',
+    'He gives strength to the weary, and yes, that includes burnt-out students.',
     'faith',
     ['strength', 'faith'],
     ['rough', 'idle'],
@@ -328,7 +328,7 @@ const ORIGINALS = [
     ['break', 'rough'],
   ],
   [
-    'His mercies are new this morning — including for whatever yesterday held.',
+    'His mercies are new this morning, including for whatever yesterday held.',
     'faith',
     ['hope', 'faith'],
     ['morning', 'daily'],
@@ -352,7 +352,7 @@ const ORIGINALS = [
     ['rough'],
   ],
   [
-    'He delights in you — not in your output, in you. let that be enough today.',
+    'He delights in you. not in your output, in you. let that be enough today.',
     'faith',
     ['identity', 'joy'],
     ['idle', 'breeze'],
@@ -364,7 +364,7 @@ const ORIGINALS = [
     ['rough', 'idle'],
   ],
   [
-    'your study can be worship — small faithfulness offered up with open hands.',
+    'your study can be worship: small faithfulness offered up with open hands.',
     'faith',
     ['focus', 'faith'],
     ['idle', 'daily'],
@@ -424,7 +424,7 @@ const ORIGINALS = [
     ['rough', 'idle'],
   ],
   [
-    'the peace He gives is not the absence of the exam — it is His presence in it.',
+    'the peace He gives is not the absence of the exam. it is His presence in it.',
     'faith',
     ['peace', 'faith'],
     ['rough', 'idle'],
@@ -457,7 +457,7 @@ const ORIGINALS = [
     ['idle', 'complete'],
   ],
   [
-    'your hippocampus consolidates everything while you sleep — so that nap is literally studying. 😴',
+    'your hippocampus consolidates everything while you sleep, so that nap is literally studying. 😴',
     'neuro',
     ['neuro', 'rest'],
     ['break', 'night'],
@@ -475,7 +475,7 @@ const ORIGINALS = [
     ['rough', 'idle'],
   ],
   [
-    'neuroplasticity says you are not bad at this — you are just early on the curve.',
+    'neuroplasticity says you are not bad at this. you are just early on the curve.',
     'neuro',
     ['neuro', 'hope'],
     ['rough', 'idle'],
@@ -487,7 +487,7 @@ const ORIGINALS = [
     ['break'],
   ],
   [
-    'spaced repetition beats the forgetting curve — tiny reviews now save whole nights later.',
+    'spaced repetition beats the forgetting curve: tiny reviews now save whole nights later.',
     'neuro',
     ['neuro', 'focus'],
     ['idle'],
@@ -523,7 +523,7 @@ const ORIGINALS = [
     ['night', 'break'],
   ],
   [
-    'your working memory is small for everyone — that is why we write things down, not a flaw.',
+    'your working memory is small for everyone, so we write things down. not a flaw.',
     'neuro',
     ['neuro', 'identity'],
     ['idle'],
@@ -553,7 +553,7 @@ const ORIGINALS = [
     ['idle'],
   ],
   [
-    'one tab of focus at a time — task-switching has a real cognitive cost. protect the lane.',
+    'one tab of focus at a time. task-switching has a real cognitive cost, so protect the lane.',
     'neuro',
     ['neuro', 'focus'],
     ['idle'],
@@ -577,7 +577,7 @@ const ORIGINALS = [
     ['idle', 'complete'],
   ],
   [
-    'you remember beginnings and ends best — so short sessions have more prime real estate.',
+    'you remember beginnings and ends best, so short sessions have more prime real estate.',
     'neuro',
     ['neuro', 'focus'],
     ['idle'],
@@ -607,7 +607,7 @@ const ORIGINALS = [
     ['rough', 'idle'],
   ],
   [
-    'curiosity primes the hippocampus to absorb — so let yourself find one bit interesting.',
+    'curiosity primes the hippocampus to absorb, so let yourself find one bit interesting.',
     'neuro',
     ['neuro', 'focus'],
     ['idle'],
@@ -631,7 +631,7 @@ const ORIGINALS = [
     ['rough'],
   ],
   [
-    'you are building myelin with every rep — insulation that makes recall faster. keep wrapping. 🧵',
+    'you are building myelin with every rep: insulation that makes recall faster. keep wrapping. 🧵',
     'neuro',
     ['neuro', 'focus'],
     ['idle', 'complete'],
@@ -649,7 +649,7 @@ const ORIGINALS = [
     ['break'],
   ],
   [
-    'recall feels harder than recognition because it works harder — that effort is the point.',
+    'recall feels harder than recognition because it works harder. that effort is the point.',
     'neuro',
     ['neuro', 'focus'],
     ['idle'],
@@ -765,7 +765,7 @@ const ORIGINALS = [
     ['idle', 'morning'],
   ],
   [
-    'the kettle, the lamp, the quiet — your little sanctuary is open. welcome back. 🏡',
+    'the kettle, the lamp, the quiet. your little sanctuary is open. welcome back. 🏡',
     'cozy',
     ['cozy', 'peace'],
     ['daily', 'idle'],
@@ -822,7 +822,7 @@ const ORIGINALS = [
     ['rough'],
   ],
   [
-    'peace is not the absence of the exam — it is steadiness right in the middle of it.',
+    'peace is not the absence of the exam. it is steadiness right in the middle of it.',
     'cozy',
     ['peace', 'anxiety'],
     ['rough', 'idle'],
@@ -1005,7 +1005,7 @@ const ORIGINALS = [
     ['celebration'],
     ['complete'],
   ],
-  ['you showed up — that is the whole win. so proud of you. 🌿', 'playful', ['celebration'], ['complete']],
+  ['you showed up. that is the whole win. so proud of you. 🌿', 'playful', ['celebration'], ['complete']],
   [
     'another session banked. your future self is quietly, deeply grateful. 💛',
     'playful',
@@ -1037,7 +1037,7 @@ const ORIGINALS = [
     ['complete', 'break'],
   ],
   [
-    'that is exactly how big things get done — one finished session at a time. proud of you.',
+    'that is exactly how big things get done: one finished session at a time. proud of you.',
     'playful',
     ['celebration'],
     ['complete'],
@@ -1069,7 +1069,7 @@ const ORIGINALS = [
     ['break'],
   ],
   ['gentle nudge to drink some water, Emily. yes, right now. 💧', 'cozy', ['rest'], ['break']],
-  ['you are not a machine, thank God. take five — you have earned it.', 'cozy', ['rest', 'faith'], ['break']],
+  ['you are not a machine, thank God. take five, you have earned it.', 'cozy', ['rest', 'faith'], ['break']],
   [
     'unclench. you have been concentrating hard. let the break be actually restful.',
     'cozy',
@@ -1108,7 +1108,7 @@ const ORIGINALS = [
     ['break'],
   ],
   [
-    'hydrate, snack, stretch — the unglamorous trio that keeps the brain online. 🧃',
+    'hydrate, snack, stretch: the unglamorous trio that keeps the brain online. 🧃',
     'cozy',
     ['rest', 'neuro'],
     ['break'],
@@ -1122,7 +1122,7 @@ const ORIGINALS = [
 
   // ── Morning / fresh start ─────────────────────────────────────────────────
   [
-    'good morning, Emily. you do not have to do it all today — just gently begin. 🌅',
+    'good morning, Emily. you do not have to do it all today, just gently begin. 🌅',
     'cozy',
     ['hope', 'peace'],
     ['morning', 'daily'],
@@ -1253,7 +1253,7 @@ const ORIGINALS = [
     ['idle'],
   ],
   [
-    'hope is not naive — it is just refusing to let the hard day write the whole story.',
+    'hope is not naive. it is just refusing to let the hard day write the whole story.',
     'faith',
     ['hope'],
     ['rough', 'idle'],
@@ -1313,7 +1313,7 @@ const ORIGINALS = [
     ['idle', 'complete'],
   ],
   [
-    'breeze day, Emily — ride the good mood into a couple of cards while it lasts. ☀️',
+    'breeze day, Emily. ride the good mood into a couple of cards while it lasts. ☀️',
     'playful',
     ['joy', 'focus'],
     ['breeze'],
@@ -1678,7 +1678,7 @@ const ORIGINALS = [
   ],
 
   [
-    'recall fails, then succeeds, then sticks — that frustrating gap is literally the learning.',
+    'recall fails, then succeeds, then sticks. that frustrating gap is literally the learning.',
     'neuro',
     ['neuro', 'focus'],
     ['idle', 'rough'],
@@ -1708,7 +1708,7 @@ const ORIGINALS = [
     ['idle'],
   ],
   [
-    'your focus has a natural rhythm — ride the wave when it is high, rest when it dips.',
+    'your focus has a natural rhythm. ride the wave when it is high, rest when it dips.',
     'neuro',
     ['neuro', 'rest'],
     ['idle', 'break'],
@@ -1726,7 +1726,7 @@ const ORIGINALS = [
     ['idle'],
   ],
   [
-    'the brain loves chunking — three things grouped beat seven things scattered. group them.',
+    'the brain loves chunking: three things grouped beat seven things scattered. group them.',
     'neuro',
     ['neuro', 'focus'],
     ['idle'],
@@ -1768,7 +1768,7 @@ const ORIGINALS = [
     ['break'],
   ],
   [
-    'your senses gate attention — quieter room, fewer tabs, and recall gets measurably easier.',
+    'your senses gate attention: quieter room, fewer tabs, and recall gets measurably easier.',
     'neuro',
     ['neuro', 'focus'],
     ['idle'],
@@ -1841,7 +1841,7 @@ const ORIGINALS = [
     ['idle'],
   ],
   [
-    'the wind outside, the warm inside, the quiet between — your sanctuary holds you. breathe.',
+    'the wind outside, the warm inside, the quiet between. your sanctuary holds you. breathe.',
     'cozy',
     ['cozy', 'peace'],
     ['idle', 'night'],
@@ -1933,7 +1933,7 @@ const ORIGINALS = [
     ['rough', 'idle'],
   ],
   [
-    'grit is not gritting your teeth — it is gently refusing to give up on yourself. keep gently.',
+    'grit is not gritting your teeth. it is gently refusing to give up on yourself. keep gently.',
     'playful',
     ['strength'],
     ['rough', 'idle'],
@@ -1976,7 +1976,7 @@ const ORIGINALS = [
     ['complete'],
   ],
   [
-    'the tree grew because you stayed. small, steady, alive — just like your progress. 🌱',
+    'the tree grew because you stayed. small, steady, alive, just like your progress. 🌱',
     'playful',
     ['celebration', 'hope'],
     ['complete'],
@@ -2518,16 +2518,16 @@ export function verseOfDay(verses = {}, dateStr = dayStr()) {
 
 // ── Letter sign-offs (rotating) ──────────────────────────────────────────────
 export const SIGNOFFS = [
-  '— your soot friend',
-  '— here in the rain with you ☔',
-  '— rooting for you, always',
-  '— with a little cup of tea 🍵',
-  '— from your cozy corner',
-  '— the sprite who believes in you',
-  '— softly, and on your side',
-  '— see you after the next session 🌱',
-  '— keeping the lamp on for you 🕯️',
-  '— proud of you, truly',
+  'your soot friend, always',
+  'here in the rain with you ☔',
+  'rooting for you, always',
+  'with a little cup of tea 🍵',
+  'from your cozy corner',
+  'the sprite in your corner',
+  'softly, and on your side',
+  'see you after the next session 🌱',
+  'keeping the lamp on for you 🕯️',
+  'proud of you, truly',
 ]
 
 export function randomSignoff() {

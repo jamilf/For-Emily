@@ -143,7 +143,7 @@ export default function Journal({ onClose }) {
 
         <div className="paper-grain space-y-4 overflow-y-auto bg-cream p-5 text-brownDark">
           <p className="text-sm text-brown/75">
-            A look back at the moments you&apos;ve made — memories, the spirits that found you, and the grove
+            A look back at the moments you&apos;ve made: memories, the spirits that found you, and the grove
             you&apos;ve grown, one session at a time.
           </p>
 
@@ -159,7 +159,7 @@ export default function Journal({ onClose }) {
 
           {total === 0 ? (
             <p className="py-6 text-center text-sm text-brown/70">
-              Your journal fills in as you study — finish a session, dedicate a memory, meet a spirit. The
+              Your journal fills in as you study. Finish a session, dedicate a memory, meet a spirit. The
               first page is waiting for you.
             </p>
           ) : (
@@ -212,7 +212,7 @@ export default function Journal({ onClose }) {
                                 {entry.title}
                               </p>
                               <p className="mt-0.5 text-sm text-brown/75">{entry.detail}</p>
-                              <p className="mt-1 text-xs text-brown/55">—</p>
+                              <p className="mt-1 text-xs text-brown/55">undated</p>
                             </div>
                           </li>
                         ))}

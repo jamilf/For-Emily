@@ -32,20 +32,20 @@ function prettyDay(ymd) {
 /** Accessible name for a cell — count + optional known minutes, never shaming. */
 function cellLabel(cell) {
   const when = prettyDay(cell.ymd)
-  if (cell.sessions <= 0) return `${when} — no sessions yet`
+  if (cell.sessions <= 0) return `${when}: no sessions yet`
   const plural = cell.sessions === 1 ? 'focus session' : 'focus sessions'
   const mins = cell.minutes != null ? `, ~${cell.minutes} min` : ''
-  return `${when} — ${cell.sessions} ${plural}${mins}`
+  return `${when}: ${cell.sessions} ${plural}${mins}`
 }
 
 /** A friendlier, longer phrasing for the live detail region. */
 function detailLine(cell) {
   const when = prettyDay(cell.ymd)
-  if (cell.sessions <= 0) return `${when} — a quiet day. No fireflies yet, and that's perfectly okay.`
+  if (cell.sessions <= 0) return `${when}: a quiet day. No fireflies yet, and that's perfectly okay.`
   const fly = cell.sessions === 1 ? 'firefly' : 'fireflies'
   const sess = cell.sessions === 1 ? 'session' : 'sessions'
   const mins = cell.minutes != null ? ` · about ${cell.minutes} min of focus` : ''
-  return `${when} — ${cell.sessions} ${fly} lit, ${cell.sessions} focus ${sess}${mins}.`
+  return `${when}: ${cell.sessions} ${fly} lit, ${cell.sessions} focus ${sess}${mins}.`
 }
 
 /** Format a minutes total as "2h 5m" / "45m". */
@@ -167,7 +167,7 @@ export default function FireflyCalendar({ onClose }) {
   const insights = useMemo(() => buildInsights(log, garden, today), [log, garden, today])
   const bestDayText = summary.bestDay
     ? `${prettyDay(summary.bestDay.ymd)} (${summary.bestDay.sessions})`
-    : '—'
+    : 'none yet'
 
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -207,7 +207,7 @@ export default function FireflyCalendar({ onClose }) {
         <div className="space-y-5 overflow-y-auto bg-bg0 p-5 text-fg">
           <p className="text-sm text-fg/80">
             Every completed focus session lights one firefly in your meadow. This is a record of when you
-            tended your grove — quiet days are simply quiet, never a failure.
+            tended your grove. Quiet days are simply quiet, never a failure.
           </p>
 
           {/* Header summary */}
@@ -232,7 +232,7 @@ export default function FireflyCalendar({ onClose }) {
             className="room-vignette overflow-x-auto overscroll-x-contain rounded-xl bg-bgDim/60 p-3"
             style={{ background: 'linear-gradient(to bottom, #2D353B, #232A2E)' }}
           >
-            <div role="group" aria-label="Your focus meadow — the most recent weeks, by day">
+            <div role="group" aria-label="Your focus meadow: the most recent weeks, by day">
               {grid.map((lane, row) => (
                 <div key={row} className="flex items-center gap-1">
                   <span
@@ -334,7 +334,7 @@ function buildInsights(log, garden, today) {
   if (activeWithin(log, today, 1) === 0) {
     const since = daysSinceActive(log, today)
     if (since >= 2 && since < 400) {
-      out.push("Welcome back — the meadow's glad to see you. Light one firefly when you're ready.")
+      out.push("Welcome back. The meadow's glad to see you. Light one firefly when you're ready.")
     }
   }
 

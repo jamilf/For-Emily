@@ -99,7 +99,7 @@ export function buildJournal({
       ts: k.ts,
       kind: 'keepsake',
       icon: '💌',
-      title: isVerse ? `You kept a verse — ${k.ref}` : 'You kept a letter',
+      title: isVerse ? `You kept a verse: ${k.ref}` : 'You kept a letter',
       detail: snippet(k.text),
     })
   }

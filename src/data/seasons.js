@@ -17,7 +17,7 @@ export const SEASONS = [
     id: 'spring',
     name: 'Spring',
     emoji: '🌸',
-    blurb: 'Soft beginnings — the sanctuary wakes up green and hopeful.',
+    blurb: 'Soft beginnings. The sanctuary wakes up green and hopeful.',
     threshold: 0,
     tint: 'rgba(167, 192, 128, 0.10)', // ever-green
     accent: '#F4A6C0', // sunset-pink petals
@@ -27,7 +27,7 @@ export const SEASONS = [
     id: 'summer',
     name: 'Summer',
     emoji: '☀️',
-    blurb: 'Long, warm light — your grove is thriving.',
+    blurb: 'Long, warm light. Your grove is thriving.',
     threshold: SEASON_THRESHOLDS.summer,
     tint: 'rgba(255, 210, 125, 0.10)', // sunset-gold
     accent: '#FFD27D', // golden motes
@@ -37,7 +37,7 @@ export const SEASONS = [
     id: 'autumn',
     name: 'Autumn',
     emoji: '🍂',
-    blurb: 'Amber and rust — a season of quiet, earned warmth.',
+    blurb: 'Amber and rust, a season of quiet, earned warmth.',
     threshold: SEASON_THRESHOLDS.autumn,
     tint: 'rgba(230, 152, 117, 0.12)', // ever-orange
     accent: '#E69875', // drifting leaves
@@ -47,7 +47,7 @@ export const SEASONS = [
     id: 'winter',
     name: 'Winter',
     emoji: '❄️',
-    blurb: 'Still and cool — the deepest, coziest season of all.',
+    blurb: 'Still and cool, the deepest, coziest season of all.',
     threshold: SEASON_THRESHOLDS.winter,
     tint: 'rgba(127, 187, 179, 0.10)', // ever-blue
     accent: '#D3EAF0', // pale snow

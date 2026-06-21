@@ -85,8 +85,7 @@ export default function QuestBoard({ onClose }) {
               {done} of {total} quests tended today
             </p>
             <p className="mt-1 text-xs text-brown/60">
-              A fresh set arrives each morning. There is nothing to fail here and no streak to break — tend
-              what you can.
+              A fresh set arrives each morning. Nothing to fail here, no streak to break. Tend what you can.
             </p>
           </div>
 
@@ -95,7 +94,7 @@ export default function QuestBoard({ onClose }) {
               className="rounded-2xl border-2 border-ever-green/40 bg-ever-green/15 p-3 text-center"
               aria-live="polite"
             >
-              <p className="font-display text-brown">✨ All tended today — beautifully done.</p>
+              <p className="font-display text-brown">✨ All tended today. Beautifully done.</p>
               <div className="mt-2 flex items-center justify-center">
                 {nodSpiritId ? (
                   <ProceduralSpirit

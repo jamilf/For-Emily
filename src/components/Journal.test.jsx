@@ -53,12 +53,12 @@ describe('Journal', () => {
     expect(screen.getByRole('heading', { name: /june 2026/i })).toBeInTheDocument()
   })
 
-  it('lists retroactively-met spirits in an undated section with a dash', () => {
+  it('lists retroactively-met spirits in an undated section marked "undated"', () => {
     render(<Journal onClose={() => {}} />)
     const undatedHeading = screen.getByRole('heading', { name: /before your journal began/i })
     const section = undatedHeading.closest('section')
     expect(within(section).getByText(/persistence found you/i)).toBeInTheDocument()
-    expect(within(section).getByText('—')).toBeInTheDocument()
+    expect(within(section).getByText('undated')).toBeInTheDocument()
   })
 
   it('filters entries by search and updates the live count', () => {

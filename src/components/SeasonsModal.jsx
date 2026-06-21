@@ -18,8 +18,8 @@ export default function SeasonsModal({ onClose }) {
   const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
   const progressLine = next
-    ? `${season.name} — ${remaining} more ${remaining === 1 ? 'tree' : 'trees'} until ${next.name}.`
-    : `${season.name} — the deepest season. Your sanctuary is in full bloom of rest.`
+    ? `${season.name}, ${remaining} more ${remaining === 1 ? 'tree' : 'trees'} until ${next.name}.`
+    : `${season.name}, the deepest season. Your sanctuary is in full bloom of rest.`
 
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">

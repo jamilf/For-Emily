@@ -61,7 +61,7 @@ describe('Flashcards — review, reschedule, undo, resume', () => {
     seed(DECK)
     localStorage.setItem('emily.flashSession', JSON.stringify({ ids: [1, 2], idx: 1, deck: null }))
     render(<Flashcards onClose={() => {}} />)
-    const resume = screen.getByRole('button', { name: /resume your review — card 2 of 2/i })
+    const resume = screen.getByRole('button', { name: /resume your review: card 2 of 2/i })
     fireEvent.click(resume)
     expect(screen.getByText('Reviewing 2 of 2')).toBeInTheDocument()
     expect(screen.getByText('Q2')).toBeInTheDocument()

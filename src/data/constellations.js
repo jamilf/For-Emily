@@ -16,7 +16,7 @@ export const CONSTELLATIONS = [
   {
     id: 'first-spark',
     name: 'The First Spark',
-    blurb: 'Where every grove begins — your very first session.',
+    blurb: 'Where every grove begins, your very first session.',
     rule: { metric: 'sessions', n: 1 },
     stars: [
       { x: 0.2, y: 0.7 },
@@ -27,7 +27,7 @@ export const CONSTELLATIONS = [
   {
     id: 'lantern',
     name: 'The Lantern',
-    blurb: 'A steady light you carry — ten sessions in.',
+    blurb: 'A steady light you carry, ten sessions in.',
     rule: { metric: 'sessions', n: 10 },
     stars: [
       { x: 0.35, y: 0.15 },

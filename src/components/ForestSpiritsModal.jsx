@@ -16,9 +16,9 @@ const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, las
 const EMPTY_SPIRITS = { unlocked: {}, seen: {}, discoveredAt: {} }
 const FILTERS = ['all', 'found', 'locked']
 
-/** "Jun 20" from an epoch-ms discovery timestamp, or "—" when undated/retroactive. */
+/** "Jun 20" from an epoch-ms discovery timestamp, or "undated" when retroactive. */
 function discoveredLabel(ts) {
-  if (ts == null) return '—'
+  if (ts == null) return 'undated'
   return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
@@ -168,7 +168,7 @@ export default function ForestSpiritsModal({ onClose }) {
                   />
                 </div>
                 <p className="mt-2 text-xs text-brown/60">
-                  Spirits are companions, not trophies. They arrive from the habits you already keep — and a
+                  Spirits are companions, not trophies. They arrive from the habits you already keep, and a
                   quiet stretch never sends one away.
                 </p>
               </div>

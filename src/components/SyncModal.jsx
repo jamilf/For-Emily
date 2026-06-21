@@ -68,7 +68,7 @@ export default function SyncModal({ onClose }) {
     {
       syncing: 'Syncing…',
       synced: sync?.lastSyncedAt ? `Synced ${timeAgo(sync.lastSyncedAt)}` : 'Synced',
-      offline: 'Offline — saved on this device, will sync when you reconnect.',
+      offline: 'Offline. Saved on this device, will sync when you reconnect.',
       error: 'Could not reach the cloud just now. Your progress is safe on this device.',
       signedOut: '',
     }[sync?.status] || ''
@@ -145,7 +145,7 @@ export default function SyncModal({ onClose }) {
             <form onSubmit={handleSend} className="space-y-3">
               <p className="text-sm text-brown/80">
                 Sign in with your email to keep your flashcards, garden, stats, and letters in sync across
-                your phone and laptop. We’ll email you a 6-digit code — no password.
+                your phone and laptop. We’ll email you a 6-digit code, no password.
               </p>
               <input
                 type="email"

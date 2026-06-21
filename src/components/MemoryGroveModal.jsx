@@ -183,7 +183,7 @@ export default function MemoryGroveModal({ onClose }) {
 
               {memories.length === 0 ? (
                 <p className="text-sm text-brown/70">
-                  Dedicate a tree to remember a moment — a finished assignment, a hard day you got through, a
+                  Dedicate a tree to remember a moment: a finished assignment, a hard day you got through, a
                   small win. It stays here for good.
                 </p>
               ) : filtered.length === 0 ? (

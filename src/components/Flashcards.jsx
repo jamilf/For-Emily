@@ -269,7 +269,7 @@ export default function Flashcards({ onClose }) {
     e.preventDefault()
     const parsed = parseBulk(bulk, bulkDeck)
     if (parsed.length === 0) {
-      setImportMsg('No cards found — use “term — definition”, one per line.')
+      setImportMsg('No cards found. Use “term - definition”, one per line.')
       return
     }
     // Validate + de-duplicate against existing cards and within the batch.
@@ -359,7 +359,7 @@ export default function Flashcards({ onClose }) {
                       onClick={resumeSession}
                       className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-ever-green/50 bg-ever-green/15 px-4 py-2.5 font-display text-sm text-brown transition-colors hover:bg-ever-green/25 active:scale-[0.99]"
                     >
-                      ▶ Resume your review — card {resumable.idx + 1} of {resumable.q.length}
+                      ▶ Resume your review: card {resumable.idx + 1} of {resumable.q.length}
                     </button>
                   )}
                   <p className="font-display text-xl text-brown">
@@ -368,8 +368,8 @@ export default function Flashcards({ onClose }) {
                       : 'Nothing due right now'}
                   </p>
                   <p className="mt-1 text-xs text-brown/60">
-                    Recalling from memory — not rereading — is what builds lasting memory. Spacing reviews
-                    over days moves it into long-term storage.
+                    Recalling from memory, not rereading, is what builds lasting memory. Spacing reviews over
+                    days moves it into long-term storage.
                   </p>
 
                   {/* Deck picker */}
@@ -499,7 +499,7 @@ export default function Flashcards({ onClose }) {
               {/* Gentle leech care — never punitive, just an offer to reword. */}
               {isLeech(current) && !editing && (
                 <div className="mb-3 rounded-xl bg-ever-orange/15 px-3 py-2 text-center text-sm text-brown">
-                  This one keeps slipping away — that&apos;s normal. Want to{' '}
+                  This one keeps slipping away, and that&apos;s normal. Want to{' '}
                   <button
                     type="button"
                     onClick={() => {
@@ -704,14 +704,14 @@ export default function Flashcards({ onClose }) {
                 ref={frontRef}
                 value={front}
                 onChange={(e) => setFront(e.target.value)}
-                placeholder="Front — keep it brief: one concept per card"
+                placeholder="Front, keep it brief: one concept per card"
                 autoFocus
                 className={inputCls}
               />
               <input
                 value={back}
                 onChange={(e) => setBack(e.target.value)}
-                placeholder="Back — the answer (Enter to save)"
+                placeholder="Back, the answer (Enter to save)"
                 className={inputCls}
               />
               <div className="flex gap-2">
@@ -751,7 +751,7 @@ export default function Flashcards({ onClose }) {
                 value={bulk}
                 onChange={(e) => setBulk(e.target.value)}
                 rows={8}
-                placeholder={'One card per line:\nterm — definition\nhippocampus — forms new memories'}
+                placeholder={'One card per line:\nterm - definition\nhippocampus - forms new memories'}
                 autoFocus
                 className={`${inputCls} resize-none font-mono text-xs leading-relaxed`}
               />
@@ -866,7 +866,7 @@ export default function Flashcards({ onClose }) {
                 ))}
                 {filtered.length > MANAGE_LIMIT && (
                   <p className="text-center text-xs text-brown/50">
-                    +{filtered.length - MANAGE_LIMIT} more — refine your search to see them.
+                    +{filtered.length - MANAGE_LIMIT} more. Refine your search to see them.
                   </p>
                 )}
                 {filtered.length === 0 && (
@@ -895,7 +895,7 @@ export default function Flashcards({ onClose }) {
                 <Stat icon="🌳" value={mastered} label="cards mastered" />
                 <Stat
                   icon="🧠"
-                  value={retention != null ? `${retention}%` : '—'}
+                  value={retention != null ? `${retention}%` : 'n/a'}
                   label="recalled (retention)"
                 />
               </div>
@@ -921,7 +921,7 @@ export default function Flashcards({ onClose }) {
                 </div>
               </div>
               <p className="mt-4 text-center text-xs text-brown/55">
-                Missed a day? No worries — the streak just starts again, gently. Showing up is the whole win.
+                Missed a day? No worries. The streak just starts again, gently. Showing up is the whole win.
               </p>
               <button
                 onClick={() => setView('home')}

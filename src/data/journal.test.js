@@ -60,7 +60,7 @@ describe('buildJournal — entry derivation', () => {
       ],
     })
     const titles = entries.map((e) => e.title)
-    expect(titles).toContain('You kept a verse — John 3:16')
+    expect(titles).toContain('You kept a verse: John 3:16')
     expect(titles).toContain('You kept a letter')
   })
 

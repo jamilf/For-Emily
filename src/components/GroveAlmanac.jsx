@@ -163,7 +163,7 @@ export default function GroveAlmanac({ onClose }) {
               {/* Header + progress */}
               <div>
                 <p className="font-display text-lg text-brown">
-                  You&apos;ve grown {grownCount} of {total} — your grove is filling in 🌿
+                  You&apos;ve grown {grownCount} of {total}. Your grove is filling in 🌿
                 </p>
                 <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-brown/10">
                   <div
@@ -243,8 +243,8 @@ export default function GroveAlmanac({ onClose }) {
                 ))}
               </ul>
               <p className="text-center text-xs text-brown/50">
-                Every varietal is drawn by the same generator that grows your trees. Unlocks are pure reward —
-                a missed day never takes one away.
+                Every varietal is drawn by the same generator that grows your trees. Unlocks are pure reward,
+                and a missed day never takes one away.
               </p>
             </>
           )}
@@ -273,7 +273,7 @@ function GroveDetail({ row, planted, onPlant, onBack }) {
           state={unlocked ? 'unlocked' : 'locked'}
         />
       </div>
-      <p className="font-display text-xl text-brown">{showName ? species.name : '??? — a mystery seed'}</p>
+      <p className="font-display text-xl text-brown">{showName ? species.name : '??? a mystery seed'}</p>
       {(unlocked || !species.mystery) && (
         <p className="mx-auto max-w-sm text-sm text-brown/75">{species.flavor}</p>
       )}
@@ -288,7 +288,7 @@ function GroveDetail({ row, planted, onPlant, onBack }) {
             disabled={planted}
             className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95 disabled:opacity-60"
           >
-            {planted ? 'Set — your next session grows this 🌱' : 'Grow this one next'}
+            {planted ? 'Set. Your next session grows this 🌱' : 'Grow this one next'}
           </button>
         </>
       ) : (

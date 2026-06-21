@@ -40,7 +40,7 @@ How to run every quality gate, and how the suite is organised.
   `MemoryGroveModal.test.jsx` covers the searchable list, the dedicate (pick → form →
   save) flow, edit-in-place, inline-confirm delete, keyboard, and zero axe.
   `Journal.test.jsx` covers the derived summary counts, month grouping, the undated
-  group rendered with "—", search + the `aria-live` count, the empty state, keyboard,
+  group marked "undated", search + the `aria-live` count, the empty state, keyboard,
   and zero axe. `Constellations.test.jsx` covers the formed-count summary, formed/
   partial state shown in text, the decorative sky kept `aria-hidden`, the reduced-
   motion static variant, keyboard, and zero axe. `SeasonLayer.test.jsx` checks the
@@ -53,6 +53,10 @@ How to run every quality gate, and how the suite is organised.
   scroll-lock assertion proving the `useFocusTrap` integration).
 - **Hooks:** `useScrollLock.test.jsx` checks the ref-counted body scroll lock pins the
   body on mount, only releases on the last overlay's unmount, and restores fully.
+- **Copy guardrail:** `src/copy-noemdash.test.js` strips comments from every source file
+  under `src/data` and `src/components`, then fails if an em dash (U+2014) appears in
+  authored copy. It allowlists the two legitimate cases (the `parseBulk` separator and
+  the scripture `— {ref}` citations) and excludes the fetched `scripture.js` verses.
 - **Migration:** `StorageManager.test.js` asserts the **v3 → v4** focusLog backfill, the
   **v4 → v5** Forest Spirits seed, and the **v5 → v6** Memory Grove ensure-exists guard
   each run as specified, are a no-op on re-run (never clobbering live data / fabricating
