@@ -36,12 +36,15 @@ test('Memory Grove opens from the garden, dedicates a tree, and screenshots', as
   await dialog.getByLabel('Title').fill('Finished my assignment')
   await dialog.getByRole('button', { name: /dedicate this tree/i }).click()
 
-  // The new memory is listed.
-  await expect(dialog.getByText('Finished my assignment')).toBeVisible()
+  // Back on the list: the count proves the save (unambiguous), then the card
+  // itself. Use exact text so we don't also match the sr-only aria-live status
+  // paragraph ("Memory "Finished my assignment" dedicated.").
+  await expect(dialog.getByText(/1 memory kept/i)).toBeVisible()
+  await expect(dialog.getByText('Finished my assignment', { exact: true })).toBeVisible()
 
   // Search narrows the list.
   await dialog.getByRole('textbox', { name: /search memories/i }).fill('assignment')
-  await expect(dialog.getByText('Finished my assignment')).toBeVisible()
+  await expect(dialog.getByText('Finished my assignment', { exact: true })).toBeVisible()
 
   await page.screenshot({
     path: `playwright-report/memories-${testInfo.project.name}.png`,
