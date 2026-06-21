@@ -13,6 +13,7 @@ export default function Toolbar({
   onOpenSync,
   onOpenJournal,
   onOpenConstellations,
+  onOpenQuests,
   dueCount = 0,
 }) {
   const sync = useSync()
@@ -66,6 +67,13 @@ export default function Toolbar({
           aria-label="Open your constellations"
         >
           🌌 <span className="hidden sm:inline">Constellations</span>
+        </button>
+      )}
+
+      {/* Focus quests */}
+      {onOpenQuests && (
+        <button type="button" onClick={onOpenQuests} className={chip} aria-label="Open today's focus quests">
+          📜 <span className="hidden sm:inline">Quests</span>
         </button>
       )}
 

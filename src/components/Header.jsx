@@ -17,6 +17,7 @@ export default function Header({
   onOpenSync,
   onOpenJournal,
   onOpenConstellations,
+  onOpenQuests,
   season,
   onOpenSeasons,
   dueCount,
@@ -83,6 +84,7 @@ export default function Header({
             onOpenSync={onOpenSync}
             onOpenJournal={onOpenJournal}
             onOpenConstellations={onOpenConstellations}
+            onOpenQuests={onOpenQuests}
             dueCount={dueCount}
           />
         </div>

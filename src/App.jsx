@@ -27,6 +27,7 @@ const GroveAlmanac = lazy(() => import('./components/GroveAlmanac.jsx'))
 const Journal = lazy(() => import('./components/Journal.jsx'))
 const Constellations = lazy(() => import('./components/Constellations.jsx'))
 const SeasonsModal = lazy(() => import('./components/SeasonsModal.jsx'))
+const QuestBoard = lazy(() => import('./components/QuestBoard.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
@@ -38,6 +39,7 @@ function Dashboard() {
   const [showJournal, setShowJournal] = useState(false)
   const [showConstellations, setShowConstellations] = useState(false)
   const [showSeasons, setShowSeasons] = useState(false)
+  const [showQuests, setShowQuests] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
@@ -108,6 +110,7 @@ function Dashboard() {
           onOpenSync={() => setShowSync(true)}
           onOpenJournal={() => setShowJournal(true)}
           onOpenConstellations={() => setShowConstellations(true)}
+          onOpenQuests={() => setShowQuests(true)}
           season={season}
           onOpenSeasons={() => setShowSeasons(true)}
           dueCount={dueCount}
@@ -187,6 +190,9 @@ function Dashboard() {
 
         {/* Sanctuary Seasons — a derived field guide to the growing world */}
         {showSeasons && <SeasonsModal onClose={() => setShowSeasons(false)} />}
+
+        {/* Focus Quest Board — derived daily objectives, nothing to fail */}
+        {showQuests && <QuestBoard onClose={() => setShowQuests(false)} />}
       </Suspense>
     </div>
   )

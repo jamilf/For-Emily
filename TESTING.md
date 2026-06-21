@@ -22,7 +22,8 @@ How to run every quality gate, and how the suite is organised.
   `src/data/encouragements.test.js`, `src/data/focusLog.test.js`,
   `src/data/spirits.test.js`, `src/data/memories.test.js`,
   `src/data/journal.test.js`, `src/data/constellations.test.js`,
-  `src/data/seasons.test.js`, `src/pixel/SpiritGenerator.test.js`,
+  `src/data/seasons.test.js`, `src/data/quests.test.js`,
+  `src/pixel/SpiritGenerator.test.js`,
   `src/storage/StorageManager.test.js`, `src/sync/syncEngine.test.js`
   (scheduler/parser, no-repeat selection bag, Firefly Calendar time-series incl.
   local-midnight edge cases, Forest Spirits unlock derivation incl. the `>=20 || <5`
@@ -46,6 +47,9 @@ How to run every quality gate, and how the suite is organised.
   decorative overlay is `aria-hidden` + `pointer-events-none` and drops its particles
   under reduced motion; `SeasonsModal.test.jsx` covers the four-season list, the
   current-season `✦ Now` text marker, the progress-to-next line, keyboard, and zero axe.
+  `QuestBoard.test.jsx` covers the no-fail framing (no failed/expired wording), the
+  three-quest board with text/icon state, the all-done cosmetic celebration, the
+  reduced-motion variant (no `animate-pixel-pop`), keyboard, and zero axe.
 - **Migration:** `StorageManager.test.js` asserts the **v3 → v4** focusLog backfill, the
   **v4 → v5** Forest Spirits seed, and the **v5 → v6** Memory Grove ensure-exists guard
   each run as specified, are a no-op on re-run (never clobbering live data / fabricating

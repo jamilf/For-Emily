@@ -28,6 +28,7 @@ export default defineConfig({
         'src/data/journal.js',
         'src/data/constellations.js',
         'src/data/seasons.js',
+        'src/data/quests.js',
         'src/data/encouragements.js',
         'src/pixel/SpiritGenerator.js',
         'src/storage/StorageManager.js',

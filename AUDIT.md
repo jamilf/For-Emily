@@ -271,3 +271,23 @@ change, no migration** — it only reads `emily.garden.length`.
   `seasonFall` keyframe, and `SeasonLayer` additionally renders no particles when motion is reduced
   (testable static fallback), mirroring `WeatherCanvas`'s `matchMedia` approach.
 - Root-class hook `season-<id>` is added to `rootClass` (semantic only; visuals come from the overlay).
+
+## 12. Phase 17 audit — Focus Quest Board (derived daily objectives, no new state)
+
+Read-only audit before building. The fourth and final **DERIVED** feature: **no new persisted key, no
+`SYNC_KEYS` change, no migration** — completion is computed live and nothing is stored.
+
+- **Deterministic per local date:** `dailyQuests(localDayStr())` seeds a `mulberry32` from an FNV-1a hash of
+  the local date string → the same day always yields the same quests. No stored checklist.
+- **Today's metrics (live):** trees/reflection/before-noon/after-dark from `emily.garden` + `emily.reflections`
+  by **local** day (`localDayStr`, `src/data/scheduler.js`); flashcard **reviews today** from
+  `emily.flashcardStats.reviewedToday`, gated by `flashcardStats.day === dayStr()` (UTC, `src/utils/day.js`) —
+  because that's the day format the flashcard stats are stamped with. Documented so the local/UTC split is intentional.
+- **One engine:** reused grove's generic `progressFor(item, metrics)` for both numeric (`{metric,n}`) and
+  boolean (`{metric}`) quests.
+- **No pressure mechanics:** no fail/expire/red state, no currency/energy, no streak penalty; the only reward
+  is a cosmetic, reduced-motion-aware celebration (`animate-pixel-pop` + an optional `ProceduralSpirit` nod —
+  the soft dependency on Spirits is optional and degrades gracefully).
+- **Accessible:** state by text + icon (never colour alone), `aria-live` summary/celebration, focus-trapped
+  modal, reduced-motion honored. Entry: a "📜 Quests" chip in the header `Toolbar`, lazy-mounted in the shared
+  `<Suspense>` (same pattern as Journal/Constellations).

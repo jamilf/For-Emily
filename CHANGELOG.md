@@ -258,3 +258,33 @@ winter: 40 }` (a single tunable constant, tuned gentle for the gift), `SEASONS` 
 - Tests: seasons unit suite (threshold/boundary mapping, progress-to-next, name-not-colour + tint-subtlety
   guarantees) + SeasonLayer (aria-hidden/pointer-events-none, particles gated on reduced-motion) +
   SeasonsModal component/axe suite + `e2e/seasons.spec.js`. 248 tests; ~97% coverage on core.
+
+## Phase 17 — Focus Quest Board (derived daily objectives)
+
+- `src/data/quests.js` — new: pure, DERIVED quest logic. `DAILY_QUEST_COUNT` (3) + `QUEST_POOL` (five
+  distinct-metric templates). `dailyQuests(localDate)` returns a deterministic set via a seeded `mulberry32`
+  (FNV-1a hash of the local date) — same local date → identical quests, different dates differ.
+  `questMetricsToday({garden, flashcardStats, reflections}, now)` computes live counts (trees/reflection/
+  before-noon/after-dark by **local** day; reviews gated by the UTC `dayStr` the flashcard stats were stamped
+  with). `evaluateQuests` reuses grove's generic `progressFor`; `questSummary` tallies. No I/O, no persistence,
+  no expiry, no fail state. 100% covered.
+- `src/components/QuestBoard.jsx` — new: lazy, focus-trapped modal. A gentle "N of M quests tended today"
+  header (`aria-live`) with explicit "nothing to fail, no streak to break" framing; each quest row shows its
+  state in **text + icon** (`✓ Done` / `current / target` / "Not yet") — never colour alone, no red/fail
+  styling. When all are done, a cosmetic `aria-live` celebration with an `animate-pixel-pop` flourish (gated
+  off under reduced motion) that optionally nods to an unlocked `ProceduralSpirit` but works without one.
+- `src/App.jsx` / `src/components/Header.jsx` / `src/components/Toolbar.jsx` — a global "📜 Quests" toolbar
+  chip (threaded `onOpenQuests`); the modal lazy-loads in the existing top-level `<Suspense>`.
+- `vitest.config.js` — `src/data/quests.js` added to coverage `include`.
+- **No new persistence, no sync, no migration** — purely derived (locked-decision compliant). No new
+  currency/energy/streak; completion only reflects that real study metrics advanced (which already feed
+  Spirits/Constellations).
+- Tests: quests unit suite (per-local-date determinism, distinct metrics, target sets, local-day metric
+  boundaries incl. the UTC reviews gate, evaluation) + QuestBoard component/axe suite (no-fail framing,
+  all-done celebration, reduced-motion, keyboard) + `e2e/quests.spec.js`. 263 tests; ~97% coverage on core.
+
+### Expansion complete
+
+This is the sixth and final feature of the Sanctuary expansion (Forest Spirits, Memory Grove, Journal,
+Constellations, Sanctuary Seasons, Focus Quest Board). Persisted+synced state added across the whole set:
+**only `emily.spirits` and `emily.memories`** — everything else is derived.
