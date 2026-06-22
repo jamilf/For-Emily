@@ -50,7 +50,7 @@ export default function Drawer({ open = true, onClose, title, children, classNam
             ref={closeRef}
             onClick={onClose}
             aria-label={`Close ${title}`}
-            className="rounded-full px-2 text-cream/90 transition-colors hover:text-cream active:scale-90"
+            className="grid h-10 w-10 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90"
           >
             ✕
           </button>

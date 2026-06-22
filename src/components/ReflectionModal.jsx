@@ -24,7 +24,7 @@ export default function ReflectionModal({
   const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: firstRef })
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
       <button
         type="button"
         aria-hidden="true"
@@ -39,7 +39,7 @@ export default function ReflectionModal({
         aria-modal="true"
         aria-label="Session reflection"
         tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
+        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-sm flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
       >
         <div
           className="flex items-center gap-2 border-b-2 border-brownDark/50 px-3 py-2"

@@ -36,6 +36,14 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
+/* Modal overlay padding: centre the panel while keeping it (and its close button)
+ * clear of the notch and home indicator on phones, with a 1rem floor on every side
+ * so non-notched devices look unchanged. Replaces a bare `p-4` on overlays. */
+.modal-overlay-pad {
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+}
+
 :focus-visible {
   outline: 2px solid theme('colors.ever.yellow');
   outline-offset: 2px;

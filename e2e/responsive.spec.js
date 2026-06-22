@@ -65,6 +65,21 @@ test('modals: scroll-locked, no horizontal overflow, keyboard-closable (per view
     const hasInternalScroll = await dialog.evaluate((el) => !!el.querySelector('.overflow-y-auto'))
     expect(hasInternalScroll, `${m.slug}: internal scroll region`).toBe(true)
 
+    // The close control is a comfortable tap target (>= 40px both ways).
+    const closeBox = await dialog
+      .getByRole('button', { name: /^close/i })
+      .first()
+      .boundingBox()
+    expect(closeBox.width, `${m.slug}: close tap-target width`).toBeGreaterThanOrEqual(40)
+    expect(closeBox.height, `${m.slug}: close tap-target height`).toBeGreaterThanOrEqual(40)
+
+    // The panel stays fully on-screen (max-h-full + safe-area overlay padding) so the
+    // header/close and the bottom of the scroll area are never clipped off the viewport.
+    const vh = page.viewportSize().height
+    const panel = await dialog.boundingBox()
+    expect(panel.y, `${m.slug}: panel top on-screen`).toBeGreaterThanOrEqual(-1)
+    expect(panel.y + panel.height, `${m.slug}: panel bottom on-screen`).toBeLessThanOrEqual(vh + 1)
+
     await page.screenshot({
       path: `playwright-report/responsive-${m.slug}-${testInfo.project.name}.png`,
       fullPage: false,

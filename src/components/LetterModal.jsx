@@ -111,7 +111,7 @@ export default function LetterModal({ context = 'idle', onClose }) {
   const isScripture = msg?.type === 'scripture'
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
       <button
         type="button"
         aria-hidden="true"
@@ -126,7 +126,7 @@ export default function LetterModal({ context = 'idle', onClose }) {
         aria-modal="true"
         aria-label="A letter for you"
         tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
+        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
       >
         {/* Window title bar — warm wood tone */}
         <div
@@ -140,7 +140,7 @@ export default function LetterModal({ context = 'idle', onClose }) {
             ref={closeRef}
             onClick={onClose}
             aria-label="Close letter"
-            className="rounded-full px-2 text-cream/90 transition-colors hover:text-cream active:scale-90"
+            className="grid h-10 w-10 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90"
           >
             ✕
           </button>

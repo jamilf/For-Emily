@@ -65,7 +65,7 @@ export default function GuideModal({ onClose }) {
   const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
       <button
         type="button"
         aria-hidden="true"
@@ -80,7 +80,7 @@ export default function GuideModal({ onClose }) {
         aria-modal="true"
         aria-label="How to use this app"
         tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
+        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
       >
         <div
           className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
@@ -93,7 +93,7 @@ export default function GuideModal({ onClose }) {
             ref={closeRef}
             onClick={onClose}
             aria-label="Close guide"
-            className="rounded-full px-2 text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+            className="grid h-10 w-10 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
           >
             ✕
           </button>
