@@ -202,6 +202,8 @@ export function greetingFacts({
   spirits = {},
   focusLog = {},
   chapter = null,
+  companion = null,
+  partOfDay = null,
   now = Date.now(),
 } = {}) {
   const today = localDayStr(new Date(now))
@@ -223,6 +225,8 @@ export function greetingFacts({
 
   return {
     name: 'Emily',
+    companion: companion || null, // the sprite's chosen name, when she's given it one
+    partOfDay: partOfDay || null, // 'dawn' | 'day' | 'dusk' | 'night', when known
     lastTree: lastSpecies?.name ?? (last ? 'a little tree' : null),
     spirit,
     chapter: chapter?.title ?? null,
@@ -230,6 +234,9 @@ export function greetingFacts({
     grown: garden.length,
   }
 }
+
+/** A friendly word for the part of day, used only when one is known. */
+const PART_OF_DAY_WORD = { dawn: 'morning', day: 'afternoon', dusk: 'evening', night: 'night' }
 
 // ── Greeting library (original; warm, casual, never guilt) ───────────────────
 // Each entry: { needs: [factKeys], line: (facts) => string }. An entry is only
@@ -247,6 +254,11 @@ export const GREETINGS = {
       line: (f) => `oh, hello ${f.name}! welcome. i’m the soot sprite who looks after this grove.`,
     },
     {
+      needs: ['companion'],
+      line: (f) =>
+        `oh, hello ${f.name}! i’m ${f.companion}, and i look after this little grove. so glad you’re here.`,
+    },
+    {
       needs: [],
       line: () => `you’re here! the grove’s been sleepy and quiet. let’s wake a little of it together.`,
     },
@@ -256,7 +268,16 @@ export const GREETINGS = {
       needs: ['todaySessions'],
       line: (f) => `back already? lovely. that’s ${f.todaySessions} today. only if you want more.`,
     },
+    {
+      needs: ['partOfDay'],
+      line: (f) =>
+        `lovely ${PART_OF_DAY_WORD[f.partOfDay]} so far, ${f.name}. back for a little more? only if you’d like.`,
+    },
     { needs: ['chapter'], line: (f) => `still here with me in “${f.chapter}.” cozy, isn’t it.` },
+    {
+      needs: ['companion'],
+      line: (f) => `it’s ${f.companion} again. so nice to have you back, ${f.name}.`,
+    },
     {
       needs: ['lastTree'],
       line: (f) => `${f.lastTree} is settling in nicely. nice to see you again, ${f.name}.`,
@@ -267,6 +288,15 @@ export const GREETINGS = {
     {
       needs: ['lastTree'],
       line: (f) => `welcome back, ${f.name}. ${f.lastTree} held its spot for you. want to tend a bit?`,
+    },
+    {
+      needs: ['companion'],
+      line: (f) => `it’s ${f.companion}. i kept your spot warm, ${f.name}. come sit a while.`,
+    },
+    {
+      needs: ['partOfDay'],
+      line: (f) =>
+        `welcome back, ${f.name}. it’s a soft ${PART_OF_DAY_WORD[f.partOfDay]} for tending the grove.`,
     },
     {
       needs: ['spirit'],
@@ -280,6 +310,10 @@ export const GREETINGS = {
   ],
   [RETURN.LONG]: [
     { needs: [], line: (f) => `${f.name}! there you are. i kept your spot warm. so glad you came back.` },
+    {
+      needs: ['companion'],
+      line: (f) => `${f.name}! it’s ${f.companion}. i kept your spot warm, and i’m so glad you’re back.`,
+    },
     {
       needs: ['chapter'],
       line: (f) => `welcome home. “${f.chapter}” waited for you, patient as ever. no rush to pick it up.`,
@@ -335,4 +369,21 @@ export function buildComeback(gapDays, seed = 0) {
 /** The local-day key used to show the comeback at most once per day. */
 export function comebackDayKey(now = Date.now()) {
   return localDayStr(new Date(now))
+}
+
+/**
+ * Sanitize a companion name she typed: trim, collapse inner whitespace, drop
+ * control characters, and cap the length. Returns null for an empty result, so an
+ * unnamed companion always reads as "no name".
+ */
+export function cleanName(raw) {
+  if (typeof raw !== 'string') return null
+  let out = ''
+  for (const ch of raw) {
+    const code = ch.codePointAt(0)
+    if (code < 0x20 || code === 0x7f) continue // skip control characters
+    out += ch
+  }
+  const cleaned = out.replace(/\s+/g, ' ').trim().slice(0, 24)
+  return cleaned.length ? cleaned : null
 }

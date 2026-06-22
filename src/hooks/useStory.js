@@ -1,9 +1,11 @@
 import { useEffect, useMemo } from 'react'
 import usePersistedState from './useLocalStorage.js'
+import useTimeOfDay from './useTimeOfDay.js'
 import {
   RETURN,
   buildComeback,
   classifyReturn,
+  cleanName,
   comebackDayKey,
   dailySeed,
   dayGap,
@@ -15,7 +17,7 @@ import {
   unlockedChapters,
 } from '../data/story.js'
 
-const EMPTY_STORY = { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {} }
+const EMPTY_STORY = { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {}, companionName: null }
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 
 /**
@@ -34,6 +36,8 @@ export default function useStory() {
   const [reflections] = usePersistedState('emily.reflections', [])
   const [focusLog] = usePersistedState('emily.focusLog', {})
   const [story, setStory] = usePersistedState('emily.story', EMPTY_STORY)
+  const partOfDay = useTimeOfDay()
+  const companionName = story.companionName || null
 
   // Snapshot the prior visit + the open moment ONCE, so later state writes (e.g.
   // stamping lastSeen, acking a chapter) never change how this return is classified.
@@ -56,8 +60,17 @@ export default function useStory() {
   const returnType = useMemo(() => classifyReturn(prevLastSeen, now), [prevLastSeen, now])
   const seed = useMemo(() => dailySeed(prevLastSeen, now), [prevLastSeen, now])
   const facts = useMemo(
-    () => greetingFacts({ garden, spirits, focusLog, chapter: currentChapter, now }),
-    [garden, spirits, focusLog, currentChapter, now],
+    () =>
+      greetingFacts({
+        garden,
+        spirits,
+        focusLog,
+        chapter: currentChapter,
+        companion: companionName,
+        partOfDay,
+        now,
+      }),
+    [garden, spirits, focusLog, currentChapter, companionName, partOfDay, now],
   )
   const greeting = useMemo(() => pickGreeting(facts, returnType, seed), [facts, returnType, seed])
 
@@ -83,6 +96,8 @@ export default function useStory() {
   const ackChapter = (id) => setStory((s) => ({ ...s, ackChapters: { ...s.ackChapters, [id]: true } }))
   const dismissComeback = () =>
     setStory((s) => ({ ...s, comebackShown: { ...s.comebackShown, [dayKey]: true } }))
+  // Store a sanitized companion name (or clear it). Syncs as part of emily.story.
+  const setCompanionName = (raw) => setStory((s) => ({ ...s, companionName: cleanName(raw) }))
 
   return {
     metrics,
@@ -94,6 +109,9 @@ export default function useStory() {
     facts,
     comeback,
     unseenChapter,
+    partOfDay,
+    companionName,
+    setCompanionName,
     ackChapter,
     dismissComeback,
   }

@@ -51,8 +51,9 @@ export const DEFAULTS = {
   // Phase-13: Memory Grove — dedicated trees with a title + note.
   'emily.memories': [], // [{ id, dna, ts, title, note }]
   // Phase-14: Grove Story — return continuity + reveal acks (chapter/greeting/
-  // comeback are all DERIVED; only this small ack state is stored).
-  'emily.story': { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {} },
+  // comeback are all DERIVED; only this small ack state + the companion's name are
+  // stored). `companionName` is additive + default-backed, so no migration is needed.
+  'emily.story': { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {}, companionName: null },
 }
 
 /** Safe read with a defaults fallback; never throws. */

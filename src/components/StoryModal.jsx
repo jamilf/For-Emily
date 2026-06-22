@@ -3,7 +3,7 @@ import usePersistedState from '../hooks/useLocalStorage.js'
 import useFocusTrap from '../hooks/useFocusTrap.js'
 import { CHAPTERS, deriveCurrentChapter, nextChapter, storyMetrics, unlockedChapters } from '../data/story.js'
 
-const EMPTY_STORY = { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {} }
+const EMPTY_STORY = { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {}, companionName: null }
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 
 /**

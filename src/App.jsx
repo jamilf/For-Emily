@@ -84,6 +84,7 @@ function Dashboard() {
     zen ? 'zen' : '',
     pageHidden ? 'anims-paused' : '', // freeze decorative animations when tab is hidden
     `season-${season.id}`,
+    `tod-${story.partOfDay}`, // shifts the daylight veil with her local time of day
   ]
     .filter(Boolean)
     .join(' ')
@@ -105,6 +106,10 @@ function Dashboard() {
 
       {/* Dynamic weather, above the scene and below the UI */}
       <WeatherCanvas />
+
+      {/* Daylight veil — a soft tint that shifts with the local time of day (set by
+          the tod-* class on the root). Decorative, sits over the scene, never over text. */}
+      <div aria-hidden="true" className="daylight-veil pointer-events-none fixed inset-0 z-[1]" />
 
       {/* Faint lo-fi film grain over the whole scene */}
       <div aria-hidden="true" className="film-grain pointer-events-none fixed inset-0 z-[1]" />
@@ -208,7 +213,13 @@ function Dashboard() {
         {showStory && <StoryModal onClose={() => setShowStory(false)} />}
 
         {/* Welcome-back moment after a gap — a gift, shown once per day */}
-        {story.comeback && <ComebackMoment comeback={story.comeback} onClose={story.dismissComeback} />}
+        {story.comeback && (
+          <ComebackMoment
+            comeback={story.comeback}
+            companionName={story.companionName}
+            onClose={story.dismissComeback}
+          />
+        )}
       </Suspense>
 
       {/* The sprite's contextual hello + a gentle new-chapter reveal. Priority:
@@ -221,7 +232,13 @@ function Dashboard() {
           onAck={story.ackChapter}
         />
       )}
-      {!story.comeback && !story.unseenChapter && story.greeting && <SpriteGreeting text={story.greeting} />}
+      {!story.comeback && !story.unseenChapter && story.greeting && (
+        <SpriteGreeting
+          text={story.greeting}
+          companionName={story.companionName}
+          onName={story.setCompanionName}
+        />
+      )}
     </div>
   )
 }

@@ -657,6 +657,43 @@ body {
   animation-delay: var(--season-delay, 0s);
 }
 
+/* Daylight veil — a soft, full-screen tint that shifts with Emily's local time of
+ * day (set on the root via the tod-* class). Drawn from the sunset/Everforest
+ * tokens at low alpha so it sits gently over SkyScene and never dims the opaque
+ * content above it. The colour eases between parts of the day; prefers-reduced-
+ * motion zeroes the transition globally, leaving a static tint. */
+.daylight-veil {
+  background: transparent;
+  transition: background 1200ms ease;
+}
+.app-root.tod-dawn .daylight-veil {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 210, 125, 0.18) 0%,
+    rgba(255, 203, 164, 0.08) 40%,
+    transparent 75%
+  );
+}
+.app-root.tod-day .daylight-veil {
+  background: linear-gradient(to bottom, rgba(131, 192, 178, 0.06) 0%, transparent 60%);
+}
+.app-root.tod-dusk .daylight-veil {
+  background: linear-gradient(
+    to bottom,
+    rgba(224, 113, 156, 0.16) 0%,
+    rgba(244, 132, 95, 0.1) 45%,
+    transparent 80%
+  );
+}
+.app-root.tod-night .daylight-veil {
+  background: linear-gradient(
+    to bottom,
+    rgba(53, 42, 82, 0.32) 0%,
+    rgba(42, 33, 64, 0.16) 55%,
+    transparent 90%
+  );
+}
+
 /* Freeze decorative animations while the tab is hidden (paired with the
  * usePageHidden hook). Pausing — not stopping — resumes seamlessly with no
  * reflow when the user returns. */

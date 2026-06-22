@@ -35,6 +35,9 @@ test('a return after a gap blooms a welcome-back, reveals a chapter, and opens t
   })
   await page.goto('/')
 
+  // The living background tags the root with the local time of day.
+  await expect(page.locator('.app-root')).toHaveClass(/tod-(dawn|day|dusk|night)/)
+
   // 1) The welcome-back moment blooms (a gift, never a guilt message).
   const welcome = page.getByRole('dialog', { name: /welcome back/i })
   await expect(welcome).toBeVisible()

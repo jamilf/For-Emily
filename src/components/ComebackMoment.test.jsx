@@ -14,6 +14,11 @@ describe('ComebackMoment', () => {
     expect(screen.getByText(/nothing here goes anywhere when you rest/i)).toBeInTheDocument()
   })
 
+  it('greets by the companion name when she has set one', () => {
+    render(<ComebackMoment comeback={comeback} companionName="Pip" onClose={() => {}} />)
+    expect(screen.getByText(/it's me, Pip\./i)).toBeInTheDocument()
+  })
+
   it('reads as welcoming — no loss, broken-streak, or fault language', () => {
     const { container } = render(<ComebackMoment comeback={comeback} onClose={() => {}} />)
     const text = container.textContent.toLowerCase()

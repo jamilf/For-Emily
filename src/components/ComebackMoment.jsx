@@ -9,7 +9,7 @@ import ProceduralTree from './ProceduralTree.jsx'
  * about loss, a broken streak, or absence as a fault. Full overlay pattern (focus
  * trap, aria-hidden backdrop, Esc, return-focus); honours reduced motion.
  */
-export default function ComebackMoment({ comeback, onClose }) {
+export default function ComebackMoment({ comeback, companionName = null, onClose }) {
   const closeRef = useRef(null)
   const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
   const reduced = useMemo(() => {
@@ -70,7 +70,8 @@ export default function ComebackMoment({ comeback, onClose }) {
             {comeback.note}
           </p>
           <p className="text-xs text-brown/60">
-            Welcome back, Emily. Nothing here goes anywhere when you rest. Begin whenever you like.
+            {companionName ? `It's me, ${companionName}. ` : ''}Welcome back, Emily. Nothing here goes
+            anywhere when you rest. Begin whenever you like.
           </p>
           <button
             onClick={onClose}
