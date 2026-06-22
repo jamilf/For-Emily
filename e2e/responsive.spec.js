@@ -65,13 +65,15 @@ test('modals: scroll-locked, no horizontal overflow, keyboard-closable (per view
     const hasInternalScroll = await dialog.evaluate((el) => !!el.querySelector('.overflow-y-auto'))
     expect(hasInternalScroll, `${m.slug}: internal scroll region`).toBe(true)
 
-    // The close control is a comfortable tap target (>= 40px both ways).
-    const closeBox = await dialog
+    // The close control is a comfortable tap target (>= 40px both ways). Measure the
+    // layout box (offsetWidth/Height) rather than boundingBox so the panel's entrance
+    // scale animation can't report a transient sub-40 size.
+    const closeSize = await dialog
       .getByRole('button', { name: /^close/i })
       .first()
-      .boundingBox()
-    expect(closeBox.width, `${m.slug}: close tap-target width`).toBeGreaterThanOrEqual(40)
-    expect(closeBox.height, `${m.slug}: close tap-target height`).toBeGreaterThanOrEqual(40)
+      .evaluate((el) => ({ w: el.offsetWidth, h: el.offsetHeight }))
+    expect(closeSize.w, `${m.slug}: close tap-target width`).toBeGreaterThanOrEqual(40)
+    expect(closeSize.h, `${m.slug}: close tap-target height`).toBeGreaterThanOrEqual(40)
 
     // The panel stays fully on-screen (max-h-full + safe-area overlay padding) so the
     // header/close and the bottom of the scroll area are never clipped off the viewport.
