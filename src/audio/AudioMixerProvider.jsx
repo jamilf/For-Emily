@@ -32,6 +32,61 @@ function unlockOutput(ctx) {
   }
 }
 
+// iOS routes Web Audio through the "ambient" audio session, which the hardware
+// ring/silent switch mutes and which never plays at full volume. Keeping any
+// audible-category media element playing flips the page to the "playback"
+// session, which ignores the mute switch — so we hold one silent, looping
+// <audio> element alongside the synth graph. This is what actually makes ambient
+// sound audible on iPhone whether the side switch is on or off. No-op elsewhere.
+let mediaEl = null
+
+function silentWavUrl() {
+  const rate = 8000
+  const samples = rate / 4 // 0.25s of digital silence, looped
+  const total = 44 + samples * 2
+  const view = new DataView(new ArrayBuffer(total))
+  const str = (off, s) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i))
+  }
+  str(0, 'RIFF')
+  view.setUint32(4, total - 8, true)
+  str(8, 'WAVE')
+  str(12, 'fmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true) // PCM
+  view.setUint16(22, 1, true) // mono
+  view.setUint32(24, rate, true)
+  view.setUint32(28, rate * 2, true)
+  view.setUint16(32, 2, true)
+  view.setUint16(34, 16, true)
+  str(36, 'data')
+  view.setUint32(40, samples * 2, true)
+  return URL.createObjectURL(new Blob([view.buffer], { type: 'audio/wav' }))
+}
+
+function claimMediaSession() {
+  if (typeof Audio === 'undefined') return
+  try {
+    if (!mediaEl) {
+      mediaEl = new Audio(silentWavUrl())
+      mediaEl.loop = true
+      mediaEl.setAttribute('playsinline', '')
+    }
+    const p = mediaEl.play()
+    if (p && typeof p.catch === 'function') p.catch(() => {})
+  } catch {
+    /* autoplay blocked / unsupported — ignore */
+  }
+}
+
+function releaseMediaSession() {
+  try {
+    mediaEl?.pause()
+  } catch {
+    /* ignore */
+  }
+}
+
 export function useMixer() {
   const ctx = useContext(MixerContext)
   if (!ctx) throw new Error('useMixer must be used within <AudioMixerProvider>')
@@ -91,7 +146,10 @@ export default function AudioMixerProvider({ children }) {
     }
     const ctx = ctxRef.current
 
-    // Prime the hardware while we still hold the user gesture (iOS unlock).
+    // Prime the hardware while we still hold the user gesture (iOS unlock):
+    // claim the playback session so the ring switch can't mute us, then poke
+    // the context's output so WebKit actually opens it.
+    claimMediaSession()
     unlockOutput(ctx)
 
     // Build (and start) the graph only once the context is actually running, so
@@ -121,6 +179,7 @@ export default function AudioMixerProvider({ children }) {
         if (ctxRef.current && ctxRef.current.state === 'running') ctxRef.current.suspend()
       }, 500)
     }
+    releaseMediaSession()
     setMixer((m) => ({ ...m, enabled: false }))
   }, [setMixer])
 
@@ -166,8 +225,13 @@ export default function AudioMixerProvider({ children }) {
     function onVisibility() {
       const ctx = ctxRef.current
       if (!ctx) return
-      if (document.hidden && ctx.state === 'running') ctx.suspend()
-      else if (!document.hidden && mixer.enabled && ctx.state === 'suspended') ctx.resume()
+      if (document.hidden && ctx.state === 'running') {
+        ctx.suspend()
+        releaseMediaSession()
+      } else if (!document.hidden && mixer.enabled && ctx.state === 'suspended') {
+        claimMediaSession()
+        ctx.resume()
+      }
     }
     document.addEventListener('visibilitychange', onVisibility)
     return () => document.removeEventListener('visibilitychange', onVisibility)
