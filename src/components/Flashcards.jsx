@@ -295,7 +295,7 @@ export default function Flashcards({ onClose }) {
         ref={closeRef}
         onClick={onClose}
         aria-label="Close flashcards"
-        className="grid h-10 w-10 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90"
       >
         ✕
       </button>

@@ -50,7 +50,7 @@ export default function SeasonsModal({ onClose }) {
             ref={closeRef}
             onClick={onClose}
             aria-label="Close seasons"
-            className="grid h-10 w-10 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
           >
             ✕
           </button>
