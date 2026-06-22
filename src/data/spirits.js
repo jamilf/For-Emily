@@ -38,7 +38,8 @@ export const SPIRITS = [
   {
     id: 'nightOwl',
     name: 'Night Owl',
-    seed: 8,
+    // seed 21 → round body + pointed ear-tufts + pale belly: an owl, not an insect.
+    seed: 21,
     paletteKey: 'blue',
     blurb: 'Wide awake when the house is asleep. It keeps the late watch alongside you.',
     rule: { metric: 'after8pmCount', n: 10 },

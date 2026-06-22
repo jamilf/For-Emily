@@ -12,13 +12,15 @@ const CX = 6
 const H = 13
 
 // Spirit palettes — every hex is an existing app token (ever.* / sunset.* / base).
+// Each palette is tuned to the one spirit that wears it (main body · base shade ·
+// glow accent), so colour + accent texture read its name at a glance.
 const PALETTES = {
-  aqua: { main: '#83C092', shade: '#3FB0AC', hi: '#A7C080' },
-  green: { main: '#A7C080', shade: '#6f8c4f', hi: '#DBBC7F' },
-  gold: { main: '#DBBC7F', shade: '#9a8a3a', hi: '#FFD27D' },
-  purple: { main: '#D699B6', shade: '#9B3D73', hi: '#F4A6C0' },
-  blue: { main: '#7FBBB3', shade: '#5A4A78', hi: '#83C092' },
-  rose: { main: '#E0719C', shade: '#9B3D73', hi: '#FFCBA4' },
+  aqua: { main: '#83C092', shade: '#3FB0AC', hi: '#7FBBB3' }, // Reflection — still water: aqua surface, teal depth, cool blue glint
+  green: { main: '#A7C080', shade: '#6f8c4f', hi: '#DBBC7F' }, // Persistence — an evergreen sprout catching a little gold light
+  gold: { main: '#DBBC7F', shade: '#E69875', hi: '#FFD27D' }, // Curiosity — a warm golden spark over a glowing ember base
+  purple: { main: '#5C3A6E', shade: '#352A52', hi: '#D699B6' }, // Scholar — inky violet with lavender flecks, like margin notes
+  blue: { main: '#5A4A78', shade: '#352A52', hi: '#7FBBB3' }, // Night Owl — slate feathers, deep-indigo night, a moonlit edge
+  rose: { main: '#E0719C', shade: '#9B3D73', hi: '#FFCBA4' }, // Dawn — sunrise rose into magenta, with a peach morning glow
 }
 export const PALETTE_KEYS = Object.keys(PALETTES)
 const DEFAULT_PALETTE = 'green'

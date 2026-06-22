@@ -18,7 +18,7 @@ const FOLIAGE = [
   { main: '#E69875', shade: '#b85c3c', hi: '#F9A857', blossom: '#E67E80' }, // autumn
   { main: '#7a9a5a', shade: '#52723a', hi: '#A7C080', blossom: '#F4A6C0' }, // blossom
   { main: '#3FB0AC', shade: '#2c7d7a', hi: '#83C092', blossom: null }, // teal
-  { main: '#9a8a3a', shade: '#6f6328', hi: '#FFD27D', blossom: '#DBBC7F' }, // golden
+  { main: '#DBBC7F', shade: '#9a8a3a', hi: '#FFD27D', blossom: '#FFCBA4' }, // golden — true gold canopy, deep-gold base, peach catch-light
 ]
 export const VARIATION_COUNT = SHAPES * TRUNKS * PATTERNS * FOLIAGE.length // 180
 
