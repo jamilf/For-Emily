@@ -16,6 +16,22 @@ import { LAYERS } from './ambientLayers.js'
  */
 const MixerContext = createContext(null)
 
+// iOS/WebKit audio unlock. On iPhone (Safari *and* iOS Chrome both run WebKit)
+// a freshly created context stays muted after resume() until a real source has
+// actually played through it once inside the user gesture — and on some versions
+// the resume() promise won't even settle until then. Playing a single silent
+// frame here primes the hardware. Harmless on desktop and Android.
+function unlockOutput(ctx) {
+  try {
+    const src = ctx.createBufferSource()
+    src.buffer = ctx.createBuffer(1, 1, 22050)
+    src.connect(ctx.destination)
+    src.start(0)
+  } catch {
+    /* createBuffer/start unsupported — ignore */
+  }
+}
+
 export function useMixer() {
   const ctx = useContext(MixerContext)
   if (!ctx) throw new Error('useMixer must be used within <AudioMixerProvider>')
@@ -75,22 +91,25 @@ export default function AudioMixerProvider({ children }) {
     }
     const ctx = ctxRef.current
 
-    // Build (and start) the graph only once the context is actually running.
+    // Prime the hardware while we still hold the user gesture (iOS unlock).
+    unlockOutput(ctx)
+
+    // Build (and start) the graph only once the context is actually running, so
+    // WebKit can't silently drop sources that were started while suspended.
     const begin = () => {
       if (!masterRef.current) buildGraph(ctx)
       rampParam(masterRef.current?.gain, userMasterRef.current, 0.4)
       setMixer((m) => ({ ...m, enabled: true }))
     }
 
-    if (ctx.state !== 'running') {
-      // resume() must be called synchronously within the gesture (mobile unlock).
-      const p = ctx.resume()
-      if (p && typeof p.then === 'function') {
-        p.then(begin).catch(begin)
-        return
-      }
+    if (ctx.state === 'running') {
+      begin()
+      return
     }
-    begin()
+    // resume() must be kicked off synchronously within the gesture (mobile unlock).
+    const p = ctx.resume()
+    if (p && typeof p.then === 'function') p.then(begin).catch(begin)
+    else begin()
   }, [buildGraph, setMixer])
 
   const stop = useCallback(() => {
