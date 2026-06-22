@@ -1,9 +1,23 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import useFocusTrap from '../hooks/useFocusTrap.js'
-import { CHAPTERS, deriveCurrentChapter, nextChapter, storyMetrics, unlockedChapters } from '../data/story.js'
+import {
+  CHAPTERS,
+  cleanNote,
+  deriveCurrentChapter,
+  nextChapter,
+  storyMetrics,
+  unlockedChapters,
+} from '../data/story.js'
 
-const EMPTY_STORY = { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {}, companionName: null }
+const EMPTY_STORY = {
+  lastSeen: 0,
+  seenBeats: {},
+  ackChapters: {},
+  comebackShown: {},
+  companionName: null,
+  notes: {},
+}
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 
 /**
@@ -45,6 +59,34 @@ export default function StoryModal({ onClose }) {
   }, [current])
 
   const remaining = CHAPTERS.length - unlocked.length
+
+  // Keeper's notes — her own line beside the sprite's, per chapter. Optional.
+  const notes = story.notes || {}
+  const [editingId, setEditingId] = useState(null)
+  const [draft, setDraft] = useState('')
+
+  function startNote(c) {
+    setDraft(notes[c.id] || '')
+    setEditingId(c.id)
+  }
+  function saveNote(id) {
+    setStory((s) => {
+      const next = { ...(s.notes || {}) }
+      const note = cleanNote(draft)
+      if (note) next[id] = note
+      else delete next[id]
+      return { ...s, notes: next }
+    })
+    setEditingId(null)
+    setDraft('')
+  }
+  function clearNote(id) {
+    setStory((s) => {
+      const next = { ...(s.notes || {}) }
+      delete next[id]
+      return { ...s, notes: next }
+    })
+  }
 
   return (
     <div className="animate-fade-in modal-overlay-pad fixed inset-0 z-50 flex items-center justify-center">
@@ -117,6 +159,70 @@ export default function StoryModal({ onClose }) {
                         <span aria-hidden="true">🌙</span>
                         <span>{c.hook}</span>
                       </p>
+
+                      {/* Keeper's note — her own line, woven beside the sprite's. Optional. */}
+                      <div className="mt-3 border-t border-brown/10 pt-3">
+                        {editingId === c.id ? (
+                          <div className="space-y-2">
+                            <label htmlFor={`note-${c.id}`} className="block text-xs text-brown/60">
+                              what&apos;s on your mind? only if you feel like it.
+                            </label>
+                            <textarea
+                              id={`note-${c.id}`}
+                              value={draft}
+                              onChange={(e) => setDraft(e.target.value)}
+                              rows={2}
+                              maxLength={140}
+                              placeholder="a line for your grove…"
+                              className="w-full resize-none rounded-xl border-2 border-brown/20 bg-white/80 p-2 text-sm text-brownDark placeholder:text-brown/40 focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                            />
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => saveNote(c.id)}
+                                className="rounded-xl bg-brown px-3 py-1.5 font-display text-xs text-cream transition-colors hover:bg-brownDark active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                              >
+                                save
+                              </button>
+                              <button
+                                onClick={() => setEditingId(null)}
+                                className="rounded-xl px-2 py-1.5 text-xs text-brown/60 underline-offset-2 transition-colors hover:text-brown hover:underline focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                              >
+                                cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : notes[c.id] ? (
+                          <div>
+                            <p className="font-display text-xs uppercase tracking-wide text-brown/45">
+                              you wrote
+                            </p>
+                            <p className="mt-0.5 text-sm italic leading-relaxed text-brownDark/85">
+                              {notes[c.id]}
+                            </p>
+                            <div className="mt-1.5 flex items-center gap-3">
+                              <button
+                                onClick={() => startNote(c)}
+                                className="text-xs text-brown/60 underline-offset-2 transition-colors hover:text-brown hover:underline focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                              >
+                                edit
+                              </button>
+                              <button
+                                onClick={() => clearNote(c.id)}
+                                className="text-xs text-brown/60 underline-offset-2 transition-colors hover:text-brown hover:underline focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                              >
+                                clear
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => startNote(c)}
+                            className="text-xs text-brown/60 underline-offset-2 transition-colors hover:text-brown hover:underline focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                          >
+                            ✎ leave a note
+                          </button>
+                        )}
+                      </div>
                     </li>
                   )
                 })}

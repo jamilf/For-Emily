@@ -64,11 +64,27 @@ test('a return after a gap blooms a welcome-back, reveals a chapter, and opens t
   await expect(story.getByText('Lanternlight')).toBeVisible()
   await expect(story.getByText(/you are here/i)).toBeVisible()
   await expect(story.getByText(/something new is waiting up ahead/i)).toBeVisible()
+
+  // She co-authors the story: leave a keeper note on the current chapter.
+  await story
+    .getByRole('button', { name: /leave a note/i })
+    .first()
+    .click()
+  await story.getByRole('textbox').first().fill('a quiet good day')
+  await story.getByRole('button', { name: /^save$/i }).click()
+  await expect(story.getByText('a quiet good day')).toBeVisible()
+
   await page.screenshot({
     path: `playwright-report/story-modal-${testInfo.project.name}.png`,
     fullPage: true,
   })
   await story.getByRole('button', { name: /close story/i }).click()
+
+  // The note persists: reopen the Story from the toolbar and it's still there.
+  await page.getByRole('button', { name: /open your grove story/i }).click()
+  const story2 = page.getByRole('dialog', { name: /grove story/i })
+  await expect(story2.getByText('a quiet good day')).toBeVisible()
+  await story2.getByRole('button', { name: /close story/i }).click()
 
   // 4) Reload: the comeback is not shown again, and a warm greeting appears.
   await page.reload()

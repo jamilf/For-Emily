@@ -387,3 +387,21 @@ export function cleanName(raw) {
   const cleaned = out.replace(/\s+/g, ' ').trim().slice(0, 24)
   return cleaned.length ? cleaned : null
 }
+
+/**
+ * Sanitize a keeper's note she wrote for a chapter: drop control characters
+ * (keeping ordinary punctuation), collapse runs of whitespace, trim, and cap the
+ * length. Returns '' for an empty result, which clears the note. Mirrors cleanName.
+ */
+export function cleanNote(raw) {
+  if (typeof raw !== 'string') return ''
+  let out = ''
+  for (const ch of raw) {
+    const code = ch.codePointAt(0)
+    // Keep whitespace controls (tab/newline/CR) so they collapse to a space below;
+    // drop the rest of the control range and DEL.
+    if ((code < 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d) || code === 0x7f) continue
+    out += ch
+  }
+  return out.replace(/\s+/g, ' ').trim().slice(0, 140)
+}

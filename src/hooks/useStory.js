@@ -6,6 +6,7 @@ import {
   buildComeback,
   classifyReturn,
   cleanName,
+  cleanNote,
   comebackDayKey,
   dailySeed,
   dayGap,
@@ -17,7 +18,14 @@ import {
   unlockedChapters,
 } from '../data/story.js'
 
-const EMPTY_STORY = { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {}, companionName: null }
+const EMPTY_STORY = {
+  lastSeen: 0,
+  seenBeats: {},
+  ackChapters: {},
+  comebackShown: {},
+  companionName: null,
+  notes: {},
+}
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 
 /**
@@ -98,6 +106,15 @@ export default function useStory() {
     setStory((s) => ({ ...s, comebackShown: { ...s.comebackShown, [dayKey]: true } }))
   // Store a sanitized companion name (or clear it). Syncs as part of emily.story.
   const setCompanionName = (raw) => setStory((s) => ({ ...s, companionName: cleanName(raw) }))
+  // Save (or clear) Emily's note for a chapter. Empty notes drop the key entirely.
+  const setChapterNote = (id, raw) =>
+    setStory((s) => {
+      const next = { ...(s.notes || {}) }
+      const note = cleanNote(raw)
+      if (note) next[id] = note
+      else delete next[id]
+      return { ...s, notes: next }
+    })
 
   return {
     metrics,
@@ -112,6 +129,8 @@ export default function useStory() {
     partOfDay,
     companionName,
     setCompanionName,
+    notes: story.notes || {},
+    setChapterNote,
     ackChapter,
     dismissComeback,
   }

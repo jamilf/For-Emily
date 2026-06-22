@@ -53,6 +53,31 @@ describe('StoryModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('lets her leave a keeper note that persists and reads back as "you wrote"', () => {
+    seed(10)
+    render(<StoryModal onClose={() => {}} />)
+    fireEvent.click(screen.getAllByRole('button', { name: /leave a note/i })[0])
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'i finished my essay today' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    expect(screen.getByText(/you wrote/i)).toBeInTheDocument()
+    expect(screen.getByText('i finished my essay today')).toBeInTheDocument()
+    // The first unlocked chapter is "stirs"; its note is persisted to emily.story.
+    expect(JSON.parse(localStorage.getItem('emily.story')).notes.stirs).toBe('i finished my essay today')
+  })
+
+  it('can clear a note again', () => {
+    seed(10)
+    localStorage.setItem(
+      'emily.story',
+      JSON.stringify({ lastSeen: 1, ackChapters: {}, comebackShown: {}, notes: { stirs: 'a kept line' } }),
+    )
+    render(<StoryModal onClose={() => {}} />)
+    expect(screen.getByText('a kept line')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /^clear$/i }))
+    expect(screen.queryByText('a kept line')).not.toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem('emily.story')).notes.stirs).toBeUndefined()
+  })
+
   it('has no axe-detectable accessibility violations', async () => {
     seed(10)
     const { container } = render(<StoryModal onClose={() => {}} />)
