@@ -39,9 +39,14 @@ test('a return after a gap blooms a welcome-back, reveals a chapter, and opens t
   const welcome = page.getByRole('dialog', { name: /welcome back/i })
   await expect(welcome).toBeVisible()
   await expect(welcome.getByText(/nothing here goes anywhere when you rest/i)).toBeVisible()
-  await expect(page.getByText(/lost|streak|behind|missed/i)).toHaveCount(0)
+  // Scope to the dialog: the dashboard behind it shows a "day streak" tile, which is
+  // unrelated to the comeback copy we're guarding here.
+  await expect(welcome.getByText(/lost|streak|behind|missed/i)).toHaveCount(0)
 
-  await page.screenshot({ path: `playwright-report/story-comeback-${testInfo.project.name}.png`, fullPage: true })
+  await page.screenshot({
+    path: `playwright-report/story-comeback-${testInfo.project.name}.png`,
+    fullPage: true,
+  })
   await welcome.getByRole('button', { name: /close welcome back/i }).click()
   await expect(welcome).toBeHidden()
 
@@ -56,7 +61,10 @@ test('a return after a gap blooms a welcome-back, reveals a chapter, and opens t
   await expect(story.getByText('Lanternlight')).toBeVisible()
   await expect(story.getByText(/you are here/i)).toBeVisible()
   await expect(story.getByText(/something new is waiting up ahead/i)).toBeVisible()
-  await page.screenshot({ path: `playwright-report/story-modal-${testInfo.project.name}.png`, fullPage: true })
+  await page.screenshot({
+    path: `playwright-report/story-modal-${testInfo.project.name}.png`,
+    fullPage: true,
+  })
   await story.getByRole('button', { name: /close story/i }).click()
 
   // 4) Reload: the comeback is not shown again, and a warm greeting appears.
