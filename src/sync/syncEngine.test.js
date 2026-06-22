@@ -17,8 +17,14 @@ describe('SYNC_KEYS', () => {
     expect(isSyncKey('emily.memories')).toBe(true)
   })
 
+  it('syncs the Grove Story continuity across devices (last-write-wins)', () => {
+    expect(SYNC_KEYS).toContain('emily.story')
+    expect(isSyncKey('emily.story')).toBe(true)
+  })
+
   it('leaves device-local caches out of sync', () => {
     expect(isSyncKey('emily.mixer')).toBe(false)
     expect(isSyncKey('emily.zen')).toBe(false)
+    expect(isSyncKey('emily.spr')).toBe(false) // ephemeral per-device seen-bag
   })
 })

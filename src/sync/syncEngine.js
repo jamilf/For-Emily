@@ -20,6 +20,7 @@ export const SYNC_KEYS = [
   'emily.focusLog', // Firefly Calendar time-series (real progress; per-key LWW)
   'emily.spirits', // Forest Spirits — sticky collectible companions
   'emily.memories', // Memory Grove — dedicated trees (title + note)
+  'emily.story', // Grove Story — return continuity (last-write-wins: "last seen anywhere")
 ]
 const SYNC_SET = new Set(SYNC_KEYS)
 const META_KEY = 'emily.sync.meta' // { [key]: epochMs of last local change }

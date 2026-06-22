@@ -11,7 +11,7 @@ import { backfillFromGarden } from '../data/focusLog.js'
 import { spiritMetrics, reconcileSpirits } from '../data/spirits.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 6
+export const SCHEMA_VERSION = 7
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -50,6 +50,9 @@ export const DEFAULTS = {
   'emily.spirits': { unlocked: {}, seen: {}, discoveredAt: {} },
   // Phase-13: Memory Grove — dedicated trees with a title + note.
   'emily.memories': [], // [{ id, dna, ts, title, note }]
+  // Phase-14: Grove Story — return continuity + reveal acks (chapter/greeting/
+  // comeback are all DERIVED; only this small ack state is stored).
+  'emily.story': { lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {} },
 }
 
 /** Safe read with a defaults fallback; never throws. */
@@ -134,6 +137,16 @@ export function migrate() {
     // just ensure the key exists. Non-destructive: never overwrites real memories.
     if (current < 6) {
       if (localStorage.getItem('emily.memories') == null) write('emily.memories', [])
+    }
+    // v6 → v7: Grove Story. Ensure the key exists. Seed `lastSeen` to NOW only for
+    // a user who already has history, so upgrading never triggers a false "welcome
+    // back" comeback; a brand-new install keeps lastSeen = 0 so the first open reads
+    // as a first-day greeting (never a comeback). Non-destructive: never overwrites.
+    if (current < 7) {
+      if (localStorage.getItem('emily.story') == null) {
+        const hasHistory = (read('emily.garden', []).length || 0) > 0
+        write('emily.story', { ...DEFAULTS['emily.story'], lastSeen: hasHistory ? Date.now() : 0 })
+      }
     }
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
   } catch {

@@ -14,6 +14,7 @@ export default function Toolbar({
   onOpenJournal,
   onOpenConstellations,
   onOpenQuests,
+  onOpenStory,
   dueCount = 0,
 }) {
   const sync = useSync()
@@ -74,6 +75,13 @@ export default function Toolbar({
       {onOpenQuests && (
         <button type="button" onClick={onOpenQuests} className={chip} aria-label="Open today's focus quests">
           📜 <span className="hidden sm:inline">Quests</span>
+        </button>
+      )}
+
+      {/* Grove Story */}
+      {onOpenStory && (
+        <button type="button" onClick={onOpenStory} className={chip} aria-label="Open your grove story">
+          📖 <span className="hidden sm:inline">Story</span>
         </button>
       )}
 

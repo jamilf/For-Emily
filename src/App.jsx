@@ -14,6 +14,9 @@ import AudioMixerProvider, { useMixer } from './audio/AudioMixerProvider.jsx'
 import SyncProvider from './sync/SyncProvider.jsx'
 import usePersistedState from './hooks/useLocalStorage.js'
 import usePageHidden from './hooks/usePageHidden.js'
+import useStory from './hooks/useStory.js'
+import SpriteGreeting from './components/SpriteGreeting.jsx'
+import ChapterReveal from './components/ChapterReveal.jsx'
 import { SEED_CARDS, countDue } from './data/flashcards.js'
 import { migrate } from './storage/StorageManager.js'
 
@@ -28,6 +31,8 @@ const Journal = lazy(() => import('./components/Journal.jsx'))
 const Constellations = lazy(() => import('./components/Constellations.jsx'))
 const SeasonsModal = lazy(() => import('./components/SeasonsModal.jsx'))
 const QuestBoard = lazy(() => import('./components/QuestBoard.jsx'))
+const StoryModal = lazy(() => import('./components/StoryModal.jsx'))
+const ComebackMoment = lazy(() => import('./components/ComebackMoment.jsx'))
 
 function Dashboard() {
   const [focusMode, setFocusMode] = useState(false) // manual single-task toggle
@@ -40,7 +45,9 @@ function Dashboard() {
   const [showConstellations, setShowConstellations] = useState(false)
   const [showSeasons, setShowSeasons] = useState(false)
   const [showQuests, setShowQuests] = useState(false)
+  const [showStory, setShowStory] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
+  const story = useStory()
   const [zen, setZen] = usePersistedState('emily.zen', false)
   const [cards] = usePersistedState('emily.flashcards', SEED_CARDS)
   const [garden] = usePersistedState('emily.garden', [])
@@ -113,6 +120,7 @@ function Dashboard() {
           onOpenJournal={() => setShowJournal(true)}
           onOpenConstellations={() => setShowConstellations(true)}
           onOpenQuests={() => setShowQuests(true)}
+          onOpenStory={() => setShowStory(true)}
           season={season}
           onOpenSeasons={() => setShowSeasons(true)}
           dueCount={dueCount}
@@ -195,7 +203,25 @@ function Dashboard() {
 
         {/* Focus Quest Board — derived daily objectives, nothing to fail */}
         {showQuests && <QuestBoard onClose={() => setShowQuests(false)} />}
+
+        {/* Grove Story — a derived, comeback-positive narrative layer */}
+        {showStory && <StoryModal onClose={() => setShowStory(false)} />}
+
+        {/* Welcome-back moment after a gap — a gift, shown once per day */}
+        {story.comeback && <ComebackMoment comeback={story.comeback} onClose={story.dismissComeback} />}
       </Suspense>
+
+      {/* The sprite's contextual hello + a gentle new-chapter reveal. Priority:
+          the welcome-back moment first, then a chapter reveal, then the greeting —
+          so at most one ambient announcement appears at a time. */}
+      {!story.comeback && story.unseenChapter && (
+        <ChapterReveal
+          chapter={story.unseenChapter}
+          onRead={() => setShowStory(true)}
+          onAck={story.ackChapter}
+        />
+      )}
+      {!story.comeback && !story.unseenChapter && story.greeting && <SpriteGreeting text={story.greeting} />}
     </div>
   )
 }

@@ -18,6 +18,7 @@ export default function Header({
   onOpenJournal,
   onOpenConstellations,
   onOpenQuests,
+  onOpenStory,
   season,
   onOpenSeasons,
   dueCount,
@@ -85,6 +86,7 @@ export default function Header({
             onOpenJournal={onOpenJournal}
             onOpenConstellations={onOpenConstellations}
             onOpenQuests={onOpenQuests}
+            onOpenStory={onOpenStory}
             dueCount={dueCount}
           />
         </div>

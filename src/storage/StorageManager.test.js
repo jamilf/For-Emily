@@ -191,6 +191,37 @@ describe('migrate', () => {
     migrate()
     expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
   })
+
+  it('seeds the emily.story default on the v6→v7 upgrade', () => {
+    localStorage.setItem('emily.schemaVersion', '6')
+    migrate()
+    const story = JSON.parse(localStorage.getItem('emily.story'))
+    expect(story).toMatchObject({ lastSeen: 0, seenBeats: {}, ackChapters: {}, comebackShown: {} })
+  })
+
+  it('a brand-new install keeps story.lastSeen = 0 (so the first open reads as first-day)', () => {
+    migrate() // fresh install, version 0, no garden
+    expect(JSON.parse(localStorage.getItem('emily.story')).lastSeen).toBe(0)
+  })
+
+  it('an existing user with history seeds lastSeen to NOW (no false comeback on upgrade)', () => {
+    localStorage.setItem('emily.schemaVersion', '6')
+    localStorage.setItem('emily.garden', JSON.stringify([{ id: 0, ts: 1 }]))
+    const before = Date.now()
+    migrate()
+    const last = JSON.parse(localStorage.getItem('emily.story')).lastSeen
+    expect(last).toBeGreaterThanOrEqual(before)
+  })
+
+  it('never overwrites an existing emily.story, and double-runs as a no-op', () => {
+    const story = { lastSeen: 123, seenBeats: { x: true }, ackChapters: { stirs: true }, comebackShown: {} }
+    localStorage.setItem('emily.schemaVersion', '6')
+    localStorage.setItem('emily.story', JSON.stringify(story))
+    migrate()
+    localStorage.setItem('emily.schemaVersion', '6') // force the guard to run again
+    migrate()
+    expect(JSON.parse(localStorage.getItem('emily.story'))).toEqual(story)
+  })
 })
 
 describe('backup export/import (Sanctuary backup)', () => {
