@@ -16,7 +16,7 @@ test('unlocking and choosing a scene theme persists across a reload', async ({ p
   })
   await page.goto('/')
 
-  await page.getByRole('button', { name: /open the grove/i }).click()
+  await page.getByRole('button', { name: 'Open the grove', exact: true }).click()
   await page.getByRole('button', { name: /open scene themes/i }).click()
   const dialog = page.getByRole('dialog', { name: /scene themes/i })
   await expect(dialog).toBeVisible()
@@ -28,7 +28,7 @@ test('unlocking and choosing a scene theme persists across a reload', async ({ p
 
   // Reload: the choice is remembered.
   await page.reload()
-  await page.getByRole('button', { name: /open the grove/i }).click()
+  await page.getByRole('button', { name: 'Open the grove', exact: true }).click()
   await page.getByRole('button', { name: /open scene themes/i }).click()
   const dialog2 = page.getByRole('dialog', { name: /scene themes/i })
   await expect(dialog2.getByRole('button', { name: /sakura is active/i })).toBeVisible()

@@ -24,7 +24,7 @@ test('Constellations opens from the Grove hub, shows the sky + list, and screens
   })
   await page.goto('/')
 
-  await page.getByRole('button', { name: /open the grove/i }).click()
+  await page.getByRole('button', { name: 'Open the grove', exact: true }).click()
   await page.getByRole('button', { name: /open constellations/i }).click()
   const dialog = page.getByRole('dialog', { name: /your constellations/i })
   await expect(dialog).toBeVisible()

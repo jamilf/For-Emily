@@ -25,7 +25,7 @@ test('Sanctuary Seasons opens from the Grove hub and marks the current season', 
   await page.goto('/')
 
   // Seasons now lives inside the Grove hub.
-  await page.getByRole('button', { name: /open the grove/i }).click()
+  await page.getByRole('button', { name: 'Open the grove', exact: true }).click()
   await page.getByRole('button', { name: /open sanctuary seasons/i }).click()
 
   const dialog = page.getByRole('dialog', { name: /sanctuary seasons/i })

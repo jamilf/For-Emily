@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test'
 // open), so the Esc-returns-focus check holds. The Grove hub stands in for the many
 // world surfaces it launches — they all share this exact modal shell.
 const MODALS = [
-  { slug: 'grove', open: /open the grove/i, dialog: /the grove/i },
+  { slug: 'grove', open: /^open the grove$/i, dialog: /the grove/i },
   { slug: 'quests', open: /open today's focus quests/i, dialog: /focus quests/i },
   { slug: 'spirits', open: /forest spirits/i, dialog: /forest spirits/i },
   { slug: 'memories', open: /memory grove/i, dialog: /memory grove/i },

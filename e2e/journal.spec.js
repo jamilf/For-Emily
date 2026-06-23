@@ -32,7 +32,7 @@ test('Journal opens from the Grove hub, shows a timeline, and screenshots', asyn
   })
   await page.goto('/')
 
-  await page.getByRole('button', { name: /open the grove/i }).click()
+  await page.getByRole('button', { name: 'Open the grove', exact: true }).click()
   await page.getByRole('button', { name: /open journal/i }).click()
   const dialog = page.getByRole('dialog', { name: /your journal/i })
   await expect(dialog).toBeVisible()
