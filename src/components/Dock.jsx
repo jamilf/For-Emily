@@ -12,7 +12,7 @@ export default function Dock({
   onOpenFlashcards,
   flashcardsDue = 0,
 }) {
-  const items = [{ id: 'mixer', icon: '🎚️', label: 'Ambient mixer' }]
+  const items = [{ id: 'mixer', icon: '🎚️', label: 'Sound & music' }]
 
   const base =
     'relative flex h-11 w-11 items-center justify-center rounded-full border-2 text-lg transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow'

@@ -22,6 +22,10 @@ export const DEFAULTS = {
   'emily.mixer': {
     enabled: false,
     master: 0.7,
+    // Generative focus music. Additive + default-backed, so old saves merge these
+    // in with no migration. 'off' means no music; a style id starts the player.
+    musicStyle: 'off',
+    musicVolume: 0.6,
     levels: {
       steadyRain: 0.5,
       rainWindow: 0,

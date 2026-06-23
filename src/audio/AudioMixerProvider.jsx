@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useRef } from 'react
 import usePersistedState from '../hooks/useLocalStorage.js'
 import { DEFAULTS } from '../storage/StorageManager.js'
 import { LAYERS } from './ambientLayers.js'
+import MusicPlayer from './music/MusicPlayer.js'
+import { MUSIC_STYLES } from './music/styles.js'
 
 /**
  * AudioMixerProvider — owns the single AudioContext and the synthesized ambient
@@ -100,21 +102,44 @@ export default function AudioMixerProvider({ children }) {
   const masterRef = useRef(null)
   const layerGainsRef = useRef({}) // id -> GainNode
   const disposersRef = useRef([]) // teardown fns
+  const musicRef = useRef(null) // MusicPlayer, built with the graph
   const userMasterRef = useRef(mixer.master) // master to restore after a fade
   userMasterRef.current = mixer.master
+  const musicStyleRef = useRef(mixer.musicStyle || 'off')
+  musicStyleRef.current = mixer.musicStyle || 'off'
+  const musicVolumeRef = useRef(mixer.musicVolume ?? 0.6)
+  musicVolumeRef.current = mixer.musicVolume ?? 0.6
 
   // Build the synthesized graph onto an already-running context. Source nodes
   // (buffers/oscillators) are only started here, never before the context is
   // running — iOS/Android WebKit silently drop sources started while suspended.
   const buildGraph = useCallback((ctx) => {
+    // Master chain:  master → subsonic HP → gentle glue comp → brick-wall limiter
+    // → destination. The HP clears DC/rumble the brown-noise layers carry, and the
+    // limiter is the safety net that stops stacked layers + music from ever clipping.
+    const hp = ctx.createBiquadFilter()
+    hp.type = 'highpass'
+    hp.frequency.value = 26
+    hp.Q.value = 0.5
+
     const compressor = ctx.createDynamicsCompressor()
     compressor.threshold.value = -12
     compressor.ratio.value = 4
-    compressor.connect(ctx.destination)
+
+    const limiter = ctx.createDynamicsCompressor()
+    limiter.threshold.value = -1.5
+    limiter.knee.value = 0
+    limiter.ratio.value = 20
+    limiter.attack.value = 0.003
+    limiter.release.value = 0.25
+
+    hp.connect(compressor)
+    compressor.connect(limiter)
+    limiter.connect(ctx.destination)
 
     const master = ctx.createGain()
     master.gain.value = 0 // ramps up on start
-    master.connect(compressor)
+    master.connect(hp)
 
     LAYERS.forEach((layer) => {
       const { output, dispose } = layer.build(ctx)
@@ -125,6 +150,20 @@ export default function AudioMixerProvider({ children }) {
       layerGainsRef.current[layer.id] = g
       disposersRef.current.push(dispose)
     })
+
+    // Focus music rides its own bus into master, so the Pomodoro focus-fade ducks
+    // it along with the ambient layers. The player schedules notes only while a
+    // real style is selected.
+    const musicBus = ctx.createGain()
+    musicBus.gain.value = 1
+    musicBus.connect(master)
+    const player = new MusicPlayer(ctx, musicBus)
+    player.setVolume(musicVolumeRef.current)
+    musicRef.current = player
+    disposersRef.current.push(() => player.dispose())
+    if (musicStyleRef.current && musicStyleRef.current !== 'off') {
+      player.setStyle(musicStyleRef.current)
+    }
 
     masterRef.current = master
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -209,6 +248,27 @@ export default function AudioMixerProvider({ children }) {
     setMixer((m) => ({ ...m, levels: Object.fromEntries(LAYERS.map((l) => [l.id, 0])) }))
   }, [setMixer])
 
+  // Choose a focus-music style ('off' to stop). Persists always; only drives the
+  // player when the graph is live (mirrors how layers only build once running, so
+  // selecting a style before Start just saves the choice for next time).
+  const setMusicStyle = useCallback(
+    (id) => {
+      musicStyleRef.current = id
+      if (musicRef.current) musicRef.current.setStyle(id)
+      setMixer((m) => ({ ...m, musicStyle: id }))
+    },
+    [setMixer],
+  )
+
+  const setMusicVolume = useCallback(
+    (v) => {
+      musicVolumeRef.current = v
+      if (musicRef.current) musicRef.current.setVolume(v)
+      setMixer((m) => ({ ...m, musicVolume: v }))
+    },
+    [setMixer],
+  )
+
   // Focus-fade hooks for the Pomodoro timer (do not touch persisted master).
   const rampMaster = useCallback((target, seconds) => {
     const ctx = ctxRef.current
@@ -263,11 +323,16 @@ export default function AudioMixerProvider({ children }) {
     enabled: mixer.enabled,
     master: mixer.master,
     levels: mixer.levels,
+    musicStyles: MUSIC_STYLES,
+    musicStyle: mixer.musicStyle || 'off',
+    musicVolume: mixer.musicVolume ?? 0.6,
     start,
     stop,
     setLevel,
     setMaster,
     muteAll,
+    setMusicStyle,
+    setMusicVolume,
     rampMaster,
     restoreMaster,
   }

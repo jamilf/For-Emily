@@ -30,13 +30,30 @@ function VolumeSlider({ id, label, icon, value, onChange }) {
  * synthesized-layer config; everything persists via the mixer context.
  */
 export default function AmbientMixerDrawer({ onClose }) {
-  const { layers, enabled, master, levels, start, stop, setLevel, setMaster, muteAll } = useMixer()
+  const {
+    layers,
+    enabled,
+    master,
+    levels,
+    start,
+    stop,
+    setLevel,
+    setMaster,
+    muteAll,
+    musicStyles,
+    musicStyle,
+    musicVolume,
+    setMusicStyle,
+    setMusicVolume,
+  } = useMixer()
 
   const btn =
     'flex-1 rounded-xl px-3 py-2 font-display text-sm transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow'
+  const styleBtn =
+    'rounded-lg px-3 py-2 font-display text-sm transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow'
 
   return (
-    <Drawer open onClose={onClose} title="🎚️ Ambient Mixer" className="zen-hide">
+    <Drawer open onClose={onClose} title="🎚️ Sound & Music" className="zen-hide">
       <div className="flex gap-2">
         <button
           onClick={start}
@@ -60,6 +77,39 @@ export default function AmbientMixerDrawer({ onClose }) {
       <p className="mt-2 text-xs text-brown/60" aria-live="polite">
         {enabled ? 'Playing' : 'Tap Start. Nothing plays on its own.'}
       </p>
+
+      <div className="mt-3 border-t border-brown/15 pt-3">
+        <p className="mb-1.5 font-display text-sm text-brown">🎵 Focus Music</p>
+        <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Focus music style">
+          {musicStyles.map((s) => {
+            const active = musicStyle === s.id
+            return (
+              <button
+                key={s.id}
+                onClick={() => setMusicStyle(s.id)}
+                aria-pressed={active}
+                className={`${styleBtn} ${
+                  active ? 'bg-ever-green text-bg0' : 'bg-brown/15 text-brown hover:bg-brown/25'
+                }`}
+              >
+                {s.label}
+              </button>
+            )
+          })}
+        </div>
+        <p className="mt-1.5 text-xs text-brown/60">
+          Composed live as you study, so no two sessions sound quite the same.
+        </p>
+        <div className="mt-2">
+          <VolumeSlider
+            id="__music"
+            label="Music"
+            icon="🎹"
+            value={musicVolume}
+            onChange={(_, v) => setMusicVolume(v)}
+          />
+        </div>
+      </div>
 
       <div className="mt-3 border-t border-brown/15 pt-3">
         <VolumeSlider

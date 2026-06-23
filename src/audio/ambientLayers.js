@@ -11,23 +11,66 @@
 // keep the zero-asset guarantee the app has always honored.
 
 // ---- shared noise buffers ---------------------------------------------------
-function whiteNoise(ctx, seconds = 2) {
-  const frames = Math.floor(ctx.sampleRate * seconds)
-  const buf = ctx.createBuffer(1, frames, ctx.sampleRate)
-  const data = buf.getChannelData(0)
-  for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1
-  return buf
+// Fill a Float32Array with one of three noise colours. White is flat and bright;
+// pink rolls off ~3 dB/oct (Paul Kellet's filter) for a warmer, far less "buzzy"
+// hiss; brown rolls off ~6 dB/oct for a soft low rumble. Each call advances its
+// own state, so filling two channels gives a decorrelated (naturally wide) stereo
+// field rather than the old dead-centre mono.
+function fillNoise(data, kind) {
+  const n = data.length
+  if (kind === 'white') {
+    for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1
+    return
+  }
+  if (kind === 'brown') {
+    let last = 0
+    for (let i = 0; i < n; i++) {
+      const w = Math.random() * 2 - 1
+      last = (last + 0.02 * w) / 1.02
+      data[i] = last * 3.5
+    }
+    return
+  }
+  // pink (Paul Kellet's economical approximation)
+  let b0 = 0,
+    b1 = 0,
+    b2 = 0,
+    b3 = 0,
+    b4 = 0,
+    b5 = 0,
+    b6 = 0
+  for (let i = 0; i < n; i++) {
+    const w = Math.random() * 2 - 1
+    b0 = 0.99886 * b0 + w * 0.0555179
+    b1 = 0.99332 * b1 + w * 0.0750759
+    b2 = 0.969 * b2 + w * 0.153852
+    b3 = 0.8665 * b3 + w * 0.3104856
+    b4 = 0.55 * b4 + w * 0.5329522
+    b5 = -0.7616 * b5 - w * 0.016898
+    data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11
+    b6 = w * 0.115926
+  }
 }
 
-function brownNoise(ctx, seconds = 2) {
-  const frames = Math.floor(ctx.sampleRate * seconds)
-  const buf = ctx.createBuffer(1, frames, ctx.sampleRate)
-  const data = buf.getChannelData(0)
-  let last = 0
-  for (let i = 0; i < frames; i++) {
-    const white = Math.random() * 2 - 1
-    last = (last + 0.02 * white) / 1.02
-    data[i] = last * 3.5
+// A seamless, looping STEREO noise buffer. The old layers looped a flat 2-second
+// mono buffer with `loop = true`, so every 2s the waveform jumped back to its
+// start and clicked. Here we generate a longer take plus an `overlap` tail, then
+// equal-power crossfade that tail back over the head — the loop point becomes
+// continuous and the click is gone. Channels are filled independently for width.
+function noiseBuffer(ctx, kind, seconds = 10, overlap = 0.5) {
+  const N = Math.floor(ctx.sampleRate * seconds)
+  const O = Math.min(Math.floor(ctx.sampleRate * overlap), Math.floor(N / 2))
+  const buf = ctx.createBuffer(2, N, ctx.sampleRate)
+  const gen = new Float32Array(N + O)
+  for (let ch = 0; ch < 2; ch++) {
+    fillNoise(gen, kind)
+    const out = buf.getChannelData(ch)
+    for (let i = 0; i < N; i++) out[i] = gen[i]
+    // Crossfade the continuation (gen[N..N+O)) over the head so head meets tail.
+    for (let i = 0; i < O; i++) {
+      const x = (i / O) * 0.5 * Math.PI
+      out[i] = gen[i] * Math.sin(x) + gen[N + i] * Math.cos(x)
+    }
   }
   return buf
 }
@@ -39,14 +82,17 @@ function loopSource(ctx, buffer) {
   return src
 }
 
-// A slow oscillator wired to modulate an AudioParam around a base value.
+// A slow oscillator wired to modulate an AudioParam around a base value. The
+// modulation depth fades in over ~0.9s (setTargetAtTime) instead of snapping to
+// full depth, so a layer never lurches the instant it starts.
 function attachLFO(ctx, param, { base, depth, rate }) {
   param.value = base
   const osc = ctx.createOscillator()
   osc.type = 'sine'
   osc.frequency.value = rate
   const depthGain = ctx.createGain()
-  depthGain.gain.value = depth
+  depthGain.gain.value = 0
+  depthGain.gain.setTargetAtTime(depth, ctx.currentTime, 0.3)
   osc.connect(depthGain)
   depthGain.connect(param)
   osc.start()
@@ -67,7 +113,7 @@ export const LAYERS = [
     icon: '🌧️',
     defaultVolume: 0.5,
     build(ctx) {
-      const src = loopSource(ctx, whiteNoise(ctx))
+      const src = loopSource(ctx, noiseBuffer(ctx, 'pink'))
       const hp = ctx.createBiquadFilter()
       hp.type = 'highpass'
       hp.frequency.value = 500
@@ -86,7 +132,7 @@ export const LAYERS = [
     icon: '🪟',
     defaultVolume: 0,
     build(ctx) {
-      const src = loopSource(ctx, whiteNoise(ctx))
+      const src = loopSource(ctx, noiseBuffer(ctx, 'pink'))
       const lp = ctx.createBiquadFilter()
       lp.type = 'lowpass'
       lp.frequency.value = 1600
@@ -104,7 +150,7 @@ export const LAYERS = [
     icon: '⛈️',
     defaultVolume: 0,
     build(ctx) {
-      const src = loopSource(ctx, brownNoise(ctx))
+      const src = loopSource(ctx, noiseBuffer(ctx, 'brown'))
       const lp = ctx.createBiquadFilter()
       lp.type = 'lowpass'
       lp.frequency.value = 220
@@ -133,7 +179,7 @@ export const LAYERS = [
     icon: '🍃',
     defaultVolume: 0,
     build(ctx) {
-      const src = loopSource(ctx, whiteNoise(ctx))
+      const src = loopSource(ctx, noiseBuffer(ctx, 'pink'))
       const bp = ctx.createBiquadFilter()
       bp.type = 'bandpass'
       bp.Q.value = 0.7
@@ -154,7 +200,7 @@ export const LAYERS = [
     defaultVolume: 0,
     build(ctx) {
       // Low rumble bed.
-      const rumbleSrc = loopSource(ctx, brownNoise(ctx))
+      const rumbleSrc = loopSource(ctx, noiseBuffer(ctx, 'brown'))
       const rumbleLp = ctx.createBiquadFilter()
       rumbleLp.type = 'lowpass'
       rumbleLp.frequency.value = 420
@@ -163,8 +209,9 @@ export const LAYERS = [
       rumbleSrc.connect(rumbleLp)
       rumbleLp.connect(out)
       rumbleSrc.start()
-      // Random crackle pops (short high-passed bursts).
-      const crackleSrc = loopSource(ctx, whiteNoise(ctx))
+      // Random crackle pops (short high-passed bursts). White noise reads brightest
+      // here, which is what we want for a spark.
+      const crackleSrc = loopSource(ctx, noiseBuffer(ctx, 'white'))
       const crackleHp = ctx.createBiquadFilter()
       crackleHp.type = 'highpass'
       crackleHp.frequency.value = 2400
@@ -177,8 +224,12 @@ export const LAYERS = [
       let timer = null
       const pop = () => {
         const now = ctx.currentTime
+        const peak = 0.5 + Math.random() * 0.4
+        // A 5ms linear attack to the peak (not an instant jump) so the pop has a
+        // spark's softness instead of a digital click, then an exponential decay.
         crackleEnv.gain.cancelScheduledValues(now)
-        crackleEnv.gain.setValueAtTime(0.5 + Math.random() * 0.4, now)
+        crackleEnv.gain.setValueAtTime(0.0001, now)
+        crackleEnv.gain.linearRampToValueAtTime(peak, now + 0.005)
         crackleEnv.gain.exponentialRampToValueAtTime(0.0001, now + 0.05 + Math.random() * 0.08)
         timer = setTimeout(pop, 120 + Math.random() * 500)
       }
@@ -195,7 +246,7 @@ export const LAYERS = [
     icon: '☕',
     defaultVolume: 0,
     build(ctx) {
-      const src = loopSource(ctx, brownNoise(ctx))
+      const src = loopSource(ctx, noiseBuffer(ctx, 'brown'))
       const bp = ctx.createBiquadFilter()
       bp.type = 'bandpass'
       bp.frequency.value = 520
@@ -214,7 +265,7 @@ export const LAYERS = [
     icon: '🟤',
     defaultVolume: 0,
     build(ctx) {
-      const src = loopSource(ctx, brownNoise(ctx))
+      const src = loopSource(ctx, noiseBuffer(ctx, 'brown'))
       const lp = ctx.createBiquadFilter()
       lp.type = 'lowpass'
       lp.frequency.value = 1000
