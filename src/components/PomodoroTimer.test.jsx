@@ -52,6 +52,22 @@ describe('PomodoroTimer (timestamp-based countdown)', () => {
     expect(screen.getByText('Ready when you are.')).toBeInTheDocument()
   })
 
+  it('lets her choose a focus length, which retimes the clock and persists', () => {
+    renderTimer()
+    fireEvent.click(screen.getByRole('button', { name: '45 minute focus' }))
+    expect(screen.getByText('45:00')).toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem('emily.timer')).focusMin).toBe(45)
+  })
+
+  it('records the chosen length (15) as the session minutes on completion', () => {
+    renderTimer()
+    fireEvent.click(screen.getByRole('button', { name: '15 minute focus' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+    act(() => vi.advanceTimersByTime(15 * 60_000))
+    expect(screen.getByText('Session done.')).toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem('emily.stats')).minutesToday).toBe(15)
+  })
+
   it('records a completed focus session to emily.stats when it reaches 0:00', () => {
     renderTimer()
     fireEvent.click(screen.getByRole('button', { name: 'Start' }))

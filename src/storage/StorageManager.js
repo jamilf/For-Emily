@@ -69,6 +69,8 @@ export const DEFAULTS = {
   // Scene Themes — cosmetic skies unlocked as the grove grows. Additive +
   // default-backed (the default 'grove' theme is always on), so no migration.
   'emily.themes': { selected: null, unlocked: {} }, // unlocked: { [id]: 'YYYY-MM-DD' }
+  // Chosen focus-session length in minutes (25 stays the default). Additive.
+  'emily.timer': { focusMin: 25 },
 }
 
 /** Safe read with a defaults fallback; never throws. */

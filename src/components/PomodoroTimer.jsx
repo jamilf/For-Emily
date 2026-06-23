@@ -17,8 +17,12 @@ import { recordSession } from '../data/focusLog.js'
 const LetterModal = lazy(() => import('./LetterModal.jsx'))
 const ReflectionModal = lazy(() => import('./ReflectionModal.jsx'))
 
-const DURATIONS = { focus: 25 * 60, break: 5 * 60 }
-const FOCUS_MINUTES = DURATIONS.focus / 60
+// Focus length is chosen by Emily so the session can fit the task (a small
+// challenge-skill / planning aid). 25 stays the default; the break is fixed at 5.
+// Note: the 25/5 split is a convention, not settled science — hence the choice.
+const FOCUS_CHOICES = [15, 25, 45]
+const DEFAULT_FOCUS_MIN = 25
+const BREAK_MIN = 5
 
 const RADIUS = 130
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
@@ -32,8 +36,11 @@ function tipCoords(fraction) {
 
 /** Widget 2 — The Pomodoro timer (centerpiece, lofi window). */
 export default function PomodoroTimer({ onFocusActive, className = '' }) {
+  const [timer, setTimer] = usePersistedState('emily.timer', { focusMin: DEFAULT_FOCUS_MIN })
+  const focusMin = FOCUS_CHOICES.includes(timer?.focusMin) ? timer.focusMin : DEFAULT_FOCUS_MIN
+  const durations = useMemo(() => ({ focus: focusMin * 60, break: BREAK_MIN * 60 }), [focusMin])
   const [mode, setMode] = useState('focus')
-  const [secondsLeft, setSecondsLeft] = useState(DURATIONS.focus)
+  const [secondsLeft, setSecondsLeft] = useState(durations.focus)
   const [running, setRunning] = useState(false)
   const [hasMail, setHasMail] = useState(false)
   const [letterContext, setLetterContext] = useState(null) // null = letter closed
@@ -56,7 +63,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
 
   const { rampMaster, restoreMaster } = useMixer()
 
-  const total = DURATIONS[mode]
+  const total = durations[mode]
 
   useEscapeKey(() => setShowReflection(false), showReflection)
 
@@ -100,7 +107,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
       }
       // Log this completed focus session to the Firefly Calendar time-series with
       // its real focus length. Breaks never reach this branch, so they never log.
-      setFocusLog((prev) => recordSession(prev, { ts, minutes: FOCUS_MINUTES }))
+      setFocusLog((prev) => recordSession(prev, { ts, minutes: focusMin }))
       // Arm the sprite's next letter: celebration normally, but after a few
       // sessions today lean toward rest/peace to counter ADHD hyperfocus.
       // (Reflection mood, chosen next, may refine this to 'rough' / 'breeze'.)
@@ -149,7 +156,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
       const td = dayStr()
       const freshDay = prev.day !== td
       const sessionsToday = (freshDay ? 0 : prev.sessionsToday) + 1
-      const minutesToday = (freshDay ? 0 : prev.minutesToday) + FOCUS_MINUTES
+      const minutesToday = (freshDay ? 0 : prev.minutesToday) + focusMin
       let streak = prev.streak || 0
       if (prev.lastStudyDay !== td) {
         streak = prev.lastStudyDay === yesterdayStr() ? streak + 1 : 1
@@ -160,7 +167,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
 
   function switchMode(next) {
     setMode(next)
-    setSecondsLeft(DURATIONS[next])
+    setSecondsLeft(durations[next])
     setRunning(false)
     setHasMail(false)
     setShowReflection(false)
@@ -207,10 +214,19 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
 
   function handleReset() {
     setRunning(false)
-    setSecondsLeft(DURATIONS[mode])
+    setSecondsLeft(durations[mode])
     setHasMail(false)
     setPlantDna(null)
     setWithered(false)
+  }
+
+  // Choose how long this kind of work wants to be (only while idle in focus).
+  function setFocusLength(n) {
+    setTimer((t) => ({ ...(t || {}), focusMin: n }))
+    if (mode === 'focus' && !sessionActive) {
+      setRunning(false)
+      setSecondsLeft(n * 60)
+    }
   }
 
   // Open the sprite's letter. An event may have "armed" a context (completion,
@@ -267,7 +283,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
               mode === 'focus' ? 'scale-[1.04] bg-brown text-cream shadow-sm' : 'text-brown hover:bg-brown/10'
             }`}
           >
-            Focus · 25
+            Focus · {focusMin}
           </button>
           <button
             onClick={() => switchMode('break')}
@@ -278,25 +294,49 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
                 : 'text-brown hover:bg-brown/10'
             }`}
           >
-            Rest · 5
+            Rest · {BREAK_MIN}
           </button>
         </div>
 
-        {/* Session intention — "the one thing" */}
+        {/* Focus length — let the session fit the task (only while idle in focus) */}
+        {mode === 'focus' && (
+          <div role="group" aria-label="Focus length in minutes" className="flex items-center gap-2">
+            <span className="font-display text-xs text-brown/60">Length</span>
+            <div className="flex gap-1 rounded-full bg-brown/10 p-1 font-display text-xs">
+              {FOCUS_CHOICES.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setFocusLength(n)}
+                  disabled={sessionActive}
+                  aria-pressed={focusMin === n}
+                  aria-label={`${n} minute focus`}
+                  className={`rounded-full px-3 py-1 transition-colors disabled:opacity-40 ${
+                    focusMin === n ? 'bg-brown text-cream' : 'text-brown hover:bg-brown/15'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Session intention as an implementation intention ("when I start, I will…"):
+            naming the concrete first action makes task initiation easier. */}
         {showIntentionInput ? (
           <div className="w-full max-w-xs">
             <label
               htmlFor="intention-input"
               className="mb-1.5 block text-center font-display text-sm text-brown"
             >
-              What&apos;s the one thing?
+              When I start, I will&hellip;
             </label>
             <input
               id="intention-input"
               type="text"
               value={intention}
               onChange={(e) => setIntention(e.target.value)}
-              placeholder="e.g. read one chapter…"
+              placeholder="open the chapter and read one page&hellip;"
               className="w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2 text-center text-sm text-brownDark placeholder:text-brown/40 focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow"
             />
           </div>
@@ -304,7 +344,7 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
           mode === 'focus' &&
           trimmedIntention && (
             <p className="max-w-xs text-center font-display text-sm text-brown" aria-live="polite">
-              <span className="text-brown/60">Your one thing:</span> {trimmedIntention}
+              <span className="text-brown/60">When I start:</span> {trimmedIntention}
             </p>
           )
         )}
