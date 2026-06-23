@@ -20,14 +20,14 @@ test('unlocking and choosing a scene theme persists across a reload', async ({ p
   const dialog = page.getByRole('dialog', { name: /scene themes/i })
   await expect(dialog).toBeVisible()
 
-  // Sakura is unlocked at 6 trees; choose it.
+  // Sakura is unlocked at 6 trees; choose it. Its button flips to the active state.
   await dialog.getByRole('button', { name: /use the sakura theme/i }).click()
-  await expect(dialog.getByText('Sakura').locator('..')).toContainText('Active')
+  await expect(dialog.getByRole('button', { name: /sakura is active/i })).toBeVisible()
   await dialog.getByRole('button', { name: /close themes/i }).click()
 
   // Reload: the choice is remembered.
   await page.reload()
   await page.getByRole('button', { name: /open scene themes/i }).click()
   const dialog2 = page.getByRole('dialog', { name: /scene themes/i })
-  await expect(dialog2.getByText('Sakura').locator('..')).toContainText('Active')
+  await expect(dialog2.getByRole('button', { name: /sakura is active/i })).toBeVisible()
 })
