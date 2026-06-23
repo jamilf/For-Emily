@@ -163,7 +163,12 @@ function Dashboard() {
                 Review {dueCount} card{dueCount === 1 ? '' : 's'} due today
               </button>
             )}
-            <PomodoroTimer onFocusActive={setFocusActive} className="w-full" />
+            <PomodoroTimer
+              onFocusActive={setFocusActive}
+              reviewDue={dueCount}
+              onReviewCards={() => setShowCards(true)}
+              className="w-full"
+            />
           </div>
 
           <aside

@@ -35,7 +35,7 @@ function tipCoords(fraction) {
 }
 
 /** Widget 2 — The Pomodoro timer (centerpiece, lofi window). */
-export default function PomodoroTimer({ onFocusActive, className = '' }) {
+export default function PomodoroTimer({ onFocusActive, reviewDue = 0, onReviewCards, className = '' }) {
   const [timer, setTimer] = usePersistedState('emily.timer', { focusMin: DEFAULT_FOCUS_MIN })
   const focusMin = FOCUS_CHOICES.includes(timer?.focusMin) ? timer.focusMin : DEFAULT_FOCUS_MIN
   const durations = useMemo(() => ({ focus: focusMin * 60, break: BREAK_MIN * 60 }), [focusMin])
@@ -525,6 +525,15 @@ export default function PomodoroTimer({ onFocusActive, className = '' }) {
             onSaveMood={saveReflection}
             intention={trimmedIntention}
             onClearIntention={() => setIntention('')}
+            reviewDue={reviewDue}
+            onReviewCards={
+              onReviewCards
+                ? () => {
+                    setShowReflection(false)
+                    onReviewCards()
+                  }
+                : undefined
+            }
             onClose={() => setShowReflection(false)}
           />
         )}

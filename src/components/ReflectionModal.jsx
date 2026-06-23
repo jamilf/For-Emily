@@ -18,6 +18,8 @@ export default function ReflectionModal({
   onSaveMood,
   intention = '',
   onClearIntention,
+  reviewDue = 0,
+  onReviewCards,
   onClose,
 }) {
   const firstRef = useRef(null)
@@ -78,6 +80,21 @@ export default function ReflectionModal({
             placeholder="Add a note (optional)"
             className="mt-4 w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2.5 text-left text-sm text-brownDark placeholder:text-brown/40 focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow"
           />
+
+          {reviewDue > 0 && onReviewCards && (
+            <div className="mt-4 border-t border-brown/15 pt-4">
+              <p className="text-xs leading-relaxed text-brown/70">
+                {reviewDue} card{reviewDue === 1 ? '' : 's'} ready for a quick recall. Locking it in now,
+                while your mind is warm, is when memory holds best.
+              </p>
+              <button
+                onClick={onReviewCards}
+                className="mt-2 w-full rounded-2xl bg-ever-green px-4 py-2.5 font-display text-sm text-bg0 transition-colors hover:brightness-95 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+              >
+                Review {reviewDue} card{reviewDue === 1 ? '' : 's'}
+              </button>
+            </div>
+          )}
 
           {intention && (
             <div className="mt-4 border-t border-brown/15 pt-4 text-sm">
