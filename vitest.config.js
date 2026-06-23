@@ -30,6 +30,7 @@ export default defineConfig({
         'src/data/seasons.js',
         'src/data/quests.js',
         'src/data/encouragements.js',
+        'src/data/themes.js',
         'src/audio/music/theory.js',
         'src/audio/music/styles.js',
         'src/audio/music/generator.js',

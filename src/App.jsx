@@ -7,6 +7,7 @@ import FocusGarden from './components/FocusGarden.jsx'
 import Dock from './components/Dock.jsx'
 import WeatherCanvas from './components/WeatherCanvas.jsx'
 import SeasonLayer from './components/SeasonLayer.jsx'
+import ThemeLayer from './scene/ThemeLayer.jsx'
 import SkyScene from './scene/SkyScene.jsx'
 import WindowSill from './scene/WindowSill.jsx'
 import { seasonForHarvest } from './data/seasons.js'
@@ -33,6 +34,7 @@ const GroveAlmanac = lazy(() => import('./components/GroveAlmanac.jsx'))
 const Journal = lazy(() => import('./components/Journal.jsx'))
 const Constellations = lazy(() => import('./components/Constellations.jsx'))
 const SeasonsModal = lazy(() => import('./components/SeasonsModal.jsx'))
+const ThemesModal = lazy(() => import('./components/ThemesModal.jsx'))
 const QuestBoard = lazy(() => import('./components/QuestBoard.jsx'))
 const StoryModal = lazy(() => import('./components/StoryModal.jsx'))
 const ComebackMoment = lazy(() => import('./components/ComebackMoment.jsx'))
@@ -47,6 +49,7 @@ function Dashboard() {
   const [showJournal, setShowJournal] = useState(false)
   const [showConstellations, setShowConstellations] = useState(false)
   const [showSeasons, setShowSeasons] = useState(false)
+  const [showThemes, setShowThemes] = useState(false)
   const [showQuests, setShowQuests] = useState(false)
   const [showStory, setShowStory] = useState(false)
   const [openDrawer, setOpenDrawer] = useState(null)
@@ -108,6 +111,9 @@ function Dashboard() {
       {/* Seasonal tint + ambient drift, behind the content (decorative) */}
       <SeasonLayer season={season} />
 
+      {/* Cosmetic scene theme tint — unlocked as the grove grows, chosen by Emily */}
+      <ThemeLayer />
+
       {/* Dynamic weather, above the scene and below the UI */}
       <WeatherCanvas />
 
@@ -135,6 +141,7 @@ function Dashboard() {
           onOpenStory={() => setShowStory(true)}
           season={season}
           onOpenSeasons={() => setShowSeasons(true)}
+          onOpenThemes={() => setShowThemes(true)}
           dueCount={dueCount}
         />
 
@@ -212,6 +219,9 @@ function Dashboard() {
 
         {/* Sanctuary Seasons — a derived field guide to the growing world */}
         {showSeasons && <SeasonsModal onClose={() => setShowSeasons(false)} />}
+
+        {/* Scene Themes — cosmetic skies unlocked by growth */}
+        {showThemes && <ThemesModal onClose={() => setShowThemes(false)} />}
 
         {/* Focus Quest Board — derived daily objectives, nothing to fail */}
         {showQuests && <QuestBoard onClose={() => setShowQuests(false)} />}

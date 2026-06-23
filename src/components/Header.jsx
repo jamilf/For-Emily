@@ -21,6 +21,7 @@ export default function Header({
   onOpenStory,
   season,
   onOpenSeasons,
+  onOpenThemes,
   dueCount,
 }) {
   const { greeting, dateLabel } = useMemo(() => {
@@ -66,6 +67,17 @@ export default function Header({
             >
               <span aria-hidden="true">{season.emoji} </span>
               {season.name}
+            </button>
+          )}
+          {onOpenThemes && (
+            <button
+              type="button"
+              onClick={onOpenThemes}
+              aria-label="Open scene themes"
+              className="rounded-full border border-cream/30 bg-bgDim/30 px-2 py-0.5 font-display text-xs text-cream drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-colors hover:bg-bgDim/50 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow sm:backdrop-blur-sm"
+            >
+              <span aria-hidden="true">🎨 </span>
+              Themes
             </button>
           )}
         </div>

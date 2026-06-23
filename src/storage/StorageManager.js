@@ -66,6 +66,9 @@ export const DEFAULTS = {
     notes: {},
     letterAcks: {},
   },
+  // Scene Themes — cosmetic skies unlocked as the grove grows. Additive +
+  // default-backed (the default 'grove' theme is always on), so no migration.
+  'emily.themes': { selected: null, unlocked: {} }, // unlocked: { [id]: 'YYYY-MM-DD' }
 }
 
 /** Safe read with a defaults fallback; never throws. */
