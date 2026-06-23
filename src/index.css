@@ -694,6 +694,29 @@ body {
   );
 }
 
+/* Scene parallax — the bands translate from the --par-* vars useParallax sets on
+ * <html>. The vars default to 0 (and the hook never sets them under reduced motion
+ * or before any pointer/scroll), so this is inert until there is real movement. */
+.parallax {
+  will-change: transform;
+}
+
+/* The windowsill glass — a faint sheen by day that warms to an interior reflection
+ * at dusk/night, keyed off the same tod-* root class as the daylight veil. */
+.window-glass {
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 22%);
+}
+.app-root.tod-dusk .window-glass {
+  background:
+    linear-gradient(115deg, rgba(255, 220, 180, 0.06) 0%, transparent 24%),
+    radial-gradient(120% 80% at 50% 100%, rgba(255, 190, 130, 0.05) 0%, transparent 60%);
+}
+.app-root.tod-night .window-glass {
+  background:
+    linear-gradient(115deg, rgba(255, 225, 190, 0.05) 0%, transparent 22%),
+    radial-gradient(120% 90% at 50% 100%, rgba(255, 200, 140, 0.07) 0%, transparent 55%);
+}
+
 /* Freeze decorative animations while the tab is hidden (paired with the
  * usePageHidden hook). Pausing — not stopping — resumes seamlessly with no
  * reflow when the user returns. */

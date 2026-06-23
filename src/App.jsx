@@ -8,12 +8,14 @@ import Dock from './components/Dock.jsx'
 import WeatherCanvas from './components/WeatherCanvas.jsx'
 import SeasonLayer from './components/SeasonLayer.jsx'
 import SkyScene from './scene/SkyScene.jsx'
+import WindowSill from './scene/WindowSill.jsx'
 import { seasonForHarvest } from './data/seasons.js'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import AudioMixerProvider, { useMixer } from './audio/AudioMixerProvider.jsx'
 import SyncProvider from './sync/SyncProvider.jsx'
 import usePersistedState from './hooks/useLocalStorage.js'
 import usePageHidden from './hooks/usePageHidden.js'
+import useParallax from './hooks/useParallax.js'
 import useStory from './hooks/useStory.js'
 import SpriteGreeting from './components/SpriteGreeting.jsx'
 import ChapterReveal from './components/ChapterReveal.jsx'
@@ -57,6 +59,7 @@ function Dashboard() {
   const season = useMemo(() => seasonForHarvest(garden.length), [garden.length])
   const { enabled: mixerEnabled } = useMixer()
   const pageHidden = usePageHidden()
+  useParallax() // publishes pointer/scroll depth vars for the scene bands
 
   // In focus mode the supporting rail recedes so the timer is the single point
   // of focus.
@@ -114,6 +117,9 @@ function Dashboard() {
 
       {/* Faint lo-fi film grain over the whole scene */}
       <div aria-hidden="true" className="film-grain pointer-events-none fixed inset-0 z-[1]" />
+
+      {/* Cozy windowsill frame — the nearest layer; the scene parallaxes behind it */}
+      <WindowSill />
 
       {/* Foreground */}
       <main id="main-content" className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
