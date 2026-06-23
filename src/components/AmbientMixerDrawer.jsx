@@ -45,12 +45,20 @@ export default function AmbientMixerDrawer({ onClose }) {
     musicVolume,
     setMusicStyle,
     setMusicVolume,
+    entrainment,
+    setEntrainment,
+    nowPlaying,
   } = useMixer()
 
   const btn =
     'flex-1 rounded-xl px-3 py-2 font-display text-sm transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow'
-  const styleBtn =
-    'rounded-lg px-3 py-2 font-display text-sm transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow'
+
+  // Group the picker: ungrouped (Off, Auto) first, then one optgroup per section.
+  const ungrouped = musicStyles.filter((s) => !s.group)
+  const grouped = musicStyles.reduce((acc, s) => {
+    if (s.group) (acc[s.group] ||= []).push(s)
+    return acc
+  }, {})
 
   return (
     <Drawer open onClose={onClose} title="🎚️ Sound & Music" className="zen-hide">
@@ -79,26 +87,34 @@ export default function AmbientMixerDrawer({ onClose }) {
       </p>
 
       <div className="mt-3 border-t border-brown/15 pt-3">
-        <p className="mb-1.5 font-display text-sm text-brown">🎵 Focus Music</p>
-        <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Focus music style">
-          {musicStyles.map((s) => {
-            const active = musicStyle === s.id
-            return (
-              <button
-                key={s.id}
-                onClick={() => setMusicStyle(s.id)}
-                aria-pressed={active}
-                className={`${styleBtn} ${
-                  active ? 'bg-ever-green text-bg0' : 'bg-brown/15 text-brown hover:bg-brown/25'
-                }`}
-              >
-                {s.label}
-              </button>
-            )
-          })}
-        </div>
-        <p className="mt-1.5 text-xs text-brown/60">
-          Composed live as you study, so no two sessions sound quite the same.
+        <label htmlFor="music-style" className="mb-1.5 block font-display text-sm text-brown">
+          🎵 Focus Music
+        </label>
+        <select
+          id="music-style"
+          value={musicStyle}
+          onChange={(e) => setMusicStyle(e.target.value)}
+          className="w-full cursor-pointer rounded-xl border border-brown/20 bg-cream/80 px-3 py-2 font-display text-sm text-brown focus-visible:ring-2 focus-visible:ring-ever-yellow"
+        >
+          {ungrouped.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.label}
+            </option>
+          ))}
+          {Object.entries(grouped).map(([name, items]) => (
+            <optgroup key={name} label={name}>
+              {items.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <p className="mt-1.5 text-xs text-brown/60" aria-live="polite">
+          {musicStyle === 'off'
+            ? 'Composed live as you study, so no two sessions sound quite the same.'
+            : `Now playing: ${nowPlaying}. Composed live, so no two sessions sound alike.`}
         </p>
         <div className="mt-2">
           <VolumeSlider
@@ -109,6 +125,21 @@ export default function AmbientMixerDrawer({ onClose }) {
             onChange={(_, v) => setMusicVolume(v)}
           />
         </div>
+        <label className="mt-2 flex items-start gap-2.5 py-1 text-sm text-brown">
+          <input
+            type="checkbox"
+            checked={entrainment}
+            onChange={(e) => setEntrainment(e.target.checked)}
+            className="mt-0.5 h-4 w-4 cursor-pointer accent-sunset-magenta"
+          />
+          <span>
+            Steady pulse
+            <span className="block text-xs text-brown/60">
+              Experimental: a faint, even pulse in the music that some people find focusing. It may do
+              nothing. Off by default.
+            </span>
+          </span>
+        </label>
       </div>
 
       <div className="mt-3 border-t border-brown/15 pt-3">

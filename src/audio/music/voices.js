@@ -3,6 +3,8 @@
 // (no instant gain jumps), so notes never click. Web Audio only — not pure, not
 // coverage-gated; the musical decisions live in generator.js.
 
+import { pulseCoeffs, dutyOf } from './chiptune.js'
+
 function adsrTail(envGain, t, peak, end) {
   envGain.setValueAtTime(0.0001, t)
   envGain.linearRampToValueAtTime(Math.max(0.0001, peak), t + 0.006) // 6ms attack
@@ -127,10 +129,108 @@ function bass(ctx, dest, freq, t, dur, gain) {
   o2.stop(end + 0.05)
 }
 
-const VOICES = { piano, epiano, pad, bass }
+// ── Chiptune channels — warm, band-limited, NES-flavoured ──────────────────
+// PeriodicWaves are cached per context + duty so we build each pulse table once.
+const pulseWaves = new WeakMap()
+function pulseWave(ctx, duty) {
+  let byDuty = pulseWaves.get(ctx)
+  if (!byDuty) {
+    byDuty = {}
+    pulseWaves.set(ctx, byDuty)
+  }
+  const key = String(duty)
+  if (!byDuty[key]) {
+    const { real, imag } = pulseCoeffs(duty, 28)
+    byDuty[key] = ctx.createPeriodicWave(real, imag)
+  }
+  return byDuty[key]
+}
 
-/** Trigger a named voice; unknown names fall back to piano. */
+/** A warm pulse voice (selectable duty) with a touch of vibrato + lowpass. */
+function pulse(ctx, dest, freq, t, dur, gain, duty) {
+  const o = ctx.createOscillator()
+  o.setPeriodicWave(pulseWave(ctx, duty))
+  o.frequency.value = freq
+  // gentle vibrato for a hand-played feel
+  const vib = ctx.createOscillator()
+  vib.type = 'sine'
+  vib.frequency.value = 5.2
+  const vibg = ctx.createGain()
+  vibg.gain.value = freq * 0.004
+  vib.connect(vibg)
+  vibg.connect(o.frequency)
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = Math.min(4200, freq * 6)
+  const env = ctx.createGain()
+  o.connect(lp)
+  lp.connect(env)
+  env.connect(dest)
+  const peak = Math.max(0.0001, gain * 0.5) // pulses are bright; keep them gentle
+  const end = t + Math.max(0.25, dur) + 0.3
+  env.gain.setValueAtTime(0.0001, t)
+  env.gain.linearRampToValueAtTime(peak, t + 0.008)
+  env.gain.setValueAtTime(peak, Math.max(t + 0.008, end - 0.12))
+  env.gain.exponentialRampToValueAtTime(0.0001, end)
+  o.start(t)
+  vib.start(t)
+  o.stop(end + 0.05)
+  vib.stop(end + 0.05)
+}
+
+/** Mellow triangle (chip lead/bass), soft and rounded. */
+function tri(ctx, dest, freq, t, dur, gain) {
+  const o = ctx.createOscillator()
+  o.type = 'triangle'
+  o.frequency.value = freq
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = Math.min(3000, freq * 5)
+  const env = ctx.createGain()
+  o.connect(lp)
+  lp.connect(env)
+  env.connect(dest)
+  const peak = Math.max(0.0001, gain)
+  const end = t + dur + 0.3
+  env.gain.setValueAtTime(0.0001, t)
+  env.gain.linearRampToValueAtTime(peak, t + 0.01)
+  env.gain.setValueAtTime(peak, Math.max(t + 0.01, end - 0.15))
+  env.gain.exponentialRampToValueAtTime(0.0001, end)
+  o.start(t)
+  o.stop(end + 0.05)
+}
+
+/** A soft, short filtered noise burst — minimal percussion. */
+function noise(ctx, dest, freq, t, dur, gain) {
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.2), ctx.sampleRate)
+  const d = buf.getChannelData(0)
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+  const src = ctx.createBufferSource()
+  src.buffer = buf
+  const bp = ctx.createBiquadFilter()
+  bp.type = 'bandpass'
+  bp.frequency.value = Math.min(6000, Math.max(800, freq * 2))
+  bp.Q.value = 0.7
+  const env = ctx.createGain()
+  src.connect(bp)
+  bp.connect(env)
+  env.connect(dest)
+  const peak = Math.max(0.0001, gain * 0.4)
+  const end = t + 0.08
+  env.gain.setValueAtTime(0.0001, t)
+  env.gain.linearRampToValueAtTime(peak, t + 0.003)
+  env.gain.exponentialRampToValueAtTime(0.0001, end)
+  src.start(t)
+  src.stop(end + 0.02)
+}
+
+const VOICES = { piano, epiano, pad, bass, tri }
+
+/** Trigger a named voice; pulse12/25/50 and noise are chiptune, else fall back. */
 export function triggerVoice(ctx, dest, name, freq, t, dur, gain) {
+  const duty = dutyOf(name)
+  if (duty != null) return pulse(ctx, dest, freq, t, dur, gain, duty)
+  if (name === 'noise') return noise(ctx, dest, freq, t, dur, gain)
   ;(VOICES[name] || piano)(ctx, dest, freq, t, dur, gain)
 }
 

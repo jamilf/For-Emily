@@ -4,7 +4,7 @@ import { STYLES } from './styles.js'
 import { SCALES, midiOf, degreeToMidi, chordDegrees } from './theory.js'
 
 const ALL = Object.values(STYLES)
-const VOICES = new Set(['piano', 'epiano', 'pad', 'bass'])
+const VOICES = new Set(['piano', 'epiano', 'pad', 'bass', 'pulse12', 'pulse25', 'pulse50', 'tri', 'noise'])
 const SEED = 0x1234
 
 function scalePitchClasses(style) {
@@ -50,6 +50,7 @@ describe('planBar — deterministic, well-formed events', () => {
       for (let bar = 0; bar < 8; bar++) {
         const chordTones = chordPitchClasses(style, bar)
         for (const e of planBar(style, SEED, bar)) {
+          if (e.voice === 'noise') continue // unpitched percussion
           const pc = ((e.midi % 12) + 12) % 12
           expect(scale.has(pc), `${style.id} bar ${bar}: ${pc} out of scale`).toBe(true)
           if (e.voice !== style.voices.lead) {

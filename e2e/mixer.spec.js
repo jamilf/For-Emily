@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test'
 // controls and assert state survives a reload, without asserting actual audio,
 // which the browser only permits behind a user gesture and can't verify headless).
 
-test('choosing a focus-music style persists across a reload', async ({ page }) => {
+test('choosing a focus-music mood persists across a reload', async ({ page }) => {
   await page.goto('/')
 
   // Open the dock's Sound & Music drawer.
@@ -12,20 +12,18 @@ test('choosing a focus-music style persists across a reload', async ({ page }) =
   const drawer = page.getByRole('dialog', { name: /sound & music/i })
   await expect(drawer).toBeVisible()
 
-  // The focus-music picker offers the four styles plus Off.
-  const group = drawer.getByRole('group', { name: /focus music style/i })
-  await expect(group).toBeVisible()
-  await expect(group.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true')
+  // The focus-music picker is a labeled select, Off by default.
+  const picker = drawer.getByRole('combobox', { name: /focus music/i })
+  await expect(picker).toHaveValue('off')
 
-  // Pick Lofi; it becomes the pressed option.
-  await group.getByRole('button', { name: 'Lofi' }).click()
-  await expect(group.getByRole('button', { name: 'Lofi' })).toHaveAttribute('aria-pressed', 'true')
+  // Pick a chiptune mood; the now-playing hint reflects it.
+  await picker.selectOption('latenight')
+  await expect(picker).toHaveValue('latenight')
+  await expect(drawer.getByText(/now playing: late-night library/i)).toBeVisible()
 
   // Reload: the choice is remembered.
   await page.reload()
   await page.getByRole('button', { name: /sound & music/i }).click()
   const drawer2 = page.getByRole('dialog', { name: /sound & music/i })
-  await expect(
-    drawer2.getByRole('group', { name: /focus music style/i }).getByRole('button', { name: 'Lofi' }),
-  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(drawer2.getByRole('combobox', { name: /focus music/i })).toHaveValue('latenight')
 })

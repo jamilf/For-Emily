@@ -51,9 +51,9 @@ export function planBar(style, seed, barIndex) {
 
   const events = []
   const hum = (g) => Math.min(1, g * (0.85 + 0.3 * rng()))
-  const push = (start, dur, midi, gain, voice) => {
+  const push = (start, dur, midi, gain, voice, role) => {
     if (start < 0 || start >= beatsPerBar) return
-    events.push({ start, dur, midi, freq: midiToFreq(midi), gain, voice })
+    events.push({ start, dur, midi, freq: midiToFreq(midi), gain, voice, role })
   }
 
   // ---- bass --------------------------------------------------------------
@@ -112,7 +112,16 @@ export function planBar(style, seed, barIndex) {
       const deg = 1 + Math.floor(rng() * 7)
       midi = foldIntoRange(degreeToMidi(tonicMidi, mode, deg), melodyFloor, melodyFloor + 12)
     }
-    push(swung(p, swing), EIGHTH * 0.9, midi, hum(0.32), voices.lead)
+    push(swung(p, swing), EIGHTH * 0.9, midi, hum(0.32), voices.lead, 'lead')
+  }
+
+  // ---- minimal percussion (optional; chiptune moods) ---------------------
+  // A soft, unpitched noise tick on the backbeat. Pitched at the tonic only so it
+  // stays in key; the noise voice ignores pitch and just centres its filter.
+  if (style.percussion) {
+    for (const b of [1, 3]) {
+      if (b < beatsPerBar) push(b, 0.12, tonicMidi, hum(0.16), 'noise')
+    }
   }
 
   events.sort((a, b) => a.start - b.start)

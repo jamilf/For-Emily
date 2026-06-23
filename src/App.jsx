@@ -81,9 +81,14 @@ function Dashboard() {
   const dueCount = countDue(cards)
   // The sanctuary's season is derived from the total trees grown — nothing new is stored.
   const season = useMemo(() => seasonForHarvest(garden.length), [garden.length])
-  const { enabled: mixerEnabled } = useMixer()
+  const { enabled: mixerEnabled, setFocusActive: setMixerFocusActive } = useMixer()
   const pageHidden = usePageHidden()
   useParallax() // publishes pointer/scroll depth vars for the scene bands
+
+  // Let the mixer duck + simplify the focus music while a Pomodoro session runs.
+  useEffect(() => {
+    setMixerFocusActive(focusActive)
+  }, [focusActive, setMixerFocusActive])
 
   // In focus mode the supporting rail recedes so the timer is the single point
   // of focus.

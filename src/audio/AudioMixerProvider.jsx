@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useRef } from 'react'
 import usePersistedState from '../hooks/useLocalStorage.js'
+import useTimeOfDay from '../hooks/useTimeOfDay.js'
 import { DEFAULTS } from '../storage/StorageManager.js'
 import { LAYERS } from './ambientLayers.js'
 import MusicPlayer from './music/MusicPlayer.js'
-import { MUSIC_STYLES } from './music/styles.js'
+import { MUSIC_STYLES, labelFor } from './music/styles.js'
+import { pickAutoMood } from './music/autoMood.js'
 
 /**
  * AudioMixerProvider — owns the single AudioContext and the synthesized ambient
@@ -109,6 +111,24 @@ export default function AudioMixerProvider({ children }) {
   musicStyleRef.current = mixer.musicStyle || 'off'
   const musicVolumeRef = useRef(mixer.musicVolume ?? 0.6)
   musicVolumeRef.current = mixer.musicVolume ?? 0.6
+  const entrainmentRef = useRef(mixer.entrainment ?? false)
+  entrainmentRef.current = mixer.entrainment ?? false
+  // The rain layer feeds Auto's mood pick; a focus session ducks + simplifies music.
+  const rainRef = useRef(mixer.levels.steadyRain ?? 0)
+  rainRef.current = mixer.levels.steadyRain ?? 0
+  const focusActiveRef = useRef(false)
+  const partOfDay = useTimeOfDay()
+
+  // Resolve a chosen music id to a concrete style id. Everything but 'auto' passes
+  // through; 'auto' maps the current context (hour, rain, focus) to a chiptune mood.
+  const resolveStyle = useCallback((id) => {
+    if (id !== 'auto') return id
+    return pickAutoMood({
+      hour: new Date().getHours(),
+      rainLevel: rainRef.current,
+      focusActive: focusActiveRef.current,
+    })
+  }, [])
 
   // Build the synthesized graph onto an already-running context. Source nodes
   // (buffers/oscillators) are only started here, never before the context is
@@ -159,11 +179,12 @@ export default function AudioMixerProvider({ children }) {
     musicBus.connect(master)
     const player = new MusicPlayer(ctx, musicBus)
     player.setVolume(musicVolumeRef.current)
+    player.setFocus(focusActiveRef.current)
+    player.setEntrainment(entrainmentRef.current)
     musicRef.current = player
     disposersRef.current.push(() => player.dispose())
-    if (musicStyleRef.current && musicStyleRef.current !== 'off') {
-      player.setStyle(musicStyleRef.current)
-    }
+    const resolved = resolveStyle(musicStyleRef.current)
+    if (resolved && resolved !== 'off') player.setStyle(resolved)
 
     masterRef.current = master
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,10 +275,10 @@ export default function AudioMixerProvider({ children }) {
   const setMusicStyle = useCallback(
     (id) => {
       musicStyleRef.current = id
-      if (musicRef.current) musicRef.current.setStyle(id)
+      if (musicRef.current) musicRef.current.setStyle(resolveStyle(id))
       setMixer((m) => ({ ...m, musicStyle: id }))
     },
-    [setMixer],
+    [resolveStyle, setMixer],
   )
 
   const setMusicVolume = useCallback(
@@ -268,6 +289,39 @@ export default function AudioMixerProvider({ children }) {
     },
     [setMixer],
   )
+
+  // Opt-in, honestly-labeled entrainment (a faint steady pulse). Persists always;
+  // drives the player only when the graph is live.
+  const setEntrainment = useCallback(
+    (on) => {
+      entrainmentRef.current = on
+      if (musicRef.current) musicRef.current.setEntrainment(on)
+      setMixer((m) => ({ ...m, entrainment: on }))
+    },
+    [setMixer],
+  )
+
+  // Reported by the Pomodoro (via App): a deep-focus session is active. Ducks +
+  // simplifies the music, and re-resolves Auto toward a calmer mood. Not persisted.
+  const setFocusActive = useCallback(
+    (active) => {
+      if (focusActiveRef.current === active) return
+      focusActiveRef.current = active
+      if (musicRef.current) {
+        musicRef.current.setFocus(active)
+        if (musicStyleRef.current === 'auto') musicRef.current.setStyle(resolveStyle('auto'))
+      }
+    },
+    [resolveStyle],
+  )
+
+  // Re-resolve Auto (crossfaded) when the part of day or the rain level changes.
+  // setStyle no-ops when the resolved mood is unchanged, so this is cheap.
+  useEffect(() => {
+    if (musicStyleRef.current === 'auto' && musicRef.current) {
+      musicRef.current.setStyle(resolveStyle('auto'))
+    }
+  }, [partOfDay, mixer.levels.steadyRain, resolveStyle])
 
   // Focus-fade hooks for the Pomodoro timer (do not touch persisted master).
   const rampMaster = useCallback((target, seconds) => {
@@ -326,6 +380,9 @@ export default function AudioMixerProvider({ children }) {
     musicStyles: MUSIC_STYLES,
     musicStyle: mixer.musicStyle || 'off',
     musicVolume: mixer.musicVolume ?? 0.6,
+    entrainment: mixer.entrainment ?? false,
+    // The concrete mood currently sounding (resolves 'auto'); for a "now playing" hint.
+    nowPlaying: labelFor(resolveStyle(mixer.musicStyle || 'off')),
     start,
     stop,
     setLevel,
@@ -333,6 +390,8 @@ export default function AudioMixerProvider({ children }) {
     muteAll,
     setMusicStyle,
     setMusicVolume,
+    setEntrainment,
+    setFocusActive,
     rampMaster,
     restoreMaster,
   }

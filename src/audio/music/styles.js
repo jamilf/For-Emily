@@ -117,18 +117,148 @@ export const STYLES = {
     crackle: false,
     flutter: false,
   },
+
+  // ── Chiptune moods — warm, nostalgic, late-night. Pulse + triangle channels
+  // through a warm lowpass and a generous reverb send (set per mood in `fx`).
+  // Original sketches in the spirit of pastoral 8/16-bit scores; never a real tune.
+  latenight: {
+    id: 'latenight',
+    label: 'Late-night Library',
+    group: 'chiptune',
+    tonic: { name: 'A', octave: 3 },
+    mode: 'minor', // Aeolian: warm, quiet melancholy
+    bpm: 64,
+    beatsPerBar: 4,
+    swing: 0,
+    progression: [
+      { degree: 1, size: 4 },
+      { degree: 6, size: 3 },
+      { degree: 3, size: 4 },
+      { degree: 7, size: 3 },
+    ],
+    bassPattern: 'root',
+    chordPattern: 'arp',
+    pad: false,
+    melodyDensity: 0.22, // very sparse, lots of air
+    octaves: { bass: 2, chord: 4, melody: 5 },
+    voices: { lead: 'pulse12', chord: 'pulse25', bass: 'tri' },
+    masterFilter: { type: 'lowpass', freq: 2600, Q: 0.5 },
+    fx: 0.32,
+    percussion: false,
+    crackle: false,
+    flutter: false,
+  },
+
+  rainyfocus: {
+    id: 'rainyfocus',
+    label: 'Rainy Focus',
+    group: 'chiptune',
+    tonic: { name: 'D', octave: 4 },
+    mode: 'dorian',
+    bpm: 70,
+    beatsPerBar: 4,
+    swing: 0.2, // a gentle lean
+    progression: [
+      { degree: 2, size: 4 },
+      { degree: 5, size: 4 },
+      { degree: 1, size: 5 },
+      { degree: 6, size: 4 },
+    ],
+    bassPattern: 'rootfifth',
+    chordPattern: 'arp',
+    pad: false,
+    melodyDensity: 0.32,
+    octaves: { bass: 2, chord: 4, melody: 5 },
+    voices: { lead: 'pulse25', chord: 'pulse12', bass: 'tri' },
+    masterFilter: { type: 'lowpass', freq: 2200, Q: 0.6 },
+    fx: 0.28,
+    percussion: false,
+    crackle: false,
+    flutter: false,
+  },
+
+  momentum: {
+    id: 'momentum',
+    label: 'Last-minute Momentum',
+    group: 'chiptune',
+    tonic: { name: 'G', octave: 3 },
+    mode: 'mixolydian', // bright but grounded by the flat 7th
+    bpm: 88,
+    beatsPerBar: 4,
+    swing: 0,
+    progression: [
+      { degree: 1, size: 3 },
+      { degree: 5, size: 3 },
+      { degree: 6, size: 4 },
+      { degree: 4, size: 3 },
+    ],
+    bassPattern: 'rootfifth',
+    chordPattern: 'arp',
+    pad: false,
+    melodyDensity: 0.5, // a touch more pulse, never anxious
+    octaves: { bass: 2, chord: 4, melody: 5 },
+    voices: { lead: 'pulse25', chord: 'pulse25', bass: 'tri' },
+    masterFilter: { type: 'lowpass', freq: 3400, Q: 0.4 },
+    fx: 0.16,
+    percussion: true, // a soft backbeat tick
+    crackle: false,
+    flutter: false,
+  },
+
+  winddown: {
+    id: 'winddown',
+    label: 'Winding Down',
+    group: 'chiptune',
+    tonic: { name: 'C', octave: 4 },
+    mode: 'lydian', // dreamy, the softest of the set
+    bpm: 58,
+    beatsPerBar: 4,
+    swing: 0,
+    progression: [
+      { degree: 1, size: 5 },
+      { degree: 6, size: 4 },
+      { degree: 4, size: 5 },
+      { degree: 1, size: 3 },
+    ],
+    bassPattern: 'root',
+    chordPattern: 'arp',
+    pad: true,
+    melodyDensity: 0.18,
+    octaves: { bass: 2, chord: 4, melody: 5 },
+    voices: { lead: 'tri', chord: 'pulse12', bass: 'tri' },
+    masterFilter: { type: 'lowpass', freq: 2400, Q: 0.5 },
+    fx: 0.34,
+    percussion: false,
+    crackle: false,
+    flutter: false,
+  },
 }
 
-/** The picker options, in display order, with Off first. */
+/**
+ * The picker options, in display order. `group` (when present) names a section for
+ * the UI's optgroups. 'off' and 'auto' are real selectable values.
+ */
 export const MUSIC_STYLES = [
   { id: OFF, label: 'Off' },
-  { id: 'ghibli', label: 'Ghibli' },
-  { id: 'classical', label: 'Classical' },
-  { id: 'lofi', label: 'Lofi' },
-  { id: 'rainpiano', label: 'Rain Piano' },
+  { id: 'auto', label: 'Auto' },
+  { id: 'ghibli', label: 'Ghibli', group: 'Instrumental' },
+  { id: 'classical', label: 'Classical', group: 'Instrumental' },
+  { id: 'lofi', label: 'Lofi', group: 'Instrumental' },
+  { id: 'rainpiano', label: 'Rain Piano', group: 'Instrumental' },
+  { id: 'latenight', label: 'Late-night Library', group: 'Chiptune' },
+  { id: 'rainyfocus', label: 'Rainy Focus', group: 'Chiptune' },
+  { id: 'momentum', label: 'Last-minute Momentum', group: 'Chiptune' },
+  { id: 'winddown', label: 'Winding Down', group: 'Chiptune' },
 ]
 
-/** Look up a style preset by id, or null for 'off'/unknown. */
+const LABELS = Object.fromEntries(MUSIC_STYLES.map((s) => [s.id, s.label]))
+
+/** A friendly label for a music id (Off/Auto/style/mood). */
+export function labelFor(id) {
+  return LABELS[id] || 'Off'
+}
+
+/** Look up a style preset by id, or null for 'off'/'auto'/unknown. */
 export function getStyle(id) {
   return STYLES[id] || null
 }

@@ -34,6 +34,8 @@ export default defineConfig({
         'src/audio/music/theory.js',
         'src/audio/music/styles.js',
         'src/audio/music/generator.js',
+        'src/audio/music/chiptune.js',
+        'src/audio/music/autoMood.js',
         'src/pixel/SpiritGenerator.js',
         'src/storage/StorageManager.js',
         'src/utils/**/*.js',

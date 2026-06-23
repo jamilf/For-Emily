@@ -13,16 +13,53 @@ import { triggerVoice, createCrackle } from './voices.js'
 const LOOKAHEAD = 0.1 // schedule this far ahead, in seconds
 const TICK = 25 // scheduler wake interval, in ms
 
+// A procedural reverb impulse: decaying stereo noise. No audio files.
+function makeImpulse(ctx, seconds, decay) {
+  const len = Math.max(1, Math.floor(ctx.sampleRate * seconds))
+  const buf = ctx.createBuffer(2, len, ctx.sampleRate)
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch)
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay)
+  }
+  return buf
+}
+
 export default class MusicPlayer {
   constructor(ctx, destination) {
     this.ctx = ctx
     this.destination = destination
     this.out = ctx.createGain()
     this.out.gain.value = 0
-    this.out.connect(destination)
+
+    // Entrainment stage: out -> entGain -> destination. entGain is amplitude-
+    // modulated by a ~10Hz LFO only while the opt-in toggle is on (off by default).
+    this.entGain = ctx.createGain()
+    this.entGain.gain.value = 1
+    this.out.connect(this.entGain)
+    this.entGain.connect(destination)
+    this.entLfo = null
+
     this.busIn = ctx.createGain()
     this.busIn.gain.value = 1
     this.filterNode = null
+
+    // FX send (music only): a procedural reverb + a short feedback delay, fed from
+    // busIn at an amount set per mood, summed back into `out` for late-night depth.
+    this.fxSend = ctx.createGain()
+    this.fxSend.gain.value = 0
+    const reverb = ctx.createConvolver()
+    reverb.buffer = makeImpulse(ctx, 2.4, 2.6)
+    const delay = ctx.createDelay(0.6)
+    delay.delayTime.value = 0.26
+    const fb = ctx.createGain()
+    fb.gain.value = 0.28
+    delay.connect(fb)
+    fb.connect(delay)
+    this.fxSend.connect(reverb)
+    reverb.connect(this.out)
+    this.fxSend.connect(delay)
+    delay.connect(this.out)
+
     this._connectBus(null)
 
     this.styleId = 'off'
@@ -33,6 +70,12 @@ export default class MusicPlayer {
     this.timer = null
     this.crackleDispose = null
     this.volume = 0.6
+    this.focus = false
+  }
+
+  // The volume to ride to, gently dipped while a deep-focus session is active.
+  _targetVol() {
+    return Math.max(0.0001, this.volume * (this.focus ? 0.5 : 1))
   }
 
   // busIn -> [optional master filter] -> out -> destination
@@ -61,6 +104,8 @@ export default class MusicPlayer {
     } else {
       this.busIn.connect(this.out)
     }
+    // Re-tap the FX send (busIn.disconnect() above dropped it).
+    if (this.fxSend) this.busIn.connect(this.fxSend)
   }
 
   _stopCrackle() {
@@ -88,12 +133,13 @@ export default class MusicPlayer {
       this.bar = 0
       this.nextBarTime = this.ctx.currentTime + 0.06
       this._connectBus(style)
+      this.fxSend.gain.setTargetAtTime(style.fx || 0, this.ctx.currentTime, 0.1)
       this._stopCrackle()
       if (style.crackle) this.crackleDispose = createCrackle(this.ctx, this.busIn)
       this._run()
       const t = this.ctx.currentTime
       this.out.gain.cancelScheduledValues(t)
-      this.out.gain.setTargetAtTime(this.volume, t, 0.25)
+      this.out.gain.setTargetAtTime(this._targetVol(), t, 0.25)
     }, 180)
   }
 
@@ -106,7 +152,7 @@ export default class MusicPlayer {
     this._run()
     const t = this.ctx.currentTime
     this.out.gain.cancelScheduledValues(t)
-    this.out.gain.setTargetAtTime(this.volume, t, 0.3)
+    this.out.gain.setTargetAtTime(this._targetVol(), t, 0.3)
   }
 
   _run() {
@@ -132,6 +178,9 @@ export default class MusicPlayer {
     const events = planBar(this.style, this.seed, barIndex)
     const wow = this.style.flutter ? Math.pow(2, (Math.sin(t0 * 0.6) * 5) / 1200) : 1
     for (const e of events) {
+      // During a deep-focus session, thin the music: drop the melody + percussion,
+      // keeping the calm bass/chord/pad bed (it also ducks, in setFocus).
+      if (this.focus && (e.role === 'lead' || e.voice === 'noise')) continue
       triggerVoice(ctx, this.busIn, e.voice, e.freq * wow, t0 + e.start * beat, e.dur * beat, e.gain)
     }
   }
@@ -141,7 +190,50 @@ export default class MusicPlayer {
     if (this.timer) {
       const t = this.ctx.currentTime
       this.out.gain.cancelScheduledValues(t)
-      this.out.gain.setTargetAtTime(Math.max(0.0001, v), t, 0.1)
+      this.out.gain.setTargetAtTime(this._targetVol(), t, 0.1)
+    }
+  }
+
+  /** Gently duck + simplify while a deep-focus session is active. */
+  setFocus(active) {
+    if (this.focus === active) return
+    this.focus = active
+    if (!this.timer) return
+    const t = this.ctx.currentTime
+    this.out.gain.cancelScheduledValues(t)
+    this.out.gain.setTargetAtTime(this._targetVol(), t, 0.6)
+  }
+
+  /**
+   * Opt-in, experimental entrainment: a faint ~10Hz amplitude wobble on the music
+   * bus. Honest framing — it may do nothing. Off by default; fully removable.
+   */
+  setEntrainment(on) {
+    if (on && !this.entLfo) {
+      const lfo = this.ctx.createOscillator()
+      lfo.type = 'sine'
+      lfo.frequency.value = 10
+      const depth = this.ctx.createGain()
+      depth.gain.value = 0.06
+      lfo.connect(depth)
+      depth.connect(this.entGain.gain)
+      lfo.start()
+      this.entLfo = { lfo, depth }
+    } else if (!on && this.entLfo) {
+      try {
+        this.entLfo.lfo.stop()
+      } catch {
+        /* already stopped */
+      }
+      try {
+        this.entLfo.depth.disconnect()
+      } catch {
+        /* ignore */
+      }
+      this.entLfo = null
+      const t = this.ctx.currentTime
+      this.entGain.gain.cancelScheduledValues(t)
+      this.entGain.gain.setValueAtTime(1, t)
     }
   }
 
@@ -158,8 +250,14 @@ export default class MusicPlayer {
 
   dispose() {
     this.stop()
+    this.setEntrainment(false)
     try {
       this.out.disconnect()
+    } catch {
+      /* ignore */
+    }
+    try {
+      this.entGain.disconnect()
     } catch {
       /* ignore */
     }

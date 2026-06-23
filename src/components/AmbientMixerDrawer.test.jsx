@@ -23,29 +23,52 @@ afterEach(() => {
 })
 
 describe('AmbientMixerDrawer — Sound & Music', () => {
-  it('renders as the Sound & Music dialog with a focus-music picker', () => {
+  it('renders as the Sound & Music dialog with a labeled focus-music picker', () => {
     renderDrawer()
     expect(screen.getByRole('dialog', { name: /sound & music/i })).toBeInTheDocument()
-    expect(screen.getByRole('group', { name: /focus music style/i })).toBeInTheDocument()
-    for (const name of ['Off', 'Ghibli', 'Classical', 'Lofi', 'Rain Piano']) {
-      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+    const select = screen.getByRole('combobox', { name: /focus music/i })
+    expect(select).toBeInTheDocument()
+    // Off + Auto, plus both grouped sections.
+    for (const name of ['Off', 'Auto', 'Ghibli', 'Late-night Library']) {
+      expect(screen.getByRole('option', { name })).toBeInTheDocument()
     }
   })
 
-  it('marks the current style with aria-pressed (Off by default)', () => {
+  it('reflects the current style in the select value (Off by default)', () => {
     renderDrawer()
-    expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Lofi' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('combobox', { name: /focus music/i })).toHaveValue('off')
   })
 
-  it('selecting a style persists it to emily.mixer.musicStyle', () => {
+  it('selecting a mood persists it to emily.mixer.musicStyle and shows a now-playing hint', () => {
     renderDrawer()
-    fireEvent.click(screen.getByRole('button', { name: 'Lofi' }))
-    expect(screen.getByRole('button', { name: 'Lofi' })).toHaveAttribute('aria-pressed', 'true')
-    expect(readMixer().musicStyle).toBe('lofi')
+    const select = screen.getByRole('combobox', { name: /focus music/i })
+    fireEvent.change(select, { target: { value: 'latenight' } })
+    expect(select).toHaveValue('latenight')
+    expect(readMixer().musicStyle).toBe('latenight')
+    expect(screen.getByText(/now playing: late-night library/i)).toBeInTheDocument()
     // and back to Off
-    fireEvent.click(screen.getByRole('button', { name: 'Off' }))
+    fireEvent.change(select, { target: { value: 'off' } })
     expect(readMixer().musicStyle).toBe('off')
+  })
+
+  it('only the five ambient layers render (Coffee Shop / Brown Noise removed)', () => {
+    renderDrawer()
+    for (const label of ['Steady Rain', 'Fireplace']) {
+      expect(screen.getByLabelText(new RegExp(`${label} volume`, 'i'))).toBeInTheDocument()
+    }
+    for (const gone of [/coffee/i, /brown noise/i]) {
+      expect(screen.queryByLabelText(gone)).not.toBeInTheDocument()
+    }
+  })
+
+  it('the entrainment toggle is opt-in, honestly labeled, and persists', () => {
+    renderDrawer()
+    const toggle = screen.getByRole('checkbox', { name: /steady pulse/i })
+    expect(toggle).not.toBeChecked() // off by default
+    expect(screen.getByText(/it may\s+do nothing/i)).toBeInTheDocument()
+    fireEvent.click(toggle)
+    expect(toggle).toBeChecked()
+    expect(readMixer().entrainment).toBe(true)
   })
 
   it('persists the music volume independently of the master volume', () => {
