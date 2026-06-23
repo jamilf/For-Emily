@@ -267,11 +267,14 @@ function PixelCloud({ className = '', style, color }) {
 // larger factor). With no vars set (reduced motion, or a touch device sitting
 // still) every term resolves to 0, so the scene stays perfectly still.
 function ParallaxBand({ x = 0, y = 0, s = 0, className = '', children }) {
+  // x/y are pointer factors in px; s is the bounded scroll drift in px (the band
+  // eases UP by up to `s` as --par-scroll runs 0..1). The hook eases + clamps the
+  // vars, so the motion is always smooth and small even on a fast scroll.
   return (
     <div
       className={`parallax absolute inset-0 ${className}`}
       style={{
-        transform: `translate3d(calc(var(--par-x, 0) * ${x}px), calc(var(--par-y, 0) * ${y}px + var(--par-scroll, 0) * ${s} * 1px), 0)`,
+        transform: `translate3d(calc(var(--par-x, 0) * ${x}px), calc(var(--par-y, 0) * ${y}px - var(--par-scroll, 0) * ${s}px), 0)`,
       }}
     >
       {children}
@@ -290,7 +293,7 @@ function SkyScene() {
       <div className="absolute inset-0" style={{ background: bandedGradient(t.bands) }} />
       <div className="pixel-dither absolute inset-0 opacity-40" />
 
-      <ParallaxBand x={5} y={4}>
+      <ParallaxBand x={5} y={4} s={4}>
         {/* Star field — square dot-stars + ✦ sparkle-stars, drifting almost
           imperceptibly across the sky (dusk + night). */}
         {(t.stars || t.sparkles) && (
@@ -396,7 +399,7 @@ function SkyScene() {
         </div>
       </ParallaxBand>
 
-      <ParallaxBand x={9} y={5} s={2}>
+      <ParallaxBand x={9} y={5} s={8}>
         {/* Warm horizon glow where the sun meets the skyline (the sunset band) */}
         <div
           className="absolute left-0 right-0"
@@ -446,7 +449,7 @@ function SkyScene() {
         </svg>
       </ParallaxBand>
 
-      <ParallaxBand x={13} y={5} s={5}>
+      <ParallaxBand x={13} y={5} s={16}>
         {/* Rolling pixel hills — coarse height-maps as vertical bars */}
         <svg
           className="pixelated absolute bottom-0 left-0 w-full"
@@ -508,7 +511,7 @@ function SkyScene() {
         </div>
       </ParallaxBand>
 
-      <ParallaxBand x={20} y={6} s={9}>
+      <ParallaxBand x={20} y={6} s={26}>
         {/* Pixel bushes at the bottom corners */}
         <svg
           className="pixelated absolute bottom-0 left-0 w-full"
@@ -529,7 +532,7 @@ function SkyScene() {
         </svg>
       </ParallaxBand>
 
-      <ParallaxBand x={11} y={4} s={3}>
+      <ParallaxBand x={11} y={4} s={10}>
         {/* Rain — square pixels (dusk only) */}
         {t.rain && (
           <div className="absolute inset-0 overflow-hidden">
@@ -553,7 +556,7 @@ function SkyScene() {
         )}
       </ParallaxBand>
 
-      <ParallaxBand x={18} y={8} s={7}>
+      <ParallaxBand x={18} y={8} s={20}>
         {/* Fireflies — square gold pixels (dusk only) */}
         {t.fireflies &&
           FIREFLIES.map((b) => (
