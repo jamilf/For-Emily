@@ -195,3 +195,37 @@ describe('recordReview / retentionPct — kind stats', () => {
     expect(retentionPct({ correct: 3, total: 4 })).toBe(75)
   })
 })
+
+describe('card type — additive, cloze-aware, back-compatible', () => {
+  it('makeCard defaults to a basic card', () => {
+    expect(makeCard('q', 'a', 'D').type).toBe('basic')
+  })
+
+  it('makeCard detects a {{cloze}} front and tags it cloze', () => {
+    const c = makeCard('The {{hippocampus}} forms memories', '', 'Neuro')
+    expect(c.type).toBe('cloze')
+  })
+
+  it('normalizeCard defaults older saved cards (no type) to basic, non-destructively', () => {
+    const legacy = { id: 1, deck: 'D', front: 'q', back: 'a', box: 2, due: NOW, reps: 1 }
+    const n = normalizeCard(legacy)
+    expect(n.type).toBe('basic')
+    expect(n.box).toBe(2) // existing fields preserved
+    expect(n.reps).toBe(1)
+  })
+
+  it('a legacy card still grades normally (type does not affect scheduling)', () => {
+    const legacy = { id: 1, deck: 'D', front: 'q', back: 'a', box: 2, due: NOW, reps: 1 }
+    const graded = gradeCard(legacy, 'good')
+    expect(graded.box).toBe(3)
+    expect(graded.type).toBe('basic')
+  })
+
+  it('parseBulk imports a separator-less cloze line as a cloze card', () => {
+    const out = parseBulk('The {{axon}} sends signals\nhippocampus - memory', 'Bio')
+    const cloze = out.find((c) => c.type === 'cloze')
+    expect(cloze).toBeTruthy()
+    expect(cloze.front).toContain('{{axon}}')
+    expect(out.find((c) => c.front === 'hippocampus').type).toBe('basic')
+  })
+})

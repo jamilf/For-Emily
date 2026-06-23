@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { axe } from 'vitest-axe'
 import Flashcards from './Flashcards.jsx'
 
 const PAST = Date.now() - 2 * 24 * 60 * 60 * 1000
@@ -129,5 +130,98 @@ describe('Flashcards — manage view (search, move, delete) + forecast', () => {
     fireEvent.click(screen.getByRole('button', { name: /📊 progress/i }))
     expect(screen.getByText(/next 7 days/i)).toBeInTheDocument()
     expect(screen.getByText('Today')).toBeInTheDocument()
+  })
+})
+
+describe('Flashcards — quick-review + micro-sessions (friction)', () => {
+  it('quick review starts a session in one tap (no deck picking)', () => {
+    seed(DECK)
+    render(<Flashcards onClose={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /quick review/i }))
+    expect(screen.getByText(/Reviewing 1 of/)).toBeInTheDocument()
+    // The smart default caps at ten, so a 2-card deck yields a 2-card session.
+    expect(screen.getByText('Reviewing 1 of 2')).toBeInTheDocument()
+  })
+
+  it('the "Just 5 / Just 10" presets set and persist the session size', () => {
+    seed(DECK)
+    render(<Flashcards onClose={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /just 5/i }))
+    expect(JSON.parse(localStorage.getItem('emily.flashPrefs')).lastSize).toBe(5)
+  })
+})
+
+describe('Flashcards — typed recall + cloze (recall depth)', () => {
+  const TYPABLE = [
+    { id: 1, deck: 'D', front: 'capital of France', back: 'Paris', box: 2, due: PAST, reps: 1 },
+  ]
+
+  function enableTyped() {
+    fireEvent.click(screen.getByLabelText(/type my answers/i))
+  }
+
+  it('typed mode checks a correct answer leniently and suggests a rating (override-able)', () => {
+    seed(TYPABLE)
+    render(<Flashcards onClose={() => {}} />)
+    enableTyped()
+    fireEvent.click(screen.getByLabelText(/shuffle/i))
+    fireEvent.click(screen.getByRole('button', { name: /review \d+ card/i }))
+
+    // Type with sloppy case/spacing; lenient match still counts it correct.
+    fireEvent.change(screen.getByLabelText(/type your answer/i), { target: { value: '  paris ' } })
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+
+    // Correctness is conveyed by text (icon + words), not color alone.
+    expect(screen.getByText(/correct from memory/i)).toBeInTheDocument()
+    expect(screen.getByText('Paris')).toBeInTheDocument() // the answer is shown
+    // 'Good' is suggested but she can pick any rating (the self-override).
+    expect(screen.getByText('suggested')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /3\. Good/ }))
+    const c = JSON.parse(localStorage.getItem('emily.flashcards')).find((x) => x.id === 1)
+    expect(c.box).toBe(3) // graded via the canonical gradeCard
+  })
+
+  it('a wrong typed answer is marked wrong (honestly) and reveals the answer', () => {
+    seed(TYPABLE)
+    render(<Flashcards onClose={() => {}} />)
+    enableTyped()
+    fireEvent.click(screen.getByLabelText(/shuffle/i))
+    fireEvent.click(screen.getByRole('button', { name: /review \d+ card/i }))
+    fireEvent.change(screen.getByLabelText(/type your answer/i), { target: { value: 'London' } })
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/not this time/i)).toBeInTheDocument()
+    expect(screen.getByText('Paris')).toBeInTheDocument()
+  })
+
+  it('renders a cloze card as a blanked prompt and grades the typed blank', () => {
+    seed([
+      {
+        id: 7,
+        deck: 'D',
+        front: 'The {{hippocampus}} forms memories',
+        back: '',
+        type: 'cloze',
+        box: 1,
+        due: PAST,
+        reps: 1,
+      },
+    ])
+    render(<Flashcards onClose={() => {}} />)
+    // Cloze is always typed; no need to toggle. Start the review.
+    fireEvent.click(screen.getByLabelText(/shuffle/i))
+    fireEvent.click(screen.getByRole('button', { name: /review \d+ card/i }))
+    expect(screen.getAllByText(/\[ ____ \] forms memories/).length).toBeGreaterThan(0)
+    fireEvent.change(screen.getByLabelText(/type your answer/i), { target: { value: 'hippocampus' } })
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/correct from memory/i)).toBeInTheDocument()
+  })
+
+  it('has no axe-detectable violations in typed-review mode', async () => {
+    seed(TYPABLE)
+    const { container } = render(<Flashcards onClose={() => {}} />)
+    enableTyped()
+    fireEvent.click(screen.getByLabelText(/shuffle/i))
+    fireEvent.click(screen.getByRole('button', { name: /review \d+ card/i }))
+    expect(await axe(container)).toHaveNoViolations()
   })
 })

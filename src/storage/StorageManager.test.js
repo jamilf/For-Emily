@@ -99,6 +99,29 @@ describe('migrate', () => {
     expect(JSON.parse(localStorage.getItem('emily.mixer')).entrainment).toBe(false)
   })
 
+  it('v8→v9: additive flashcard type/prefs are non-destructive and double-run safe', () => {
+    localStorage.setItem('emily.schemaVersion', '8')
+    // A legacy card with no `type` field, and existing stats.
+    localStorage.setItem(
+      'emily.flashcards',
+      JSON.stringify([{ id: 1, deck: 'D', front: 'q', back: 'a', box: 3, due: 123, reps: 4 }]),
+    )
+    migrate()
+    expect(localStorage.getItem('emily.schemaVersion')).toBe(String(SCHEMA_VERSION))
+    // The saved card is untouched on disk (it self-heals via normalizeCard at read).
+    const cards = JSON.parse(localStorage.getItem('emily.flashcards'))
+    expect(cards).toHaveLength(1)
+    expect(cards[0].box).toBe(3)
+    expect(cards[0].reps).toBe(4)
+    // The new prefs key resolves to its default via read()'s fallback.
+    expect(read('emily.flashPrefs').typed).toBe(false)
+    expect(read('emily.flashPrefs').lastSize).toBe(10)
+    // Double-run is a no-op.
+    const before = localStorage.getItem('emily.flashcards')
+    migrate()
+    expect(localStorage.getItem('emily.flashcards')).toBe(before)
+  })
+
   it('seeds the Grove retroactively from existing stats on the v2→v3 upgrade', () => {
     localStorage.setItem('emily.schemaVersion', '2')
     // Two grown trees already → first-sprout (≥1) and quiet-pine (≥2) earned.

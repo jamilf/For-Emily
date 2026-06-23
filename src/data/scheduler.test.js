@@ -81,6 +81,31 @@ describe('dueToday + new-card cap', () => {
     const q = buildQueue(cards, { now: NOW, cap: 2, shuffle: false, deck: 'D' })
     expect(q.length).toBeLessThanOrEqual(2)
   })
+
+  it('interleaves due cards across decks when no deck is selected (deck: null)', () => {
+    // Two decks, both with due reviews. With deck=null they should mix into one
+    // queue (the quick-review default) rather than studying one deck blocked.
+    const multi = [
+      { id: 11, deck: 'Neuro', due: NOW - DAY, reps: 2 },
+      { id: 12, deck: 'Neuro', due: NOW - DAY, reps: 2 },
+      { id: 13, deck: 'Philosophy', due: NOW - DAY, reps: 2 },
+      { id: 14, deck: 'Philosophy', due: NOW - DAY, reps: 2 },
+    ]
+    const q = buildQueue(multi, { now: NOW, cap: 50, shuffle: false, deck: null })
+    const decksInQueue = new Set(q.map((c) => c.deck))
+    expect(decksInQueue).toEqual(new Set(['Neuro', 'Philosophy'])) // both present, pooled
+  })
+
+  it('quick-review smart default builds a queue capped at ten', () => {
+    const many = Array.from({ length: 30 }, (_, i) => ({
+      id: 100 + i,
+      deck: i % 2 ? 'A' : 'B',
+      due: NOW - DAY,
+      reps: 2,
+    }))
+    const q = buildQueue(many, { now: NOW, cap: 10, shuffle: true, deck: null, newPerDay: 10 })
+    expect(q.length).toBe(10)
+  })
 })
 
 describe('studyAhead — pull not-yet-due cards forward', () => {

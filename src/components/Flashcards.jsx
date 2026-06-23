@@ -16,6 +16,7 @@ import {
   parseBulk,
 } from '../data/flashcards.js'
 import { buildQueue, dueToday, isLeech, dedupeCards, forecast } from '../data/scheduler.js'
+import { parseCloze, clozeAnswerKey, matchAnswer } from '../data/recall.js'
 import { pickByContext } from '../data/encouragements.js'
 
 // Gentle ADHD guard: at most this many brand-new cards enter one session.
@@ -41,15 +42,20 @@ export default function Flashcards({ onClose }) {
   const [verses] = usePersistedState('emily.verses', {})
   // In-progress review, persisted so closing + reopening resumes exactly.
   const [session, setSession] = usePersistedState('emily.flashSession', null)
+  // Sticky study prefs (device-local; never touches a card's schedule).
+  const [prefs, setPrefs] = usePersistedState('emily.flashPrefs', { typed: false, lastSize: 10 })
+  const typedMode = !!prefs.typed
 
   const [view, setView] = useState('home') // home | study | done | add | bulk | stats
   const [deck, setDeck] = useState(null) // selected deck (null = All)
-  const [cap, setCap] = useState(12)
+  const [cap, setCap] = useState(prefs.lastSize ?? 10)
   const [shuffle, setShuffle] = useState(true)
 
   const [queue, setQueue] = useState([])
   const [idx, setIdx] = useState(0)
   const [flipped, setFlipped] = useState(false)
+  const [typedValue, setTypedValue] = useState('') // free-recall input
+  const [result, setResult] = useState(null) // { correct, close } after a typed check
   const [nudge, setNudge] = useState(null)
   const [doneMsg, setDoneMsg] = useState('')
   const undoStack = useRef([]) // [{ cardBefore, statsBefore, idx }] for misclick recovery
@@ -110,10 +116,16 @@ export default function Flashcards({ onClose }) {
     return r.text || 'Well done, Emily. That counted.'
   }
 
+  function resetCardEntry() {
+    setFlipped(false)
+    setTypedValue('')
+    setResult(null)
+  }
+
   function beginQueue(q, startIdx = 0) {
     setQueue(q)
     setIdx(startIdx)
-    setFlipped(false)
+    resetCardEntry()
     setNudge(null)
     undoStack.current = []
     setView('study')
@@ -123,6 +135,22 @@ export default function Flashcards({ onClose }) {
     if (preview.length === 0) return
     beginQueue(preview, 0)
     setSession({ ids: preview.map((c) => c.id), idx: 0, deck })
+  }
+
+  // One-tap start with a smart default: all decks, interleaved, ten cards. Cuts
+  // the pick-a-deck / adjust-size decision cost (ADHD-friendly).
+  function quickReview() {
+    const q = buildQueue(cards, { deck: null, cap: 10, shuffle: true, newPerDay: NEW_PER_SESSION })
+    if (q.length === 0) return
+    beginQueue(q, 0)
+    setSession({ ids: q.map((c) => c.id), idx: 0, deck: null })
+  }
+
+  // Persisted session size (the stepper + the "Just 5 / Just 10" presets).
+  function applySize(n) {
+    const size = Math.max(1, Math.min(40, n))
+    setCap(size)
+    setPrefs((p) => ({ ...p, lastSize: size }))
   }
 
   function resumeSession() {
@@ -145,7 +173,7 @@ export default function Flashcards({ onClose }) {
 
     const nextIdx = idx + 1
     if (nextIdx < queue.length) {
-      setFlipped(false)
+      resetCardEntry()
       // A gentle soot-sprite nudge every few cards (celebration/strength lean).
       setNudge(nextIdx % 5 === 0 ? pickEncouragement('complete') : null)
       setIdx(nextIdx)
@@ -166,6 +194,8 @@ export default function Flashcards({ onClose }) {
     setStats(snap.statsBefore)
     setIdx(snap.idx)
     setFlipped(true) // they were looking at the answer when they rated
+    setTypedValue('')
+    setResult(null)
     setNudge(null)
     setView('study')
     setSession((s) => (s ? { ...s, idx: snap.idx } : s))
@@ -234,10 +264,26 @@ export default function Flashcards({ onClose }) {
     grade(dx > 0 ? 'good' : 'again') // swipe right = Good, left = Again
   }
 
-  // Keyboard: Space flips; 1–4 rate once the answer is showing; U undoes.
+  // Free-recall check: grade the typed answer leniently, reveal, and suggest a
+  // rating (she keeps the final say via the rating buttons = the self-override).
+  function checkTyped(e) {
+    e?.preventDefault()
+    const c = queue[idx]
+    if (!c) return
+    const expected = c.type === 'cloze' ? clozeAnswerKey(c.front) : c.back
+    setResult(matchAnswer(typedValue, expected))
+    setFlipped(true)
+  }
+
+  // Keyboard: Space flips; 1–4 rate once the answer is showing; U undoes. While a
+  // typed answer is still being entered, the global shortcuts stand down so she can
+  // type freely (the input's own Enter submits).
   useEffect(() => {
     if (view !== 'study' || editing) return
     function onKey(e) {
+      const c = queue[idx]
+      const awaitingTyped = !!c && (typedMode || c.type === 'cloze') && !flipped
+      if (awaitingTyped) return
       if (e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault()
         setFlipped((f) => !f)
@@ -256,7 +302,7 @@ export default function Flashcards({ onClose }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, flipped, idx, queue, editing])
+  }, [view, flipped, idx, queue, editing, typedMode])
 
   function addCard(e) {
     e.preventDefault()
@@ -303,6 +349,15 @@ export default function Flashcards({ onClose }) {
       </button>
     </div>
   )
+
+  // Per-card recall mode. Cloze cards are always typed; basic cards are typed only
+  // when the sticky "Type my answers" toggle is on (self-rate stays the default).
+  const cardCloze = current && current.type === 'cloze' ? parseCloze(current.front) : null
+  const useTyped = !!current && (typedMode || !!cardCloze)
+  const promptText = cardCloze ? cardCloze.prompt : current?.front
+  const answerText = cardCloze ? clozeAnswerKey(current.front) : current?.back
+  const awaitingTyped = useTyped && !flipped
+  const suggestedRating = result ? (result.correct ? 'good' : result.close ? 'hard' : 'again') : null
 
   const chip =
     'rounded-xl border-2 px-3 py-2 text-left text-sm transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow'
@@ -374,6 +429,17 @@ export default function Flashcards({ onClose }) {
                     days moves it into long-term storage.
                   </p>
 
+                  {/* One-tap start: a smart default (all decks, mixed, ten cards) so
+                      there is no deck-picking or fiddling between you and reviewing. */}
+                  {!resumable && (
+                    <button
+                      onClick={quickReview}
+                      className="mt-3 w-full rounded-2xl bg-brown px-5 py-3 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
+                    >
+                      ⚡ Quick review
+                    </button>
+                  )}
+
                   {/* What's sticking — gentle retention feedback at the point of study */}
                   {memory.total > 0 && (
                     <div
@@ -427,7 +493,7 @@ export default function Flashcards({ onClose }) {
                       <span>Session size</span>
                       <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => setCap((c) => Math.max(4, c - 4))}
+                          onClick={() => applySize(cap - 4)}
                           aria-label="Fewer cards"
                           className="h-7 w-7 rounded-lg bg-brown/10 font-display hover:bg-brown/20 active:scale-95"
                         >
@@ -435,13 +501,30 @@ export default function Flashcards({ onClose }) {
                         </button>
                         <span className="w-6 text-center font-display tabular-nums">{cap}</span>
                         <button
-                          onClick={() => setCap((c) => Math.min(40, c + 4))}
+                          onClick={() => applySize(cap + 4)}
                           aria-label="More cards"
                           className="h-7 w-7 rounded-lg bg-brown/10 font-display hover:bg-brown/20 active:scale-95"
                         >
                           ＋
                         </button>
                       </div>
+                    </div>
+                    {/* Micro-session presets keep it small and finite (ADHD-friendly). */}
+                    <div className="flex items-center gap-1.5">
+                      {[5, 10].map((n) => (
+                        <button
+                          key={n}
+                          onClick={() => applySize(n)}
+                          aria-pressed={cap === n}
+                          className={`rounded-lg px-2.5 py-1 font-display text-xs transition-colors active:scale-95 ${
+                            cap === n
+                              ? 'bg-sunset-pink/40 text-brown'
+                              : 'bg-brown/10 text-brown hover:bg-brown/20'
+                          }`}
+                        >
+                          Just {n}
+                        </button>
+                      ))}
                     </div>
                     <label className="flex cursor-pointer items-center gap-2">
                       <input
@@ -452,7 +535,22 @@ export default function Flashcards({ onClose }) {
                       />
                       Shuffle
                     </label>
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={typedMode}
+                        onChange={(e) => setPrefs((p) => ({ ...p, typed: e.target.checked }))}
+                        className="h-4 w-4 accent-sunset-magenta"
+                      />
+                      Type my answers
+                    </label>
                   </div>
+                  {typedMode && (
+                    <p className="mt-1.5 text-xs text-brown/55">
+                      Typing the answer from memory, then judging it, builds stronger recall than just
+                      flipping the card. Spelling is forgiven, and you always make the final call.
+                    </p>
+                  )}
 
                   <button
                     onClick={startSession}
@@ -548,54 +646,125 @@ export default function Flashcards({ onClose }) {
                   <div className={`flip-inner ${flipped ? 'is-flipped' : ''} min-h-[11rem]`}>
                     <div className="flip-face flex min-h-[11rem] w-full items-center justify-center rounded-2xl border-2 border-brown/20 bg-white/70 p-6 text-center text-lg leading-relaxed">
                       <span>
-                        {current.front}
+                        {promptText}
                         <span className="mt-3 block font-display text-xs text-brown/45">
-                          try to answer from memory first…
+                          {cardCloze ? 'fill in the blank from memory…' : 'try to answer from memory first…'}
                         </span>
                       </span>
                     </div>
                     <div className="flip-back flex min-h-[11rem] w-full items-center justify-center rounded-2xl border-2 border-brown/20 bg-latte p-6 text-center text-lg leading-relaxed">
-                      <span>{current.back}</span>
+                      <span>{answerText}</span>
                     </div>
                   </div>
                 </button>
               </div>
 
               <p className="sr-only" aria-live="polite">
-                {`Card ${idx + 1} of ${queue.length}. ${flipped ? `Answer: ${current.back}` : `Prompt: ${current.front}`}`}
+                {`Card ${idx + 1} of ${queue.length}. ${
+                  flipped
+                    ? `${result ? (result.correct ? 'Correct. ' : 'Not quite. ') : ''}Answer: ${answerText}`
+                    : `Prompt: ${promptText}`
+                }`}
               </p>
 
-              {flipped && (
+              {flipped && !useTyped && (
                 <p className="mt-2 text-center text-[0.7rem] text-brown/40 sm:hidden" aria-hidden="true">
                   Swipe → Good · ← Again
                 </p>
               )}
 
               {!flipped ? (
-                <button
-                  onClick={() => setFlipped(true)}
-                  className="mt-4 w-full rounded-2xl bg-brown px-4 py-3 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
-                >
-                  Show answer <span className="text-cream/60">(space)</span>
-                </button>
+                awaitingTyped ? (
+                  <form onSubmit={checkTyped} className="mt-4 space-y-2">
+                    <label className="sr-only" htmlFor="typed-answer">
+                      Type your answer
+                    </label>
+                    <input
+                      id="typed-answer"
+                      value={typedValue}
+                      onChange={(e) => setTypedValue(e.target.value)}
+                      autoFocus
+                      autoComplete="off"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      placeholder="Type what you remember…"
+                      className="w-full rounded-2xl border-2 border-brown/20 bg-white/80 px-4 py-3 text-base focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        className="flex-1 rounded-2xl bg-brown px-4 py-3 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
+                      >
+                        Check answer <span className="text-cream/60">(enter)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFlipped(true)}
+                        className="rounded-2xl bg-brown/10 px-4 py-3 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+                      >
+                        Show me
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setFlipped(true)}
+                    className="mt-4 w-full rounded-2xl bg-brown px-4 py-3 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
+                  >
+                    Show answer <span className="text-cream/60">(space)</span>
+                  </button>
+                )
               ) : (
                 <div className="mt-4">
-                  <p className="mb-2 text-center text-xs text-brown/55">How well did you recall it?</p>
+                  {result && (
+                    <p
+                      className={`mb-2 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-center text-sm text-brown ${
+                        result.correct
+                          ? 'bg-ever-green/20'
+                          : result.close
+                            ? 'bg-ever-orange/20'
+                            : 'bg-ever-red/15'
+                      }`}
+                    >
+                      <span aria-hidden="true">{result.correct ? '✓' : result.close ? '≈' : '✗'}</span>
+                      <span>
+                        {result.correct
+                          ? 'Correct from memory.'
+                          : result.close
+                            ? 'So close. Check the wording.'
+                            : 'Not this time. Here it is.'}
+                      </span>
+                    </p>
+                  )}
+                  <p className="mb-2 text-center text-xs text-brown/55">
+                    {result
+                      ? 'You have the final say. Adjust if you knew it.'
+                      : 'How well did you recall it?'}
+                  </p>
                   <div className="grid grid-cols-2 gap-2 font-display sm:grid-cols-4">
-                    {RATINGS.map((r, i) => (
-                      <button
-                        key={r}
-                        onClick={() => grade(r)}
-                        className={`flex min-h-[3.25rem] flex-col items-center justify-center rounded-2xl px-2 py-2 text-sm transition-all active:scale-95 ${RATING_STYLES[r]}`}
-                      >
-                        <span>
-                          {i + 1}. {RATING_LABELS[r]}
-                        </span>
-                        <span className="text-[0.65rem] font-normal opacity-70">
-                          {nextIntervalLabel(current, r)}
-                        </span>
-                      </button>
-                    ))}
+                    {RATINGS.map((r, i) => {
+                      const suggested = r === suggestedRating
+                      return (
+                        <button
+                          key={r}
+                          onClick={() => grade(r)}
+                          className={`flex min-h-[3.25rem] flex-col items-center justify-center rounded-2xl px-2 py-2 text-sm transition-all active:scale-95 ${RATING_STYLES[r]} ${
+                            suggested ? 'ring-2 ring-brown ring-offset-1' : ''
+                          }`}
+                        >
+                          <span>
+                            {i + 1}. {RATING_LABELS[r]}
+                          </span>
+                          <span className="text-[0.65rem] font-normal opacity-70">
+                            {nextIntervalLabel(current, r)}
+                          </span>
+                          {suggested && (
+                            <span className="mt-0.5 text-[0.6rem] font-normal text-brown/70">suggested</span>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               )}

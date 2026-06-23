@@ -11,7 +11,7 @@ import { backfillFromGarden } from '../data/focusLog.js'
 import { spiritMetrics, reconcileSpirits } from '../data/spirits.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 8
+export const SCHEMA_VERSION = 9
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -44,6 +44,8 @@ export const DEFAULTS = {
   'emily.flashcardStats': { day: '', reviewedToday: 0, streak: 0, lastReviewDay: null, correct: 0, total: 0 },
   'emily.spr': { seen: [], lastOpenDay: '' },
   'emily.flashSession': null, // in-progress review (device-local; resumed on reopen)
+  // Device-local flashcard UI prefs (sticky study toggles; never affects scheduling).
+  'emily.flashPrefs': { typed: false, lastSize: 10 },
   'emily.keepsakes': [], // [{ id, text, ref, type, signoff, ts }]
   'emily.verses': {}, // { [reference]: text } cached from the Bible API
   // Phase-10: Grove Almanac — sticky unlocked varietals + an optional queued seed.
@@ -180,6 +182,10 @@ export function migrate() {
         write('emily.mixer', { ...m, entrainment: m.entrainment ?? false, levels })
       }
     }
+    // v8 → v9: flashcards gained an additive `type` field (basic|cloze) and a new
+    // device-local `emily.flashPrefs`. Both self-heal via normalizeCard / read()'s
+    // defaults back-fill, so there is no data transform — existing cards keep
+    // working untouched and a double-run is a no-op. (Mirrors the v0→v2 no-op.)
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
   } catch {
     /* ignore quota/availability errors — app still works on current data */

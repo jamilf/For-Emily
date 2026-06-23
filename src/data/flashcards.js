@@ -12,6 +12,7 @@
 // by normalizeCard, so there is no risky migration.
 
 import { dayStr, yesterdayStr } from '../utils/day.js'
+import { hasCloze } from './recall.js'
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -29,6 +30,7 @@ export function countDue(cards) {
 }
 
 // Fill in any fields missing on older saved cards (defensive, no migration).
+// `type` is additive: older cards have no type and default to 'basic'.
 export function normalizeCard(c) {
   return {
     box: 1,
@@ -38,16 +40,21 @@ export function normalizeCard(c) {
     lastReviewed: null,
     due: Date.now(),
     deck: 'My deck',
+    type: 'basic',
     ...c,
   }
 }
 
 export function makeCard(front, back, deck) {
+  const f = front.trim()
+  // A front carrying a {{deletion}} is a cloze card (text-only, no asset needed).
+  const type = hasCloze(f) ? 'cloze' : 'basic'
   return {
     id: Date.now() + Math.random(),
     deck: deck?.trim() || 'My deck',
-    front: front.trim(),
+    front: f,
     back: back.trim(),
+    type,
     box: 1,
     interval: 0,
     reps: 0,
@@ -168,6 +175,12 @@ export function parseBulk(text, deck) {
   for (const rawLine of text.split('\n')) {
     const line = rawLine.trim()
     if (!line) continue
+    // A cloze line carries its own answer in the {{deletion}}, so it needs no
+    // separator: import the whole line as the front (back stays empty).
+    if (hasCloze(line)) {
+      out.push(makeCard(line, '', deck))
+      continue
+    }
     let sep = -1
     let sepLen = 1
     for (const token of [' — ', ' – ', ' - ', '—', '–', '\t', ':', ',']) {

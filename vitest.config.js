@@ -21,6 +21,7 @@ export default defineConfig({
       include: [
         'src/data/flashcards.js',
         'src/data/scheduler.js',
+        'src/data/recall.js',
         'src/data/grove.js',
         'src/data/focusLog.js',
         'src/data/spirits.js',
