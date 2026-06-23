@@ -130,6 +130,33 @@ export function masteredCount(cards) {
 }
 
 /**
+ * A gentle snapshot of what is actually sticking, for metacognitive feedback shown
+ * at the point of study (not just buried in a stats screen). Pure. Buckets every
+ * card exactly once, by priority: mastered (box at the top tier), resurfacing
+ * (lapsed to box 0, or repeatedly tricky), or settling in (the rest). Reading her
+ * memory back to her, never a grade.
+ */
+export function retentionSummary(cards = []) {
+  let mastered = 0
+  let resurfacing = 0
+  let settling = 0
+  for (const raw of cards) {
+    const c = normalizeCard(raw)
+    if ((c.box ?? 0) >= MASTERED_BOX) mastered += 1
+    else if ((c.box ?? 0) === 0 || (c.struggling || 0) >= 2) resurfacing += 1
+    else settling += 1
+  }
+  const total = cards.length
+  return {
+    total,
+    mastered,
+    resurfacing,
+    settling,
+    masteredPct: total ? Math.round((mastered / total) * 100) : 0,
+  }
+}
+
+/**
  * Parse a bulk paste into cards. One card per line as `term — definition`.
  * Accepts (in priority order) an em/en dash, a spaced hyphen, a bare em/en dash,
  * a tab, a colon, or a comma (CSV) as the separator — whichever appears first.

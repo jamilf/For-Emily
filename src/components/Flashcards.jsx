@@ -10,6 +10,7 @@ import {
   nextIntervalLabel,
   decksOf,
   masteredCount,
+  retentionSummary,
   retentionPct,
   recordReview,
   parseBulk,
@@ -72,6 +73,7 @@ export default function Flashcards({ onClose }) {
   const decks = useMemo(() => decksOf(cards), [cards])
   const dueTotal = useMemo(() => dueToday(cards).length, [cards])
   const mastered = useMemo(() => masteredCount(cards), [cards])
+  const memory = useMemo(() => retentionSummary(cards), [cards])
   const retention = retentionPct(stats)
 
   // Preview the queue for the current options (also reused when starting).
@@ -371,6 +373,26 @@ export default function Flashcards({ onClose }) {
                     Recalling from memory, not rereading, is what builds lasting memory. Spacing reviews over
                     days moves it into long-term storage.
                   </p>
+
+                  {/* What's sticking — gentle retention feedback at the point of study */}
+                  {memory.total > 0 && (
+                    <div
+                      className="mt-3 rounded-2xl border-2 border-brown/15 bg-white/55 p-3"
+                      aria-live="polite"
+                    >
+                      <p className="font-display text-sm text-brown">What&apos;s sticking</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-brown/75">
+                        {memory.mastered > 0
+                          ? `${memory.mastered} card${memory.mastered === 1 ? '' : 's'} feel${
+                              memory.mastered === 1 ? 's' : ''
+                            } like yours now`
+                          : 'nothing fully mastered yet, and that is completely okay'}
+                        {memory.settling > 0 ? `, ${memory.settling} settling in` : ''}
+                        {memory.resurfacing > 0 ? `, ${memory.resurfacing} coming back around` : ''}. Recall
+                        is what moves them, not rereading.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Deck picker */}
                   <div className="mt-4 grid grid-cols-2 gap-2">

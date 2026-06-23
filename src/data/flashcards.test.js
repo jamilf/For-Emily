@@ -10,6 +10,7 @@ import {
   nextIntervalLabel,
   decksOf,
   masteredCount,
+  retentionSummary,
   parseBulk,
   recordReview,
   retentionPct,
@@ -110,6 +111,30 @@ describe('decksOf / masteredCount', () => {
   })
   it('counts mastered cards (box >= MAX_BOX)', () => {
     expect(masteredCount([{ box: MAX_BOX }, { box: 1 }, { box: MAX_BOX }])).toBe(2)
+  })
+})
+
+describe('retentionSummary — what is sticking', () => {
+  it('buckets every card exactly once by priority', () => {
+    const cards = [
+      { box: MAX_BOX }, // mastered
+      { box: MAX_BOX }, // mastered
+      { box: 0 }, // resurfacing (lapsed)
+      { box: 2, struggling: 3 }, // resurfacing (repeatedly tricky)
+      { box: 2 }, // settling
+      { box: 3 }, // settling
+    ]
+    const r = retentionSummary(cards)
+    expect(r.total).toBe(6)
+    expect(r.mastered).toBe(2)
+    expect(r.resurfacing).toBe(2)
+    expect(r.settling).toBe(2)
+    expect(r.mastered + r.resurfacing + r.settling).toBe(r.total)
+    expect(r.masteredPct).toBe(33)
+  })
+
+  it('is empty-safe', () => {
+    expect(retentionSummary([])).toMatchObject({ total: 0, mastered: 0, masteredPct: 0 })
   })
 })
 
