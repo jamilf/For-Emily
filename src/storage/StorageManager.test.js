@@ -75,6 +75,30 @@ describe('migrate', () => {
     expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
   })
 
+  it('v7→v8: defaults entrainment and prunes the retired ambient layers (idempotent)', () => {
+    localStorage.setItem('emily.schemaVersion', '7')
+    localStorage.setItem(
+      'emily.mixer',
+      JSON.stringify({
+        enabled: true,
+        master: 0.4,
+        musicStyle: 'lofi',
+        musicVolume: 0.6,
+        levels: { steadyRain: 0.8, coffeeShop: 0.5, brownNoise: 0.3, fireplace: 0.2 },
+      }),
+    )
+    migrate()
+    const m = JSON.parse(localStorage.getItem('emily.mixer'))
+    expect(m.entrainment).toBe(false)
+    expect(m.levels.coffeeShop).toBeUndefined()
+    expect(m.levels.brownNoise).toBeUndefined()
+    expect(m.levels.steadyRain).toBe(0.8) // kept value
+    expect(m.levels.fireplace).toBe(0.2) // kept value
+    expect(m.musicStyle).toBe('lofi') // preserved
+    migrate() // idempotent
+    expect(JSON.parse(localStorage.getItem('emily.mixer')).entrainment).toBe(false)
+  })
+
   it('seeds the Grove retroactively from existing stats on the v2→v3 upgrade', () => {
     localStorage.setItem('emily.schemaVersion', '2')
     // Two grown trees already → first-sprout (≥1) and quiet-pine (≥2) earned.

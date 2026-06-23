@@ -11,7 +11,7 @@ import { backfillFromGarden } from '../data/focusLog.js'
 import { spiritMetrics, reconcileSpirits } from '../data/spirits.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 7
+export const SCHEMA_VERSION = 8
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -22,18 +22,18 @@ export const DEFAULTS = {
   'emily.mixer': {
     enabled: false,
     master: 0.7,
-    // Generative focus music. Additive + default-backed, so old saves merge these
-    // in with no migration. 'off' means no music; a style id starts the player.
+    // Generative focus music (device-local; never autoplays). `musicStyle` is a
+    // string: 'off', 'auto', an instrumental style, or a chiptune mood id.
+    // `entrainment` is an opt-in, experimental amplitude-modulation toggle.
     musicStyle: 'off',
-    musicVolume: 0.6,
+    musicVolume: 0.5,
+    entrainment: false,
     levels: {
       steadyRain: 0.5,
       rainWindow: 0,
       thunder: 0,
       windTrees: 0,
       fireplace: 0,
-      coffeeShop: 0,
-      brownNoise: 0,
     },
   },
   'emily.garden': [], // [{ id: <DNA number>, ts }]
@@ -164,6 +164,20 @@ export function migrate() {
       if (localStorage.getItem('emily.story') == null) {
         const hasHistory = (read('emily.garden', []).length || 0) > 0
         write('emily.story', { ...DEFAULTS['emily.story'], lastSeen: hasHistory ? Date.now() : 0 })
+      }
+    }
+    // v7 → v8: the mixer gained an `entrainment` toggle, and the Coffee Shop +
+    // Brown Noise layers were retired. Default the new field and prune the two
+    // removed layer keys, keeping every other saved value. Idempotent; only runs
+    // when a saved mixer exists (a fresh install gets DEFAULTS via read()).
+    if (current < 8) {
+      const raw = localStorage.getItem('emily.mixer')
+      if (raw != null) {
+        const m = read('emily.mixer', DEFAULTS['emily.mixer'])
+        const levels = { ...m.levels }
+        delete levels.coffeeShop
+        delete levels.brownNoise
+        write('emily.mixer', { ...m, entrainment: m.entrainment ?? false, levels })
       }
     }
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))

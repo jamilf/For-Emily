@@ -199,18 +199,19 @@ export const LAYERS = [
     icon: '🔥',
     defaultVolume: 0,
     build(ctx) {
-      // Low rumble bed.
+      // Warm low rumble bed, with a touch more body than before.
       const rumbleSrc = loopSource(ctx, noiseBuffer(ctx, 'brown'))
       const rumbleLp = ctx.createBiquadFilter()
       rumbleLp.type = 'lowpass'
-      rumbleLp.frequency.value = 420
+      rumbleLp.frequency.value = 480
       const out = ctx.createGain()
-      out.gain.value = 0.8
+      out.gain.value = 0.85
       rumbleSrc.connect(rumbleLp)
       rumbleLp.connect(out)
       rumbleSrc.start()
-      // Random crackle pops (short high-passed bursts). White noise reads brightest
-      // here, which is what we want for a spark.
+      // Crackle: short high-passed bursts whose brightness, size, and spacing all
+      // vary, with the occasional bigger, lower ember pop, so it reads like a real
+      // fire instead of a metronome of identical clicks.
       const crackleSrc = loopSource(ctx, noiseBuffer(ctx, 'white'))
       const crackleHp = ctx.createBiquadFilter()
       crackleHp.type = 'highpass'
@@ -224,55 +225,26 @@ export const LAYERS = [
       let timer = null
       const pop = () => {
         const now = ctx.currentTime
-        const peak = 0.5 + Math.random() * 0.4
-        // A 5ms linear attack to the peak (not an instant jump) so the pop has a
-        // spark's softness instead of a digital click, then an exponential decay.
+        const ember = Math.random() < 0.16 // an occasional bigger, warmer pop
+        const peak = ember ? 0.7 + Math.random() * 0.3 : 0.32 + Math.random() * 0.42
+        const decay = ember ? 0.16 + Math.random() * 0.14 : 0.04 + Math.random() * 0.07
+        // Brightness varies per spark; embers sit lower and warmer.
+        crackleHp.frequency.setValueAtTime(
+          ember ? 1100 + Math.random() * 500 : 2200 + Math.random() * 1800,
+          now,
+        )
+        // A 4-8ms attack (not an instant jump) keeps each pop click-free, then decays.
         crackleEnv.gain.cancelScheduledValues(now)
         crackleEnv.gain.setValueAtTime(0.0001, now)
-        crackleEnv.gain.linearRampToValueAtTime(peak, now + 0.005)
-        crackleEnv.gain.exponentialRampToValueAtTime(0.0001, now + 0.05 + Math.random() * 0.08)
-        timer = setTimeout(pop, 120 + Math.random() * 500)
+        crackleEnv.gain.linearRampToValueAtTime(peak, now + (ember ? 0.008 : 0.004))
+        crackleEnv.gain.exponentialRampToValueAtTime(0.0001, now + decay)
+        timer = setTimeout(pop, (ember ? 600 : 90) + Math.random() * (ember ? 1200 : 420))
       }
       timer = setTimeout(pop, 300)
       return {
         output: out,
         dispose: () => (safeStop(rumbleSrc), safeStop(crackleSrc), clearTimeout(timer)),
       }
-    },
-  },
-  {
-    id: 'coffeeShop',
-    label: 'Coffee Shop Murmur',
-    icon: '☕',
-    defaultVolume: 0,
-    build(ctx) {
-      const src = loopSource(ctx, noiseBuffer(ctx, 'brown'))
-      const bp = ctx.createBiquadFilter()
-      bp.type = 'bandpass'
-      bp.frequency.value = 520
-      bp.Q.value = 1.1
-      const sway = ctx.createGain()
-      const stopLfo = attachLFO(ctx, sway.gain, { base: 0.75, depth: 0.2, rate: 0.3 })
-      src.connect(bp)
-      bp.connect(sway)
-      src.start()
-      return { output: sway, dispose: () => (safeStop(src), stopLfo()) }
-    },
-  },
-  {
-    id: 'brownNoise',
-    label: 'Brown Noise',
-    icon: '🟤',
-    defaultVolume: 0,
-    build(ctx) {
-      const src = loopSource(ctx, noiseBuffer(ctx, 'brown'))
-      const lp = ctx.createBiquadFilter()
-      lp.type = 'lowpass'
-      lp.frequency.value = 1000
-      lp.Q.value = 0.6
-      src.connect(lp)
-      src.start()
-      return { output: lp, dispose: () => safeStop(src) }
     },
   },
 ]
