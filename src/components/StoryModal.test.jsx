@@ -78,6 +78,37 @@ describe('StoryModal', () => {
     expect(JSON.parse(localStorage.getItem('emily.story')).notes.stirs).toBeUndefined()
   })
 
+  it('shelves earned milestone letters to re-read, with a signature', () => {
+    seed(10) // grown >= 5 earns the "five-trees" letter
+    render(<StoryModal onClose={() => {}} />)
+    expect(screen.getByRole('heading', { name: /letters from your soot friend/i })).toBeInTheDocument()
+    expect(screen.getByText('Five little trees')).toBeInTheDocument()
+    expect(screen.getAllByText(/all my love, your soot friend/i).length).toBeGreaterThan(0)
+  })
+
+  it('signs the letters with the companion name when she has given one', () => {
+    localStorage.setItem(
+      'emily.story',
+      JSON.stringify({ lastSeen: 1, ackChapters: {}, comebackShown: {}, companionName: 'Pip' }),
+    )
+    seed(10)
+    render(<StoryModal onClose={() => {}} />)
+    expect(screen.getByRole('heading', { name: /letters from pip/i })).toBeInTheDocument()
+    expect(screen.getByText(/all my love, pip/i)).toBeInTheDocument()
+  })
+
+  it('acknowledges earned letters on open (so their toast never nags again)', () => {
+    seed(10)
+    render(<StoryModal onClose={() => {}} />)
+    expect(JSON.parse(localStorage.getItem('emily.story')).letterAcks['five-trees']).toBe(true)
+  })
+
+  it('shows no letters section before any milestone is reached', () => {
+    seed(2) // grown < 5, no letter earned
+    render(<StoryModal onClose={() => {}} />)
+    expect(screen.queryByRole('heading', { name: /letters from/i })).not.toBeInTheDocument()
+  })
+
   it('has no axe-detectable accessibility violations', async () => {
     seed(10)
     const { container } = render(<StoryModal onClose={() => {}} />)

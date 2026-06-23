@@ -65,6 +65,10 @@ test('a return after a gap blooms a welcome-back, reveals a chapter, and opens t
   await expect(story.getByText(/you are here/i)).toBeVisible()
   await expect(story.getByText(/something new is waiting up ahead/i)).toBeVisible()
 
+  // The sprite's milestone letters are shelved here too (grown >= 5 earned one).
+  await expect(story.getByRole('heading', { name: /letters from/i })).toBeVisible()
+  await expect(story.getByText('Five little trees')).toBeVisible()
+
   // She co-authors the story: leave a keeper note on the current chapter.
   await story
     .getByRole('button', { name: /leave a note/i })
@@ -89,6 +93,59 @@ test('a return after a gap blooms a welcome-back, reveals a chapter, and opens t
   // 4) Reload: the comeback is not shown again, and a warm greeting appears.
   await page.reload()
   await expect(page.getByRole('dialog', { name: /welcome back/i })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /dismiss greeting/i })).toBeVisible()
+
+  expect(errors).toEqual([])
+})
+
+test('a milestone letter arrives as a gentle toast and opens to the letter shelf', async ({ page }) => {
+  const errors = []
+  page.on('console', (m) => {
+    if (m.type() === 'error' && !/favicon|service worker|manifest|React DevTools/i.test(m.text())) {
+      errors.push(m.text())
+    }
+  })
+  page.on('pageerror', (e) => errors.push(String(e)))
+
+  // Seed a same-day visit (no comeback) with every reached chapter already acked,
+  // so the only ambient announcement left is the earned-but-unseen milestone letter.
+  await page.addInitScript(() => {
+    if (localStorage.getItem('__letterSeeded')) return
+    localStorage.clear()
+    localStorage.setItem(
+      'emily.garden',
+      JSON.stringify(Array.from({ length: 10 }, (_, i) => ({ id: 0, ts: Date.now() - i * 3600000 }))),
+    )
+    localStorage.setItem(
+      'emily.story',
+      JSON.stringify({
+        lastSeen: Date.now(),
+        seenBeats: {},
+        ackChapters: { stirs: true, mossbright: true, keeper: true, lanternlight: true },
+        comebackShown: {},
+        letterAcks: {},
+      }),
+    )
+    localStorage.setItem('__letterSeeded', '1')
+  })
+  await page.goto('/')
+
+  // The letter toast announces itself without trapping focus.
+  const toast = page.getByText(/a letter from/i)
+  await expect(toast).toBeVisible()
+  await expect(page.getByText('Five little trees')).toBeVisible()
+
+  // "Read it" opens the Story to the letter shelf.
+  await page.getByRole('button', { name: /read it/i }).click()
+  const story = page.getByRole('dialog', { name: /grove story/i })
+  await expect(story).toBeVisible()
+  await expect(story.getByRole('heading', { name: /letters from/i })).toBeVisible()
+  await expect(story.getByText(/all my love/i).first()).toBeVisible()
+  await story.getByRole('button', { name: /close story/i }).click()
+
+  // Reload: the letter was acknowledged, so its toast does not nag again.
+  await page.reload()
+  await expect(page.getByText(/a letter from/i)).toHaveCount(0)
   await expect(page.getByRole('button', { name: /dismiss greeting/i })).toBeVisible()
 
   expect(errors).toEqual([])

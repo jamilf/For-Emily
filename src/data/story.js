@@ -117,6 +117,83 @@ export const CHAPTERS = [
 
 export const CHAPTERS_BY_ID = Object.fromEntries(CHAPTERS.map((c) => [c.id, c]))
 
+// ── Milestone letters ────────────────────────────────────────────────────────
+// Where chapters narrate the grove waking (on tree count alone), these are short
+// letters the sprite writes TO Emily, about HER effort, when she crosses a real,
+// cumulative milestone. They span the breadth of what she does (trees, distinct
+// active days, reflections, spirits, reviews), are earned via the same monotonic
+// `progressFor` machinery as chapters (so a gap or dropped streak can never revoke
+// one), and are kept forever to re-read. Bodies are static + addressed to "Emily";
+// the signature personalizes with the companion name at render time. Ordered so the
+// gentlest firsts surface before the bigger counts. No em dashes, no shame, ever.
+export const MILESTONES = [
+  {
+    id: 'first-reflection',
+    rule: { metric: 'reflections', n: 1 },
+    title: 'For your first reflection',
+    lines: [
+      'dear Emily, you wrote something down today, just for you. a few honest words in a quiet place.',
+      'i tucked them away safe. that takes a kind of courage people forget to count. i counted it.',
+    ],
+  },
+  {
+    id: 'first-spirit',
+    rule: { metric: 'spiritsMet', n: 1 },
+    title: 'You met a spirit',
+    lines: [
+      'dear Emily, one of the shy little spirits came out to meet you today. they do not do that for just anyone.',
+      'they liked the calm you carried in with you. so do i. you make this a gentle place to be.',
+    ],
+  },
+  {
+    id: 'five-trees',
+    rule: { metric: 'grown', n: 5 },
+    title: 'Five little trees',
+    lines: [
+      'dear Emily, there are five trees in the grove now, and every single one is a time you chose to begin.',
+      'i lined them up and counted twice. five whole beginnings. i am so proud of you i could glow.',
+    ],
+  },
+  {
+    id: 'seven-days',
+    rule: { metric: 'activeDays', n: 7 },
+    title: 'Seven days you came',
+    lines: [
+      'dear Emily, seven different days, you found your way back to this grove. not in a row. that was never the point.',
+      'seven times you chose to sit down and tend something. that is the whole of it, and it is plenty.',
+    ],
+  },
+  {
+    id: 'cards-revisited',
+    rule: { metric: 'reviews', n: 25 },
+    title: 'The things you revisit',
+    lines: [
+      'dear Emily, you have gone back over your cards twenty-five times now, gently, one at a time.',
+      'that is how memory grows roots: a little, and again, and again. you are doing the patient kind of brave.',
+    ],
+  },
+  {
+    id: 'twenty-five-trees',
+    rule: { metric: 'grown', n: 25 },
+    title: 'A grove of twenty-five',
+    lines: [
+      'dear Emily, twenty-five trees. a real little wood now, with shade and soft places to sit.',
+      'i remember when it was bare ground and one small light. you kept coming back, and look. just look.',
+    ],
+  },
+  {
+    id: 'a-month-of-days',
+    rule: { metric: 'activeDays', n: 30 },
+    title: 'A month of days',
+    lines: [
+      'dear Emily, thirty days, spread out however they came, you showed up for yourself here.',
+      'a whole month of choosing to begin. rest was part of it too. i hope you feel how far that reaches.',
+    ],
+  },
+]
+
+export const MILESTONES_BY_ID = Object.fromEntries(MILESTONES.map((m) => [m.id, m]))
+
 /** Derive the story metrics (all monotonic) from the existing stores. */
 export function storyMetrics({
   garden = [],
@@ -151,6 +228,11 @@ export function deriveCurrentChapter(metrics) {
 /** The next locked chapter (for a soft "what's ahead" hint), or null at the end. */
 export function nextChapter(metrics) {
   return CHAPTERS.find((c) => !progressFor(c, metrics).done) || null
+}
+
+/** Every milestone letter Emily has earned (sticky/retroactive, like chapters). */
+export function earnedLetters(metrics) {
+  return MILESTONES.filter((m) => progressFor(m, metrics).done)
 }
 
 // ── Return classification (LOCAL day) ────────────────────────────────────────

@@ -60,6 +60,7 @@ export const DEFAULTS = {
     comebackShown: {},
     companionName: null,
     notes: {},
+    letterAcks: {},
   },
 }
 

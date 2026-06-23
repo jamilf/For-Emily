@@ -3,9 +3,7 @@ import { test, expect } from '@playwright/test'
 // Memory Grove journey + screenshots (desktop + mobile). Runs in CI, where
 // browsers are installed. Seeds a couple of harvested trees to dedicate.
 
-test('Memory Grove opens from the garden, dedicates a tree, and screenshots', async ({
-  page,
-}, testInfo) => {
+test('Memory Grove opens from the garden, dedicates a tree, and screenshots', async ({ page }, testInfo) => {
   const errors = []
   page.on('console', (m) => {
     if (m.type() === 'error' && !/favicon|service worker|manifest|React DevTools/i.test(m.text())) {
@@ -32,7 +30,10 @@ test('Memory Grove opens from the garden, dedicates a tree, and screenshots', as
 
   // Dedicate a tree: pick → form → save.
   await dialog.getByRole('button', { name: /dedicate a tree/i }).click()
-  await dialog.getByRole('button', { name: /dedicate the/i }).first().click()
+  await dialog
+    .getByRole('button', { name: /dedicate the/i })
+    .first()
+    .click()
   await dialog.getByLabel('Title').fill('Finished my assignment')
   await dialog.getByRole('button', { name: /dedicate this tree/i }).click()
 

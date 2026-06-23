@@ -27,10 +27,7 @@ test('Focus Quests opens from the toolbar and shows the daily board', async ({ p
         { id: 2, ts: at(21) },
       ]),
     )
-    localStorage.setItem(
-      'emily.reflections',
-      JSON.stringify([{ ts: at(10), mood: 'sun', note: 'good' }]),
-    )
+    localStorage.setItem('emily.reflections', JSON.stringify([{ ts: at(10), mood: 'sun', note: 'good' }]))
   })
   await page.goto('/')
 

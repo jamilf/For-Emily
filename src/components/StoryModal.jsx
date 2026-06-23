@@ -5,6 +5,7 @@ import {
   CHAPTERS,
   cleanNote,
   deriveCurrentChapter,
+  earnedLetters,
   nextChapter,
   storyMetrics,
   unlockedChapters,
@@ -17,6 +18,7 @@ const EMPTY_STORY = {
   comebackShown: {},
   companionName: null,
   notes: {},
+  letterAcks: {},
 }
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 
@@ -46,17 +48,31 @@ export default function StoryModal({ onClose }) {
   const unlocked = useMemo(() => unlockedChapters(metrics), [metrics])
   const current = useMemo(() => deriveCurrentChapter(metrics), [metrics])
   const ahead = useMemo(() => nextChapter(metrics), [metrics])
+  const letters = useMemo(() => earnedLetters(metrics), [metrics])
+  const companionName = story.companionName || null
+  const from = companionName || 'your soot friend'
 
-  // Re-reading the story acknowledges the current chapter so the toast won't re-show.
+  // Re-reading the story acknowledges the current chapter and any earned letters, so
+  // their toasts won't re-show once she's seen them here.
   const acked = useRef(false)
   useEffect(() => {
-    if (acked.current || !current) return
+    if (acked.current) return
     acked.current = true
-    if (!story.ackChapters?.[current.id]) {
-      setStory((s) => ({ ...s, ackChapters: { ...s.ackChapters, [current.id]: true } }))
-    }
+    setStory((s) => {
+      let next = s
+      if (current && !s.ackChapters?.[current.id]) {
+        next = { ...next, ackChapters: { ...next.ackChapters, [current.id]: true } }
+      }
+      const unseen = letters.filter((l) => !s.letterAcks?.[l.id])
+      if (unseen.length) {
+        const letterAcks = { ...(next.letterAcks || {}) }
+        for (const l of unseen) letterAcks[l.id] = true
+        next = { ...next, letterAcks }
+      }
+      return next
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current])
+  }, [current, letters])
 
   const remaining = CHAPTERS.length - unlocked.length
 
@@ -240,6 +256,41 @@ export default function StoryModal({ onClose }) {
                 </div>
               )}
             </>
+          )}
+
+          {/* Letters the sprite wrote for Emily at real milestones. Kept to re-read. */}
+          {letters.length > 0 && (
+            <section aria-labelledby="story-letters-heading" className="space-y-3">
+              <div>
+                <h2 id="story-letters-heading" className="font-display text-base text-brown">
+                  Letters from {from}
+                </h2>
+                <p className="mt-0.5 text-xs text-brown/60">
+                  Little notes I wrote you along the way. They stay here for whenever you want them.
+                </p>
+              </div>
+              <ol className="space-y-3">
+                {letters.map((l) => (
+                  <li
+                    key={l.id}
+                    className="rounded-2xl border-2 border-brown/15 bg-white/55 p-4 text-brownDark"
+                  >
+                    <p className="font-display text-base text-brown">
+                      <span aria-hidden="true">💌 </span>
+                      {l.title}
+                    </p>
+                    <div className="mt-1.5 space-y-1.5">
+                      {l.lines.map((line, i) => (
+                        <p key={i} className="text-sm leading-relaxed text-brownDark/85">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-right font-display text-sm text-brown/70">all my love, {from}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
           )}
         </div>
       </div>

@@ -11,6 +11,7 @@ import {
   dailySeed,
   dayGap,
   deriveCurrentChapter,
+  earnedLetters,
   greetingFacts,
   nextChapter,
   pickGreeting,
@@ -25,6 +26,7 @@ const EMPTY_STORY = {
   comebackShown: {},
   companionName: null,
   notes: {},
+  letterAcks: {},
 }
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 
@@ -64,6 +66,7 @@ export default function useStory() {
   const currentChapter = useMemo(() => deriveCurrentChapter(metrics), [metrics])
   const nextLocked = useMemo(() => nextChapter(metrics), [metrics])
   const unlocked = useMemo(() => unlockedChapters(metrics), [metrics])
+  const letters = useMemo(() => earnedLetters(metrics), [metrics])
 
   const returnType = useMemo(() => classifyReturn(prevLastSeen, now), [prevLastSeen, now])
   const seed = useMemo(() => dailySeed(prevLastSeen, now), [prevLastSeen, now])
@@ -95,6 +98,12 @@ export default function useStory() {
     return story.ackChapters?.[currentChapter.id] ? null : currentChapter
   }, [currentChapter, story.ackChapters])
 
+  // The first earned letter she hasn't seen yet (one at a time, in MILESTONES order).
+  const unseenLetter = useMemo(
+    () => letters.find((l) => !story.letterAcks?.[l.id]) || null,
+    [letters, story.letterAcks],
+  )
+
   // Stamp the visit exactly once per mount (the return signal for next time).
   useEffect(() => {
     setStory((s) => ({ ...s, lastSeen: now }))
@@ -102,6 +111,7 @@ export default function useStory() {
   }, [])
 
   const ackChapter = (id) => setStory((s) => ({ ...s, ackChapters: { ...s.ackChapters, [id]: true } }))
+  const ackLetter = (id) => setStory((s) => ({ ...s, letterAcks: { ...(s.letterAcks || {}), [id]: true } }))
   const dismissComeback = () =>
     setStory((s) => ({ ...s, comebackShown: { ...s.comebackShown, [dayKey]: true } }))
   // Store a sanitized companion name (or clear it). Syncs as part of emily.story.
@@ -126,6 +136,9 @@ export default function useStory() {
     facts,
     comeback,
     unseenChapter,
+    letters,
+    unseenLetter,
+    ackLetter,
     partOfDay,
     companionName,
     setCompanionName,

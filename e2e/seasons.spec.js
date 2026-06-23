@@ -3,9 +3,7 @@ import { test, expect } from '@playwright/test'
 // Sanctuary Seasons journey + screenshots (desktop + mobile). Runs in CI. Seeds the
 // garden past the Autumn threshold so the world has clearly shifted.
 
-test('Sanctuary Seasons: the header shows the season and the guide opens', async ({
-  page,
-}, testInfo) => {
+test('Sanctuary Seasons: the header shows the season and the guide opens', async ({ page }, testInfo) => {
   const errors = []
   page.on('console', (m) => {
     if (m.type() === 'error' && !/favicon|service worker|manifest|React DevTools/i.test(m.text())) {

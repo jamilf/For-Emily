@@ -13,7 +13,10 @@ function Harness() {
       <span data-testid="comeback">{s.comeback ? 'yes' : 'no'}</span>
       <span data-testid="chapter">{s.currentChapter?.id || 'none'}</span>
       <span data-testid="unseen">{s.unseenChapter?.id || 'none'}</span>
+      <span data-testid="letters">{s.letters.map((l) => l.id).join(',') || 'none'}</span>
+      <span data-testid="unseen-letter">{s.unseenLetter?.id || 'none'}</span>
       <button onClick={() => s.dismissComeback()}>dismiss</button>
+      <button onClick={() => s.unseenLetter && s.ackLetter(s.unseenLetter.id)}>ack letter</button>
     </div>
   )
 }
@@ -80,5 +83,27 @@ describe('useStory', () => {
     render(<Harness />)
     expect(screen.getByTestId('chapter').textContent).toBe('mossbright')
     expect(screen.getByTestId('unseen').textContent).toBe('mossbright')
+  })
+
+  it('surfaces the first earned letter as unseen, in MILESTONES order', () => {
+    seedGarden(5) // earns the "five-trees" letter
+    render(<Harness />)
+    expect(screen.getByTestId('letters').textContent).toBe('five-trees')
+    expect(screen.getByTestId('unseen-letter').textContent).toBe('five-trees')
+  })
+
+  it('acking a letter writes letterAcks and stops surfacing it', () => {
+    seedGarden(5)
+    render(<Harness />)
+    fireEvent.click(screen.getByRole('button', { name: /ack letter/i }))
+    expect(screen.getByTestId('unseen-letter').textContent).toBe('none')
+    expect(JSON.parse(localStorage.getItem('emily.story')).letterAcks['five-trees']).toBe(true)
+  })
+
+  it('no letter is earned, or surfaced, before any milestone', () => {
+    seedGarden(1)
+    render(<Harness />)
+    expect(screen.getByTestId('letters').textContent).toBe('none')
+    expect(screen.getByTestId('unseen-letter').textContent).toBe('none')
   })
 })

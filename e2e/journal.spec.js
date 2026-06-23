@@ -3,9 +3,7 @@ import { test, expect } from '@playwright/test'
 // Journal journey + screenshots (desktop + mobile). Runs in CI. Seeds a memory and
 // a couple of spirit discoveries so the timeline has something to show.
 
-test('Journal opens from the toolbar, shows a timeline, and screenshots', async ({
-  page,
-}, testInfo) => {
+test('Journal opens from the toolbar, shows a timeline, and screenshots', async ({ page }, testInfo) => {
   const errors = []
   page.on('console', (m) => {
     if (m.type() === 'error' && !/favicon|service worker|manifest|React DevTools/i.test(m.text())) {
@@ -19,7 +17,9 @@ test('Journal opens from the toolbar, shows a timeline, and screenshots', async 
     const now = Date.now()
     localStorage.setItem(
       'emily.memories',
-      JSON.stringify([{ id: 1, dna: 0, ts: now - 86400000, title: 'Finished my assignment', note: 'felt great' }]),
+      JSON.stringify([
+        { id: 1, dna: 0, ts: now - 86400000, title: 'Finished my assignment', note: 'felt great' },
+      ]),
     )
     localStorage.setItem(
       'emily.spirits',

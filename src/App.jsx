@@ -17,6 +17,7 @@ import usePageHidden from './hooks/usePageHidden.js'
 import useStory from './hooks/useStory.js'
 import SpriteGreeting from './components/SpriteGreeting.jsx'
 import ChapterReveal from './components/ChapterReveal.jsx'
+import LetterReveal from './components/LetterReveal.jsx'
 import { SEED_CARDS, countDue } from './data/flashcards.js'
 import { migrate } from './storage/StorageManager.js'
 
@@ -222,9 +223,9 @@ function Dashboard() {
         )}
       </Suspense>
 
-      {/* The sprite's contextual hello + a gentle new-chapter reveal. Priority:
-          the welcome-back moment first, then a chapter reveal, then the greeting —
-          so at most one ambient announcement appears at a time. */}
+      {/* The sprite's contextual hello + gentle reveals. Priority: the welcome-back
+          moment first, then a chapter reveal, then a milestone letter, then the
+          greeting — so at most one ambient announcement appears at a time. */}
       {!story.comeback && story.unseenChapter && (
         <ChapterReveal
           chapter={story.unseenChapter}
@@ -232,7 +233,15 @@ function Dashboard() {
           onAck={story.ackChapter}
         />
       )}
-      {!story.comeback && !story.unseenChapter && story.greeting && (
+      {!story.comeback && !story.unseenChapter && story.unseenLetter && (
+        <LetterReveal
+          letter={story.unseenLetter}
+          companionName={story.companionName}
+          onRead={() => setShowStory(true)}
+          onAck={story.ackLetter}
+        />
+      )}
+      {!story.comeback && !story.unseenChapter && !story.unseenLetter && story.greeting && (
         <SpriteGreeting
           text={story.greeting}
           companionName={story.companionName}
