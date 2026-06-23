@@ -42,17 +42,21 @@ test('typed recall mode: type an answer, see correctness, rate, and persist acro
   const errors = trackConsoleErrors(page)
   await page.goto('/')
 
-  // Import one deterministic card so the answer is known.
-  let dialog = await openFlashcards(page)
-  await dialog
-    .getByRole('button', { name: /import/i })
-    .first()
-    .click()
-  await dialog.getByPlaceholder(/deck for these cards/i).fill('E2E')
-  await dialog.getByPlaceholder(/one card per line/i).fill('capital of France — Paris')
-  await dialog.getByRole('button', { name: /add cards/i }).click()
+  // Seed a single deterministic card so the queue is exactly this card (no shuffle
+  // ambiguity against the built-in seed deck), then reload to pick it up.
+  await page.evaluate(() => {
+    const past = Date.now() - 2 * 24 * 60 * 60 * 1000
+    localStorage.setItem(
+      'emily.flashcards',
+      JSON.stringify([
+        { id: 1, deck: 'E2E', front: 'capital of France', back: 'Paris', box: 2, due: past, reps: 1 },
+      ]),
+    )
+  })
+  await page.reload()
 
-  // Turn on typed mode and start.
+  const dialog = await openFlashcards(page)
+  // Turn on typed mode and start the (single-card) review.
   await dialog.getByLabel(/type my answers/i).check()
   await dialog.getByRole('button', { name: /review \d+ card/i }).click()
 
@@ -62,9 +66,7 @@ test('typed recall mode: type an answer, see correctness, rate, and persist acro
   await dialog.getByRole('button', { name: /3\. Good/ }).click()
 
   await page.reload()
-  const stats = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem('emily.flashcardStats') || '{}'),
-  )
+  const stats = await page.evaluate(() => JSON.parse(localStorage.getItem('emily.flashcardStats') || '{}'))
   expect(stats.total).toBeGreaterThanOrEqual(1)
   // The typed-mode preference persisted too.
   const prefs = await page.evaluate(() => JSON.parse(localStorage.getItem('emily.flashPrefs') || '{}'))
