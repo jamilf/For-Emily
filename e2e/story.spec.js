@@ -84,8 +84,9 @@ test('a return after a gap blooms a welcome-back, reveals a chapter, and opens t
   })
   await story.getByRole('button', { name: /close story/i }).click()
 
-  // The note persists: reopen the Story from the toolbar and it's still there.
-  await page.getByRole('button', { name: /open your grove story/i }).click()
+  // The note persists: reopen the Story from the Grove hub and it's still there.
+  await page.getByRole('button', { name: /open the grove/i }).click()
+  await page.getByRole('button', { name: /open grove story/i }).click()
   const story2 = page.getByRole('dialog', { name: /grove story/i })
   await expect(story2.getByText('a quiet good day')).toBeVisible()
   await story2.getByRole('button', { name: /close story/i }).click()

@@ -15,13 +15,8 @@ export default function Header({
   onOpenFlashcards,
   onOpenGuide,
   onOpenSync,
-  onOpenJournal,
-  onOpenConstellations,
   onOpenQuests,
-  onOpenStory,
-  season,
-  onOpenSeasons,
-  onOpenThemes,
+  onOpenGrove,
   dueCount,
 }) {
   const { greeting, dateLabel } = useMemo(() => {
@@ -58,26 +53,15 @@ export default function Header({
           <p className="font-display text-sm uppercase tracking-[0.25em] text-sunset-gold drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
             {dateLabel}
           </p>
-          {season && onOpenSeasons && (
+          {onOpenGrove && (
             <button
               type="button"
-              onClick={onOpenSeasons}
-              aria-label={`Your sanctuary is in ${season.name}. Open seasons`}
+              onClick={onOpenGrove}
+              aria-label="Open the grove"
               className="rounded-full border border-cream/30 bg-bgDim/30 px-2 py-0.5 font-display text-xs text-cream drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-colors hover:bg-bgDim/50 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow sm:backdrop-blur-sm"
             >
-              <span aria-hidden="true">{season.emoji} </span>
-              {season.name}
-            </button>
-          )}
-          {onOpenThemes && (
-            <button
-              type="button"
-              onClick={onOpenThemes}
-              aria-label="Open scene themes"
-              className="rounded-full border border-cream/30 bg-bgDim/30 px-2 py-0.5 font-display text-xs text-cream drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-colors hover:bg-bgDim/50 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow sm:backdrop-blur-sm"
-            >
-              <span aria-hidden="true">🎨 </span>
-              Themes
+              <span aria-hidden="true">🌿 </span>
+              The Grove
             </button>
           )}
         </div>
@@ -95,10 +79,7 @@ export default function Header({
             onOpenFlashcards={onOpenFlashcards}
             onOpenGuide={onOpenGuide}
             onOpenSync={onOpenSync}
-            onOpenJournal={onOpenJournal}
-            onOpenConstellations={onOpenConstellations}
             onOpenQuests={onOpenQuests}
-            onOpenStory={onOpenStory}
             dueCount={dueCount}
           />
         </div>

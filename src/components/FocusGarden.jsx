@@ -1,35 +1,30 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import { generate } from '../pixel/PlantGenerator.js'
 
-// The spirits collection + memory grove load on demand, not in the initial bundle.
-const ForestSpiritsModal = lazy(() => import('./ForestSpiritsModal.jsx'))
-const MemoryGroveModal = lazy(() => import('./MemoryGroveModal.jsx'))
-
 /**
  * Feature 3 (display) — My Garden. A responsive grid of trees harvested from
  * completed focus sessions. Each is rendered from its saved DNA, so it always
  * looks the same. Persists forever unless cleared. Tuned to sit in the narrow
- * side rail.
+ * side rail. The grove-world modals it links to are owned by the dashboard (so
+ * the Grove hub can open the same ones), and triggered through callbacks here.
  */
-export default function FocusGarden({ className = '', onOpenAlmanac }) {
+export default function FocusGarden({ className = '', onOpenAlmanac, onOpenSpirits, onOpenMemories }) {
   const [garden, setGarden] = usePersistedState('emily.garden', [])
   const [confirming, setConfirming] = useState(false)
-  const [spiritsOpen, setSpiritsOpen] = useState(false)
-  const [memoriesOpen, setMemoriesOpen] = useState(false)
 
   const extraButtons = (
     <>
       <button
-        onClick={() => setSpiritsOpen(true)}
+        onClick={onOpenSpirits}
         className="rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
       >
         🌲 Forest Spirits
       </button>
       <button
-        onClick={() => setMemoriesOpen(true)}
+        onClick={onOpenMemories}
         className="rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
       >
         🌳 Memory Grove
@@ -87,13 +82,13 @@ export default function FocusGarden({ className = '', onOpenAlmanac }) {
               </button>
             )}
             <button
-              onClick={() => setSpiritsOpen(true)}
+              onClick={onOpenSpirits}
               className="flex-1 rounded-2xl bg-brown/10 px-3 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
             >
               🌲 Forest Spirits
             </button>
             <button
-              onClick={() => setMemoriesOpen(true)}
+              onClick={onOpenMemories}
               className="flex-1 rounded-2xl bg-brown/10 px-3 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
             >
               🌳 Memory Grove
@@ -132,18 +127,6 @@ export default function FocusGarden({ className = '', onOpenAlmanac }) {
             )}
           </div>
         </div>
-      )}
-
-      {spiritsOpen && (
-        <Suspense fallback={null}>
-          <ForestSpiritsModal onClose={() => setSpiritsOpen(false)} />
-        </Suspense>
-      )}
-
-      {memoriesOpen && (
-        <Suspense fallback={null}>
-          <MemoryGroveModal onClose={() => setMemoriesOpen(false)} />
-        </Suspense>
       )}
     </WindowFrame>
   )

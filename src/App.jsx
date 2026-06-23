@@ -37,6 +37,9 @@ const SeasonsModal = lazy(() => import('./components/SeasonsModal.jsx'))
 const ThemesModal = lazy(() => import('./components/ThemesModal.jsx'))
 const QuestBoard = lazy(() => import('./components/QuestBoard.jsx'))
 const StoryModal = lazy(() => import('./components/StoryModal.jsx'))
+const ForestSpiritsModal = lazy(() => import('./components/ForestSpiritsModal.jsx'))
+const MemoryGroveModal = lazy(() => import('./components/MemoryGroveModal.jsx'))
+const GroveHub = lazy(() => import('./components/GroveHub.jsx'))
 const ComebackMoment = lazy(() => import('./components/ComebackMoment.jsx'))
 
 function Dashboard() {
@@ -52,6 +55,24 @@ function Dashboard() {
   const [showThemes, setShowThemes] = useState(false)
   const [showQuests, setShowQuests] = useState(false)
   const [showStory, setShowStory] = useState(false)
+  const [showSpirits, setShowSpirits] = useState(false)
+  const [showMemories, setShowMemories] = useState(false)
+  const [showHub, setShowHub] = useState(false)
+
+  // The Grove hub launches each world surface (so the toolbar stays calm).
+  const openFromHub = (key) => {
+    const open = {
+      story: setShowStory,
+      almanac: setShowGrove,
+      spirits: setShowSpirits,
+      memories: setShowMemories,
+      seasons: setShowSeasons,
+      themes: setShowThemes,
+      constellations: setShowConstellations,
+      journal: setShowJournal,
+    }[key]
+    open?.(true)
+  }
   const [openDrawer, setOpenDrawer] = useState(null)
   const story = useStory()
   const [zen, setZen] = usePersistedState('emily.zen', false)
@@ -135,13 +156,8 @@ function Dashboard() {
           onOpenFlashcards={() => setShowCards(true)}
           onOpenGuide={() => setShowGuide(true)}
           onOpenSync={() => setShowSync(true)}
-          onOpenJournal={() => setShowJournal(true)}
-          onOpenConstellations={() => setShowConstellations(true)}
           onOpenQuests={() => setShowQuests(true)}
-          onOpenStory={() => setShowStory(true)}
-          season={season}
-          onOpenSeasons={() => setShowSeasons(true)}
-          onOpenThemes={() => setShowThemes(true)}
+          onOpenGrove={() => setShowHub(true)}
           dueCount={dueCount}
         />
 
@@ -178,7 +194,12 @@ function Dashboard() {
               <FocusMeter className="w-full" />
             </div>
             <div className="animate-slide-up flex lg:flex-1" style={{ animationDelay: '260ms' }}>
-              <FocusGarden className="w-full" onOpenAlmanac={() => setShowGrove(true)} />
+              <FocusGarden
+                className="w-full"
+                onOpenAlmanac={() => setShowGrove(true)}
+                onOpenSpirits={() => setShowSpirits(true)}
+                onOpenMemories={() => setShowMemories(true)}
+              />
             </div>
           </aside>
         </div>
@@ -233,6 +254,13 @@ function Dashboard() {
 
         {/* Grove Story — a derived, comeback-positive narrative layer */}
         {showStory && <StoryModal onClose={() => setShowStory(false)} />}
+
+        {/* Forest Spirits + Memory Grove — owned here so the Grove hub can open them */}
+        {showSpirits && <ForestSpiritsModal onClose={() => setShowSpirits(false)} />}
+        {showMemories && <MemoryGroveModal onClose={() => setShowMemories(false)} />}
+
+        {/* The Grove — one companion-led launcher for every world surface */}
+        {showHub && <GroveHub onClose={() => setShowHub(false)} onOpen={openFromHub} />}
 
         {/* Welcome-back moment after a gap — a gift, shown once per day */}
         {story.comeback && (

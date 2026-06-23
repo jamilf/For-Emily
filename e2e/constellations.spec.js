@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 // Constellations journey + screenshots (desktop + mobile). Runs in CI. Seeds a few
 // sessions so at least one constellation has formed.
 
-test('Constellations opens from the toolbar, shows the sky + list, and screenshots', async ({
+test('Constellations opens from the Grove hub, shows the sky + list, and screenshots', async ({
   page,
 }, testInfo) => {
   const errors = []
@@ -24,7 +24,8 @@ test('Constellations opens from the toolbar, shows the sky + list, and screensho
   })
   await page.goto('/')
 
-  await page.getByRole('button', { name: /open your constellations/i }).click()
+  await page.getByRole('button', { name: /open the grove/i }).click()
+  await page.getByRole('button', { name: /open constellations/i }).click()
   const dialog = page.getByRole('dialog', { name: /your constellations/i })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText(/of 9 constellations formed/i)).toBeVisible()

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 // Journal journey + screenshots (desktop + mobile). Runs in CI. Seeds a memory and
 // a couple of spirit discoveries so the timeline has something to show.
 
-test('Journal opens from the toolbar, shows a timeline, and screenshots', async ({ page }, testInfo) => {
+test('Journal opens from the Grove hub, shows a timeline, and screenshots', async ({ page }, testInfo) => {
   const errors = []
   page.on('console', (m) => {
     if (m.type() === 'error' && !/favicon|service worker|manifest|React DevTools/i.test(m.text())) {
@@ -32,7 +32,8 @@ test('Journal opens from the toolbar, shows a timeline, and screenshots', async 
   })
   await page.goto('/')
 
-  await page.getByRole('button', { name: /open your journal/i }).click()
+  await page.getByRole('button', { name: /open the grove/i }).click()
+  await page.getByRole('button', { name: /open journal/i }).click()
   const dialog = page.getByRole('dialog', { name: /your journal/i })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText('Finished my assignment')).toBeVisible()
