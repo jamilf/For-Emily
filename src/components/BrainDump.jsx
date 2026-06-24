@@ -57,14 +57,15 @@ export default function BrainDump() {
         <div
           role="dialog"
           aria-label="Brain dump"
-          className="animate-slide-up absolute bottom-14 right-0 w-72 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-2xl border-2 border-brownDark/40 bg-cream text-brownDark shadow-window"
+          className="pixel-bevel animate-slide-up absolute bottom-14 right-0 w-72 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-xl bg-cream text-brownDark shadow-window"
           style={{ animationDuration: '0.25s' }}
         >
           <div
-            className="flex items-center gap-2 border-b-2 border-brownDark/40 px-3 py-2"
-            style={{ background: 'linear-gradient(to bottom, #9B3D73, #7C3F76 55%, #5C3A6E)' }}
+            className="flex items-center gap-2 border-b-2 border-jrpg-edge px-3 py-2"
+            style={{ background: 'linear-gradient(to bottom, #5C3A6E, #4A2F5C 55%, #352A52)' }}
           >
-            <span className="font-display text-sm text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
+            <span aria-hidden="true" className="h-2.5 w-2.5 rotate-45 bg-jrpg-cursor" />
+            <span className="ml-0.5 font-display text-sm text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
               Brain dump
             </span>
           </div>

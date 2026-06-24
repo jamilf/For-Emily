@@ -333,17 +333,18 @@ export default function Flashcards({ onClose }) {
 
   const titleBar = (label) => (
     <div
-      className="flex items-center justify-between gap-2 border-b-2 border-brownDark/40 px-3 py-2"
-      style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
+      className="flex items-center gap-2 border-b-2 border-jrpg-edge px-3 py-2"
+      style={{ background: 'linear-gradient(to bottom, #5C3A6E, #4A2F5C 55%, #352A52)' }}
     >
-      <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
+      <span aria-hidden="true" className="h-2.5 w-2.5 rotate-45 bg-jrpg-cursor" />
+      <span className="ml-0.5 flex-1 truncate font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
         {label}
       </span>
       <button
         ref={closeRef}
         onClick={onClose}
         aria-label="Close flashcards"
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
       >
         ✕
       </button>
@@ -380,7 +381,7 @@ export default function Flashcards({ onClose }) {
         aria-modal="true"
         aria-label="Flashcards"
         tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
+        className="pixel-bevel animate-modal-in relative z-10 flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-xl shadow-window"
       >
         {/* ── Home / deck picker ─────────────────────────────────────────── */}
         {view === 'home' && (
