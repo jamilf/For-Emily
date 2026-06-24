@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import useFocusTrap from '../hooks/useFocusTrap.js'
+import { useState } from 'react'
+import GameWindow from '../ui/jrpg/GameWindow.jsx'
 import { useSync } from '../sync/SyncProvider.jsx'
 
 function timeAgo(ts) {
@@ -25,8 +25,6 @@ export default function SyncModal({ onClose }) {
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const closeRef = useRef(null)
-  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
   const input =
     'w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2.5 text-sm focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow'
@@ -74,137 +72,109 @@ export default function SyncModal({ onClose }) {
     }[sync?.status] || ''
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
-      <button
-        type="button"
-        aria-hidden="true"
-        tabIndex={-1}
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
-      />
-
-      <div
-        ref={trapRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Sync your progress"
-        tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-      >
-        <div
-          className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
-          style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
-        >
-          <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
-            ☁ Sync your progress
-          </span>
-          <button
-            ref={closeRef}
-            onClick={onClose}
-            aria-label="Close sync"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90"
-          >
-            ✕
-          </button>
+    <GameWindow
+      modal
+      title="☁ Sync your progress"
+      ariaLabel="Sync your progress"
+      onClose={onClose}
+      closeLabel="Close sync"
+      widthClass="max-w-md"
+      bodyClassName="overflow-y-auto p-6"
+    >
+      {!sync?.available ? (
+        <p className="text-sm text-brown/80">
+          Sync isn’t configured in this build, but your progress is still saved on this device.
+        </p>
+      ) : sync.signedIn ? (
+        // ── Signed in ────────────────────────────────────────────────
+        <div className="space-y-4 text-center">
+          <p className="font-display text-lg text-brown">You’re synced ☁️</p>
+          <p className="text-sm text-brown/80">
+            Signed in as <span className="font-display">{sync.email}</span>. Your progress now follows you to
+            any device you sign in on with this email.
+          </p>
+          <p className="text-xs text-brown/60" aria-live="polite">
+            {statusLine}
+          </p>
+          <div className="flex justify-center gap-2 pt-1">
+            <button
+              onClick={sync.syncNow}
+              disabled={sync.status === 'syncing'}
+              className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95 disabled:opacity-50"
+            >
+              Sync now
+            </button>
+            <button
+              onClick={sync.signOut}
+              className="rounded-2xl bg-brown/10 px-5 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
-
-        <div className="paper-grain overflow-y-auto bg-cream p-6 text-brownDark">
-          {!sync?.available ? (
-            <p className="text-sm text-brown/80">
-              Sync isn’t configured in this build, but your progress is still saved on this device.
+      ) : step === 'email' ? (
+        // ── Email step ───────────────────────────────────────────────
+        <form onSubmit={handleSend} className="space-y-3">
+          <p className="text-sm text-brown/80">
+            Sign in with your email to keep your flashcards, garden, stats, and letters in sync across your
+            phone and laptop. We’ll email you a 6-digit code, no password.
+          </p>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            autoFocus
+            autoComplete="email"
+            className={input}
+          />
+          {error && (
+            <p className="text-sm text-ever-red" aria-live="assertive">
+              {error}
             </p>
-          ) : sync.signedIn ? (
-            // ── Signed in ────────────────────────────────────────────────
-            <div className="space-y-4 text-center">
-              <p className="font-display text-lg text-brown">You’re synced ☁️</p>
-              <p className="text-sm text-brown/80">
-                Signed in as <span className="font-display">{sync.email}</span>. Your progress now follows you
-                to any device you sign in on with this email.
-              </p>
-              <p className="text-xs text-brown/60" aria-live="polite">
-                {statusLine}
-              </p>
-              <div className="flex justify-center gap-2 pt-1">
-                <button
-                  onClick={sync.syncNow}
-                  disabled={sync.status === 'syncing'}
-                  className="rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95 disabled:opacity-50"
-                >
-                  Sync now
-                </button>
-                <button
-                  onClick={sync.signOut}
-                  className="rounded-2xl bg-brown/10 px-5 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
-                >
-                  Sign out
-                </button>
-              </div>
-            </div>
-          ) : step === 'email' ? (
-            // ── Email step ───────────────────────────────────────────────
-            <form onSubmit={handleSend} className="space-y-3">
-              <p className="text-sm text-brown/80">
-                Sign in with your email to keep your flashcards, garden, stats, and letters in sync across
-                your phone and laptop. We’ll email you a 6-digit code, no password.
-              </p>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                autoFocus
-                autoComplete="email"
-                className={input}
-              />
-              {error && (
-                <p className="text-sm text-ever-red" aria-live="assertive">
-                  {error}
-                </p>
-              )}
-              <button type="submit" disabled={busy} className={primary}>
-                {busy ? 'Sending…' : 'Email me a code'}
-              </button>
-              <p className="text-center text-xs text-brown/50">
-                Your data is private to your account and never shared.
-              </p>
-            </form>
-          ) : (
-            // ── Code step ────────────────────────────────────────────────
-            <form onSubmit={handleVerify} className="space-y-3">
-              <p className="text-sm text-brown/80">
-                Enter the 6-digit code we sent to <span className="font-display">{email}</span>.
-              </p>
-              <input
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="123456"
-                autoFocus
-                className={`${input} text-center font-display text-lg tracking-[0.3em]`}
-              />
-              {error && (
-                <p className="text-sm text-ever-red" aria-live="assertive">
-                  {error}
-                </p>
-              )}
-              <button type="submit" disabled={busy} className={primary}>
-                {busy ? 'Verifying…' : 'Verify & sync'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setStep('email')
-                  setError('')
-                }}
-                className="w-full text-center font-display text-xs text-brown/60 underline-offset-2 hover:underline"
-              >
-                Use a different email
-              </button>
-            </form>
           )}
-        </div>
-      </div>
-    </div>
+          <button type="submit" disabled={busy} className={primary}>
+            {busy ? 'Sending…' : 'Email me a code'}
+          </button>
+          <p className="text-center text-xs text-brown/50">
+            Your data is private to your account and never shared.
+          </p>
+        </form>
+      ) : (
+        // ── Code step ────────────────────────────────────────────────
+        <form onSubmit={handleVerify} className="space-y-3">
+          <p className="text-sm text-brown/80">
+            Enter the 6-digit code we sent to <span className="font-display">{email}</span>.
+          </p>
+          <input
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="123456"
+            autoFocus
+            className={`${input} text-center font-display text-lg tracking-[0.3em]`}
+          />
+          {error && (
+            <p className="text-sm text-ever-red" aria-live="assertive">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={busy} className={primary}>
+            {busy ? 'Verifying…' : 'Verify & sync'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStep('email')
+              setError('')
+            }}
+            className="w-full text-center font-display text-xs text-brown/60 underline-offset-2 hover:underline"
+          >
+            Use a different email
+          </button>
+        </form>
+      )}
+    </GameWindow>
   )
 }

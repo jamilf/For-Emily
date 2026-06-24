@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import GameWindow from '../ui/jrpg/GameWindow.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
-import useFocusTrap from '../hooks/useFocusTrap.js'
 import { pickByContext, verseOfDay, randomSignoff, ALL_REFS } from '../data/encouragements.js'
 import { fetchVerses, ATTRIBUTION } from '../data/scripture.js'
 import { dayStr as today } from '../utils/day.js'
@@ -23,8 +23,6 @@ export default function LetterModal({ context = 'idle', onClose }) {
   const [loading, setLoading] = useState(true)
   const [showKept, setShowKept] = useState(false)
   const [signoff] = useState(() => randomSignoff())
-  const closeRef = useRef(null)
-  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
 
   // Compose the letter once on mount, then warm the verse cache in the
   // background so future letters can include scripture too.
@@ -111,132 +109,103 @@ export default function LetterModal({ context = 'idle', onClose }) {
   const isScripture = msg?.type === 'scripture'
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
-      <button
-        type="button"
-        aria-hidden="true"
-        tabIndex={-1}
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
-      />
+    <GameWindow
+      modal
+      title={`✉ ${showKept ? 'Letters you’ve kept' : 'A letter for you'}`}
+      ariaLabel="A letter for you"
+      onClose={onClose}
+      closeLabel="Close letter"
+      widthClass="max-w-md"
+      bodyClassName="overflow-y-auto p-7"
+    >
+      {showKept ? (
+        // ── Keepsakes list ────────────────────────────────────────────
+        keepsakes.length === 0 ? (
+          <div className="py-6 text-center">
+            <p className="text-sm text-brown/70">
+              No kept letters yet. Tap the heart on a letter to save it here for a harder day.
+            </p>
+            <button
+              onClick={() => setShowKept(false)}
+              className="mt-5 rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
+            >
+              Back
+            </button>
+          </div>
+        ) : (
+          <div>
+            <ul className="space-y-2">
+              {[...keepsakes].reverse().map((k) => (
+                <li key={`${k.id}-${k.ts}`}>
+                  <button
+                    onClick={() => openKept(k)}
+                    className="w-full rounded-xl border-2 border-brown/15 bg-white/60 px-3 py-2.5 text-left text-sm leading-relaxed transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                  >
+                    <span className={isScriptureText(k) ? 'italic' : ''}>{k.text}</span>
+                    {k.ref && (
+                      <span className="mt-1 block font-display text-xs text-brown/50">— {k.ref}</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setShowKept(false)}
+              className="mt-5 w-full rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
+            >
+              Back to your letter
+            </button>
+          </div>
+        )
+      ) : (
+        // ── The letter ────────────────────────────────────────────────
+        <>
+          <p className="font-display text-lg text-brown">Dear Emily,</p>
 
-      <div
-        ref={trapRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="A letter for you"
-        tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-      >
-        {/* Window title bar — warm wood tone */}
-        <div
-          className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
-          style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
-        >
-          <span className="ml-1 font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
-            ✉ {showKept ? 'Letters you’ve kept' : 'A letter for you'}
-          </span>
-          <button
-            ref={closeRef}
-            onClick={onClose}
-            aria-label="Close letter"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="paper-grain overflow-y-auto bg-cream p-7 text-brownDark">
-          {showKept ? (
-            // ── Keepsakes list ────────────────────────────────────────────
-            keepsakes.length === 0 ? (
-              <div className="py-6 text-center">
-                <p className="text-sm text-brown/70">
-                  No kept letters yet. Tap the heart on a letter to save it here for a harder day.
-                </p>
-                <button
-                  onClick={() => setShowKept(false)}
-                  className="mt-5 rounded-2xl bg-brown px-5 py-2.5 font-display text-cream transition-colors hover:bg-brownDark active:scale-95"
-                >
-                  Back
-                </button>
-              </div>
-            ) : (
-              <div>
-                <ul className="space-y-2">
-                  {[...keepsakes].reverse().map((k) => (
-                    <li key={`${k.id}-${k.ts}`}>
-                      <button
-                        onClick={() => openKept(k)}
-                        className="w-full rounded-xl border-2 border-brown/15 bg-white/60 px-3 py-2.5 text-left text-sm leading-relaxed transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-ever-yellow"
-                      >
-                        <span className={isScriptureText(k) ? 'italic' : ''}>{k.text}</span>
-                        {k.ref && (
-                          <span className="mt-1 block font-display text-xs text-brown/50">— {k.ref}</span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => setShowKept(false)}
-                  className="mt-5 w-full rounded-2xl bg-brown/10 px-4 py-2.5 font-display text-brown transition-colors hover:bg-brown/20 active:scale-95"
-                >
-                  Back to your letter
-                </button>
-              </div>
-            )
+          {loading ? (
+            <p className="mt-3 text-sm text-brown/50">a little note is on its way…</p>
           ) : (
-            // ── The letter ────────────────────────────────────────────────
             <>
-              <p className="font-display text-lg text-brown">Dear Emily,</p>
-
-              {loading ? (
-                <p className="mt-3 text-sm text-brown/50">a little note is on its way…</p>
-              ) : (
-                <>
-                  <p className={`mt-3 text-base leading-relaxed sm:text-lg ${isScripture ? 'italic' : ''}`}>
-                    {msg?.text}
-                  </p>
-                  {isScripture && msg?.ref && (
-                    <p className="mt-2 font-display text-sm text-brown/70">— {msg.ref}</p>
-                  )}
-                  <p className="mt-5 text-right font-display text-sm text-brown/70">{signoff}</p>
-                  {isScripture && ATTRIBUTION && (
-                    <p className="mt-3 text-[0.7rem] text-brown/40">{ATTRIBUTION}</p>
-                  )}
-                </>
+              <p className={`mt-3 text-base leading-relaxed sm:text-lg ${isScripture ? 'italic' : ''}`}>
+                {msg?.text}
+              </p>
+              {isScripture && msg?.ref && (
+                <p className="mt-2 font-display text-sm text-brown/70">— {msg.ref}</p>
               )}
-
-              <div className="mt-6 flex items-center gap-2">
-                <button
-                  onClick={toggleKeep}
-                  disabled={loading}
-                  aria-pressed={isKept}
-                  aria-label={isKept ? 'Remove from kept letters' : 'Keep this letter'}
-                  className="flex h-11 items-center gap-1.5 rounded-2xl bg-brown/10 px-4 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 disabled:opacity-50"
-                >
-                  <span aria-hidden="true">{isKept ? '❤️' : '🤍'}</span>
-                  {isKept ? 'Kept' : 'Keep'}
-                </button>
-                <button
-                  onClick={() => setShowKept(true)}
-                  className="flex h-11 items-center rounded-2xl px-3 font-display text-sm text-brown/70 underline-offset-2 transition-colors hover:text-brown hover:underline"
-                >
-                  Letters I’ve kept{keepsakes.length > 0 ? ` (${keepsakes.length})` : ''}
-                </button>
-                <button
-                  onClick={onClose}
-                  className="ml-auto flex h-11 items-center rounded-2xl bg-brown px-5 font-display text-sm text-cream transition-colors hover:bg-brownDark active:scale-95"
-                >
-                  Close
-                </button>
-              </div>
+              <p className="mt-5 text-right font-display text-sm text-brown/70">{signoff}</p>
+              {isScripture && ATTRIBUTION && (
+                <p className="mt-3 text-[0.7rem] text-brown/40">{ATTRIBUTION}</p>
+              )}
             </>
           )}
-        </div>
-      </div>
-    </div>
+
+          <div className="mt-6 flex items-center gap-2">
+            <button
+              onClick={toggleKeep}
+              disabled={loading}
+              aria-pressed={isKept}
+              aria-label={isKept ? 'Remove from kept letters' : 'Keep this letter'}
+              className="flex h-11 items-center gap-1.5 rounded-2xl bg-brown/10 px-4 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 disabled:opacity-50"
+            >
+              <span aria-hidden="true">{isKept ? '❤️' : '🤍'}</span>
+              {isKept ? 'Kept' : 'Keep'}
+            </button>
+            <button
+              onClick={() => setShowKept(true)}
+              className="flex h-11 items-center rounded-2xl px-3 font-display text-sm text-brown/70 underline-offset-2 transition-colors hover:text-brown hover:underline"
+            >
+              Letters I’ve kept{keepsakes.length > 0 ? ` (${keepsakes.length})` : ''}
+            </button>
+            <button
+              onClick={onClose}
+              className="ml-auto flex h-11 items-center rounded-2xl bg-brown px-5 font-display text-sm text-cream transition-colors hover:bg-brownDark active:scale-95"
+            >
+              Close
+            </button>
+          </div>
+        </>
+      )}
+    </GameWindow>
   )
 }
 

@@ -1,6 +1,6 @@
-import { useRef } from 'react'
-import useFocusTrap from '../hooks/useFocusTrap.js'
+import GameWindow from '../ui/jrpg/GameWindow.jsx'
 import BackupControls from './BackupControls.jsx'
+import AppearanceSettings from './AppearanceSettings.jsx'
 
 /**
  * A short field guide to the app: what each piece does, how to use it, and the
@@ -106,59 +106,28 @@ const ENTRIES = [
 ]
 
 export default function GuideModal({ onClose }) {
-  const closeRef = useRef(null)
-  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
-
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
-      <button
-        type="button"
-        aria-hidden="true"
-        tabIndex={-1}
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
-      />
-
-      <div
-        ref={trapRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="How to use this app"
-        tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-      >
-        <div
-          className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
-          style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
-        >
-          <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
-            How your sanctuary works
-          </span>
-          <button
-            ref={closeRef}
-            onClick={onClose}
-            aria-label="Close guide"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-          >
-            ✕
-          </button>
+    <GameWindow
+      modal
+      title="How your sanctuary works"
+      ariaLabel="How to use this app"
+      onClose={onClose}
+      closeLabel="Close guide"
+      bodyClassName="space-y-5 overflow-y-auto p-6"
+    >
+      <p className="text-sm text-brown/80">
+        A gentle tour of what each part is for, and why it helps. Use what feels good, and leave the rest.
+        There is no wrong way to be here, Emily.
+      </p>
+      <AppearanceSettings />
+      {ENTRIES.map((e) => (
+        <div key={e.title}>
+          <h3 className="font-display text-base text-brown">{e.title}</h3>
+          <p className="mt-1 text-sm leading-relaxed">{e.how}</p>
+          <p className="mt-1 text-sm leading-relaxed text-brown/70">{e.why}</p>
         </div>
-
-        <div className="paper-grain space-y-5 overflow-y-auto bg-cream p-6 text-brownDark">
-          <p className="text-sm text-brown/80">
-            A gentle tour of what each part is for, and why it helps. Use what feels good, and leave the rest.
-            There is no wrong way to be here, Emily.
-          </p>
-          {ENTRIES.map((e) => (
-            <div key={e.title}>
-              <h3 className="font-display text-base text-brown">{e.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed">{e.how}</p>
-              <p className="mt-1 text-sm leading-relaxed text-brown/70">{e.why}</p>
-            </div>
-          ))}
-          <BackupControls />
-        </div>
-      </div>
-    </div>
+      ))}
+      <BackupControls />
+    </GameWindow>
   )
 }

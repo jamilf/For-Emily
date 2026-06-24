@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import GameWindow from '../ui/jrpg/GameWindow.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
-import useFocusTrap from '../hooks/useFocusTrap.js'
 import ProceduralSpirit from './ProceduralSpirit.jsx'
 import {
   SPIRITS,
@@ -51,9 +51,6 @@ export default function ForestSpiritsModal({ onClose }) {
   }, [])
   const idle = reduced ? '' : 'animate-float'
 
-  const closeRef = useRef(null)
-  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
-
   // Snapshot which spirits were already "seen" BEFORE this open, so the "new!"
   // badge can show this time even though we mark them seen on open.
   const seenBefore = useRef(spirits.seen || {})
@@ -101,135 +98,107 @@ export default function ForestSpiritsModal({ onClose }) {
   const selected = selectedId ? cards.find((c) => c.spirit.id === selectedId) : null
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
-      <button
-        type="button"
-        aria-hidden="true"
-        tabIndex={-1}
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
-      />
-
-      <div
-        ref={trapRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Forest Spirits"
-        tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-      >
-        <div
-          className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
-          style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
-        >
-          <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
-            🌲 Forest Spirits
-          </span>
-          <button
-            ref={closeRef}
-            onClick={onClose}
-            aria-label="Close forest spirits"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="paper-grain space-y-4 overflow-y-auto bg-cream p-5 text-brownDark">
-          {selected ? (
-            <SpiritDetail row={selected} idle={idle} onBack={() => setSelectedId(null)} />
-          ) : (
-            <>
-              {celebrate.length > 0 && (
-                <div
-                  className="rounded-2xl border-2 border-ever-green/40 bg-ever-green/15 p-3 text-center"
-                  aria-live="polite"
-                >
-                  <p className="font-display text-brown">A spirit found you! ✨</p>
-                  <div className="mt-2 flex flex-wrap items-end justify-center gap-3">
-                    {celebrate.map((s) => (
-                      <div key={s.id} className="flex flex-col items-center">
-                        <ProceduralSpirit spiritId={s.id} pixel={3} className="animate-pixel-pop" />
-                        <span className="mt-1 font-display text-xs text-brown">{s.name}</span>
-                      </div>
-                    ))}
+    <GameWindow
+      modal
+      title="🌲 Forest Spirits"
+      ariaLabel="Forest Spirits"
+      onClose={onClose}
+      closeLabel="Close forest spirits"
+      widthClass="max-w-2xl"
+      bodyClassName="space-y-4 overflow-y-auto p-5"
+    >
+      {selected ? (
+        <SpiritDetail row={selected} idle={idle} onBack={() => setSelectedId(null)} />
+      ) : (
+        <>
+          {celebrate.length > 0 && (
+            <div
+              className="rounded-2xl border-2 border-ever-green/40 bg-ever-green/15 p-3 text-center"
+              aria-live="polite"
+            >
+              <p className="font-display text-brown">A spirit found you! ✨</p>
+              <div className="mt-2 flex flex-wrap items-end justify-center gap-3">
+                {celebrate.map((s) => (
+                  <div key={s.id} className="flex flex-col items-center">
+                    <ProceduralSpirit spiritId={s.id} pixel={3} className="animate-pixel-pop" />
+                    <span className="mt-1 font-display text-xs text-brown">{s.name}</span>
                   </div>
-                </div>
-              )}
-
-              <div>
-                <p className="font-display text-lg text-brown">
-                  {foundCount} of {total} spirits have found you 🌲
-                </p>
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-brown/10">
-                  <div
-                    className="h-full rounded-full bg-ever-green transition-[width] duration-500"
-                    style={{ width: `${Math.round((foundCount / total) * 100)}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-brown/60">
-                  Spirits are companions, not trophies. They arrive from the habits you already keep, and a
-                  quiet stretch never sends one away.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-1.5 font-display text-xs">
-                {FILTERS.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    aria-pressed={filter === f}
-                    className={`rounded-full px-3 py-1 capitalize transition-colors ${
-                      filter === f ? 'bg-brown text-cream' : 'bg-brown/10 text-brown hover:bg-brown/20'
-                    }`}
-                  >
-                    {f}
-                  </button>
                 ))}
               </div>
-
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {cards.map(({ spirit, unlocked, progress, isNew, discoveredAt }) => (
-                  <li key={spirit.id}>
-                    <button
-                      onClick={() => setSelectedId(spirit.id)}
-                      className="flex h-full w-full flex-col items-center gap-1.5 rounded-2xl border-2 border-brown/15 bg-white/55 p-3 text-center transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-ever-yellow"
-                      aria-label={
-                        unlocked
-                          ? `${spirit.name}${isNew ? ', new' : ''}, found, discovered ${discoveredLabel(discoveredAt)}`
-                          : `${spirit.name}, locked, ${hintForSpirit(spirit)}, ${progress.current} of ${progress.target}`
-                      }
-                    >
-                      <ProceduralSpirit
-                        spiritId={spirit.id}
-                        pixel={4}
-                        state={unlocked ? 'unlocked' : 'locked'}
-                        className={unlocked ? idle : ''}
-                      />
-                      <span className="font-display text-xs text-brown">{spirit.name}</span>
-                      {unlocked ? (
-                        <span className="text-[0.65rem] text-brown/55">
-                          {isNew ? (
-                            <span className="font-display text-ever-green">new!</span>
-                          ) : (
-                            `found ${discoveredLabel(discoveredAt)}`
-                          )}
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-[0.65rem] text-brown/55">
-                          <span aria-hidden="true">🔒</span>
-                          {progress.current}/{progress.target}
-                        </span>
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
+            </div>
           )}
-        </div>
-      </div>
-    </div>
+
+          <div>
+            <p className="font-display text-lg text-brown">
+              {foundCount} of {total} spirits have found you 🌲
+            </p>
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-brown/10">
+              <div
+                className="h-full rounded-full bg-ever-green transition-[width] duration-500"
+                style={{ width: `${Math.round((foundCount / total) * 100)}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-brown/60">
+              Spirits are companions, not trophies. They arrive from the habits you already keep, and a quiet
+              stretch never sends one away.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5 font-display text-xs">
+            {FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                aria-pressed={filter === f}
+                className={`rounded-full px-3 py-1 capitalize transition-colors ${
+                  filter === f ? 'bg-brown text-cream' : 'bg-brown/10 text-brown hover:bg-brown/20'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {cards.map(({ spirit, unlocked, progress, isNew, discoveredAt }) => (
+              <li key={spirit.id}>
+                <button
+                  onClick={() => setSelectedId(spirit.id)}
+                  className="flex h-full w-full flex-col items-center gap-1.5 rounded-2xl border-2 border-brown/15 bg-white/55 p-3 text-center transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                  aria-label={
+                    unlocked
+                      ? `${spirit.name}${isNew ? ', new' : ''}, found, discovered ${discoveredLabel(discoveredAt)}`
+                      : `${spirit.name}, locked, ${hintForSpirit(spirit)}, ${progress.current} of ${progress.target}`
+                  }
+                >
+                  <ProceduralSpirit
+                    spiritId={spirit.id}
+                    pixel={4}
+                    state={unlocked ? 'unlocked' : 'locked'}
+                    className={unlocked ? idle : ''}
+                  />
+                  <span className="font-display text-xs text-brown">{spirit.name}</span>
+                  {unlocked ? (
+                    <span className="text-[0.65rem] text-brown/55">
+                      {isNew ? (
+                        <span className="font-display text-ever-green">new!</span>
+                      ) : (
+                        `found ${discoveredLabel(discoveredAt)}`
+                      )}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-[0.65rem] text-brown/55">
+                      <span aria-hidden="true">🔒</span>
+                      {progress.current}/{progress.target}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </GameWindow>
   )
 }
 

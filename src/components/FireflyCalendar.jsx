@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import useFocusTrap from '../hooks/useFocusTrap.js'
+import GameWindow from '../ui/jrpg/GameWindow.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import { lastNWeeks, summarize, bucketFor, activeWithin } from '../data/focusLog.js'
 
@@ -88,9 +88,6 @@ function Fireflies({ count, reduced }) {
  * inert. The streak shown is the Focus Meter's, reused (never recomputed here).
  */
 export default function FireflyCalendar({ onClose }) {
-  const closeRef = useRef(null)
-  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
-
   const [log] = usePersistedState('emily.focusLog', {})
   const [garden] = usePersistedState('emily.garden', [])
   const [stats] = usePersistedState('emily.stats', EMPTY_STATS)
@@ -170,156 +167,129 @@ export default function FireflyCalendar({ onClose }) {
     : 'none yet'
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
-      <button
-        type="button"
-        aria-hidden="true"
-        tabIndex={-1}
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
-      />
+    <GameWindow
+      modal
+      title="✨ Firefly Calendar"
+      ariaLabel="Firefly Calendar"
+      onClose={onClose}
+      closeLabel="Close calendar"
+      widthClass="max-w-2xl"
+      bodyTone=""
+      bodyClassName="space-y-5 overflow-y-auto bg-bg0 p-5 text-fg"
+    >
+      <p className="text-sm text-fg/80">
+        Every completed focus session lights one firefly in your meadow. This is a record of when you tended
+        your grove. Quiet days are simply quiet, never a failure.
+      </p>
 
-      <div
-        ref={trapRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Firefly Calendar"
-        tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-      >
-        <div
-          className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
-          style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
-        >
-          <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
-            ✨ Firefly Calendar
-          </span>
-          <button
-            ref={closeRef}
-            onClick={onClose}
-            aria-label="Close calendar"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="space-y-5 overflow-y-auto bg-bg0 p-5 text-fg">
-          <p className="text-sm text-fg/80">
-            Every completed focus session lights one firefly in your meadow. This is a record of when you
-            tended your grove. Quiet days are simply quiet, never a failure.
-          </p>
-
-          {/* Header summary */}
-          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {[
-              ['Sessions', summary.totalSessions],
-              ['Focus time', prettyMinutes(summary.totalKnownMinutes)],
-              ['Active days', summary.activeDays],
-              ['Day streak', summary.currentStreak],
-              ['Brightest', bestDayText],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-xl bg-bg2/60 px-2 py-2 text-center">
-                <dt className="text-[0.65rem] uppercase tracking-wide text-fg/55">{label}</dt>
-                <dd className="font-display text-sm text-ever-yellow">{value}</dd>
-              </div>
-            ))}
-          </dl>
-
-          {/* The meadow grid (horizontal scroll contained so it can't rubber-band
-              the page; vertical page scroll still passes through). */}
-          <div
-            className="room-vignette touch-pan-x overflow-x-auto overscroll-x-contain rounded-xl bg-bgDim/60 p-3"
-            style={{ background: 'linear-gradient(to bottom, #2D353B, #232A2E)' }}
-          >
-            <div role="group" aria-label="Your focus meadow: the most recent weeks, by day">
-              {grid.map((lane, row) => (
-                <div key={row} className="flex items-center gap-1">
-                  <span
-                    aria-hidden="true"
-                    className="w-7 shrink-0 pr-1 text-right text-[0.55rem] leading-6 text-fg/45"
-                  >
-                    {LANE_LABEL[row] || ''}
-                  </span>
-                  {lane.map((cell, col) => {
-                    if (cell.inFuture) {
-                      return (
-                        <div
-                          key={col}
-                          aria-hidden="true"
-                          className="h-6 w-6 shrink-0 rounded-sm border border-bg3/30 bg-bg1/30 sm:h-7 sm:w-7"
-                        />
-                      )
-                    }
-                    const bucket = bucketFor(cell.sessions)
-                    const isFocusCell = focus.row === row && focus.col === col
-                    const isSelected = selected && selected.ymd === cell.ymd
-                    return (
-                      <button
-                        key={col}
-                        type="button"
-                        ref={(el) => {
-                          cellRefs.current[keyOf(row, col)] = el
-                        }}
-                        tabIndex={isFocusCell ? 0 : -1}
-                        aria-label={cellLabel(cell)}
-                        aria-pressed={isSelected}
-                        title={cellLabel(cell)}
-                        onKeyDown={(e) => onCellKeyDown(e, row, col)}
-                        onFocus={() => setFocus({ row, col })}
-                        onClick={() => setSelected(cell)}
-                        className={`relative grid h-6 w-6 shrink-0 place-items-center rounded-sm border bg-bg2/70 transition-shadow focus:outline-none sm:h-7 sm:w-7 ${
-                          cell.isToday ? 'border-ever-yellow' : 'border-bg3/50'
-                        } ${
-                          isSelected
-                            ? 'ring-2 ring-ever-aqua'
-                            : 'focus-visible:ring-2 focus-visible:ring-ever-yellow'
-                        }`}
-                        style={
-                          bucket > 0
-                            ? { backgroundColor: `rgba(167,192,128,${0.12 + bucket * 0.16})` }
-                            : undefined
-                        }
-                      >
-                        <Fireflies count={bucket} reduced={reduced} />
-                        {cell.sessions >= 1 && (
-                          <span
-                            aria-hidden="true"
-                            className="absolute -right-0.5 -top-1 rounded-full bg-bgDim px-1 text-[0.5rem] font-bold leading-tight text-ever-yellow"
-                          >
-                            {cell.sessions}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
+      {/* Header summary */}
+      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {[
+          ['Sessions', summary.totalSessions],
+          ['Focus time', prettyMinutes(summary.totalKnownMinutes)],
+          ['Active days', summary.activeDays],
+          ['Day streak', summary.currentStreak],
+          ['Brightest', bestDayText],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-xl bg-bg2/60 px-2 py-2 text-center">
+            <dt className="text-[0.65rem] uppercase tracking-wide text-fg/55">{label}</dt>
+            <dd className="font-display text-sm text-ever-yellow">{value}</dd>
           </div>
+        ))}
+      </dl>
 
-          {/* Selected-day detail — announced politely. */}
-          <p
-            className="min-h-[1.5rem] rounded-xl bg-bg2/50 px-3 py-2 text-center text-sm text-fg/90"
-            aria-live="polite"
-          >
-            {selected ? detailLine(selected) : 'Pick a day to see how its evening glowed.'}
-          </p>
-
-          {/* Gentle insights */}
-          {insights.length > 0 && (
-            <ul className="space-y-1.5">
-              {insights.map((line) => (
-                <li key={line} className="flex gap-2 text-sm text-fg/85">
-                  <span aria-hidden="true">🌙</span>
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+      {/* The meadow grid (horizontal scroll contained so it can't rubber-band
+              the page; vertical page scroll still passes through). */}
+      <div
+        className="room-vignette touch-pan-x overflow-x-auto overscroll-x-contain rounded-xl bg-bgDim/60 p-3"
+        style={{ background: 'linear-gradient(to bottom, #2D353B, #232A2E)' }}
+      >
+        <div role="group" aria-label="Your focus meadow: the most recent weeks, by day">
+          {grid.map((lane, row) => (
+            <div key={row} className="flex items-center gap-1">
+              <span
+                aria-hidden="true"
+                className="w-7 shrink-0 pr-1 text-right text-[0.55rem] leading-6 text-fg/45"
+              >
+                {LANE_LABEL[row] || ''}
+              </span>
+              {lane.map((cell, col) => {
+                if (cell.inFuture) {
+                  return (
+                    <div
+                      key={col}
+                      aria-hidden="true"
+                      className="h-6 w-6 shrink-0 rounded-sm border border-bg3/30 bg-bg1/30 sm:h-7 sm:w-7"
+                    />
+                  )
+                }
+                const bucket = bucketFor(cell.sessions)
+                const isFocusCell = focus.row === row && focus.col === col
+                const isSelected = selected && selected.ymd === cell.ymd
+                return (
+                  <button
+                    key={col}
+                    type="button"
+                    ref={(el) => {
+                      cellRefs.current[keyOf(row, col)] = el
+                    }}
+                    tabIndex={isFocusCell ? 0 : -1}
+                    aria-label={cellLabel(cell)}
+                    aria-pressed={isSelected}
+                    title={cellLabel(cell)}
+                    onKeyDown={(e) => onCellKeyDown(e, row, col)}
+                    onFocus={() => setFocus({ row, col })}
+                    onClick={() => setSelected(cell)}
+                    className={`relative grid h-6 w-6 shrink-0 place-items-center rounded-sm border bg-bg2/70 transition-shadow focus:outline-none sm:h-7 sm:w-7 ${
+                      cell.isToday ? 'border-ever-yellow' : 'border-bg3/50'
+                    } ${
+                      isSelected
+                        ? 'ring-2 ring-ever-aqua'
+                        : 'focus-visible:ring-2 focus-visible:ring-ever-yellow'
+                    }`}
+                    style={
+                      bucket > 0
+                        ? { backgroundColor: `rgba(167,192,128,${0.12 + bucket * 0.16})` }
+                        : undefined
+                    }
+                  >
+                    <Fireflies count={bucket} reduced={reduced} />
+                    {cell.sessions >= 1 && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -right-0.5 -top-1 rounded-full bg-bgDim px-1 text-[0.5rem] font-bold leading-tight text-ever-yellow"
+                      >
+                        {cell.sessions}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+
+      {/* Selected-day detail — announced politely. */}
+      <p
+        className="min-h-[1.5rem] rounded-xl bg-bg2/50 px-3 py-2 text-center text-sm text-fg/90"
+        aria-live="polite"
+      >
+        {selected ? detailLine(selected) : 'Pick a day to see how its evening glowed.'}
+      </p>
+
+      {/* Gentle insights */}
+      {insights.length > 0 && (
+        <ul className="space-y-1.5">
+          {insights.map((line) => (
+            <li key={line} className="flex gap-2 text-sm text-fg/85">
+              <span aria-hidden="true">🌙</span>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </GameWindow>
   )
 }
 

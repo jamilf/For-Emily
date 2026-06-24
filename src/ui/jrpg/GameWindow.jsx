@@ -37,6 +37,7 @@ function Ornaments() {
 
 export default function GameWindow({
   title,
+  ariaLabel,
   onClose,
   closeLabel,
   variant = 'panel',
@@ -44,6 +45,8 @@ export default function GameWindow({
   ornaments = true,
   className = '',
   bodyClassName = '',
+  bodyTone,
+  widthClass = 'max-w-lg',
   headerRight = null,
   initialFocusRef,
   children,
@@ -59,14 +62,16 @@ export default function GameWindow({
     initialFocus: initialFocusRef || closeRef,
   })
 
-  const bodyTone = dark ? 'bg-jrpg-window text-jrpg-text' : 'paper-grain bg-cream text-brownDark'
+  // The body surface. Defaults to the variant tone; callers with a bespoke body
+  // (e.g. the dark night-sky modals) pass their own `bodyTone` to override it.
+  const tone = bodyTone ?? (dark ? 'bg-jrpg-window text-jrpg-text' : 'paper-grain bg-cream text-brownDark')
 
   const windowEl = (
     <div
       ref={modal ? trapRef : undefined}
       role={modal ? 'dialog' : undefined}
       aria-modal={modal ? 'true' : undefined}
-      aria-label={modal ? title : undefined}
+      aria-label={modal ? ariaLabel || title : undefined}
       tabIndex={modal ? -1 : undefined}
       className={`pixel-bevel relative flex flex-col overflow-hidden rounded-xl ${className}`}
       {...rest}
@@ -94,7 +99,7 @@ export default function GameWindow({
         )}
       </div>
       {/* Body */}
-      <div className={`relative flex flex-1 flex-col ${bodyTone} ${bodyClassName}`}>{children}</div>
+      <div className={`relative flex flex-1 flex-col ${tone} ${bodyClassName}`}>{children}</div>
     </div>
   )
 
@@ -109,7 +114,7 @@ export default function GameWindow({
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-bgDim/80 sm:backdrop-blur-sm"
       />
-      <div className="animate-modal-in relative z-10 flex max-h-full w-full max-w-lg flex-col">
+      <div className={`animate-modal-in relative z-10 flex max-h-full w-full flex-col ${widthClass}`}>
         {windowEl}
       </div>
     </div>

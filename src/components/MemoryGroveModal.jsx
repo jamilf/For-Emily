@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
+import GameWindow from '../ui/jrpg/GameWindow.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
-import useFocusTrap from '../hooks/useFocusTrap.js'
 import ProceduralTree from './ProceduralTree.jsx'
 import { speciesForDna } from '../data/grove.js'
 import { createMemory, updateMemory, deleteMemory, searchMemories } from '../data/memories.js'
@@ -37,9 +37,6 @@ export default function MemoryGroveModal({ onClose }) {
   const [confirmId, setConfirmId] = useState(null)
   const [status, setStatus] = useState('')
 
-  const closeRef = useRef(null)
-  const trapRef = useFocusTrap(true, { onEscape: onClose, initialFocus: closeRef })
-
   const filtered = useMemo(() => searchMemories(memories, search), [memories, search])
 
   // Trees in the garden that haven't been dedicated yet (deduped by harvest ts).
@@ -75,181 +72,153 @@ export default function MemoryGroveModal({ onClose }) {
   }
 
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
-      <button
-        type="button"
-        aria-hidden="true"
-        tabIndex={-1}
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-bgDim/75 sm:backdrop-blur-sm"
-      />
+    <GameWindow
+      modal
+      title="🌳 Memory Grove"
+      ariaLabel="Memory Grove"
+      onClose={onClose}
+      closeLabel="Close memory grove"
+      widthClass="max-w-2xl"
+      bodyClassName="space-y-4 overflow-y-auto p-5"
+    >
+      {/* Polite status for screen readers on save/remove. */}
+      <p className="sr-only" aria-live="polite">
+        {status}
+      </p>
 
-      <div
-        ref={trapRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Memory Grove"
-        tabIndex={-1}
-        className="animate-modal-in relative z-10 flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window"
-      >
-        <div
-          className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
-          style={{ background: 'linear-gradient(to bottom, #9A663C, #8F5E36 55%, #7C4F2D)' }}
-        >
-          <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
-            🌳 Memory Grove
-          </span>
+      {view === 'form' && draft ? (
+        <MemoryForm
+          draft={draft}
+          onChange={setDraft}
+          onSave={saveDraft}
+          onCancel={() => {
+            setDraft(null)
+            setView('list')
+          }}
+        />
+      ) : view === 'pick' ? (
+        <div className="space-y-4">
           <button
-            ref={closeRef}
-            onClick={onClose}
-            aria-label="Close memory grove"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+            onClick={() => setView('list')}
+            className="font-display text-xs text-brown/60 underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ever-yellow"
           >
-            ✕
+            ← Back to memories
           </button>
-        </div>
-
-        <div className="paper-grain space-y-4 overflow-y-auto bg-cream p-5 text-brownDark">
-          {/* Polite status for screen readers on save/remove. */}
-          <p className="sr-only" aria-live="polite">
-            {status}
-          </p>
-
-          {view === 'form' && draft ? (
-            <MemoryForm
-              draft={draft}
-              onChange={setDraft}
-              onSave={saveDraft}
-              onCancel={() => {
-                setDraft(null)
-                setView('list')
-              }}
-            />
-          ) : view === 'pick' ? (
-            <div className="space-y-4">
-              <button
-                onClick={() => setView('list')}
-                className="font-display text-xs text-brown/60 underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ever-yellow"
-              >
-                ← Back to memories
-              </button>
-              <p className="font-display text-lg text-brown">Dedicate a tree</p>
-              {undedicated.length === 0 ? (
-                <p className="text-sm text-brown/70">
-                  {garden.length === 0
-                    ? 'Finish a focus session to grow a tree, then you can dedicate it here.'
-                    : 'Every tree in your garden already holds a memory. 🌿'}
-                </p>
-              ) : (
-                <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                  {undedicated.map((tree) => (
-                    <li key={tree.ts}>
-                      <button
-                        onClick={() => startCreate(tree)}
-                        aria-label={`Dedicate the ${speciesLabel(tree.id)} grown ${formatDay(tree.ts)}`}
-                        className="flex h-full w-full flex-col items-center gap-1 rounded-2xl border-2 border-brown/15 bg-white/55 p-2 text-center transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-ever-yellow"
-                      >
-                        <ProceduralTree dna={tree.id} stage="mature" pixel={3} />
-                        <span className="text-[0.65rem] text-brown/60">{formatDay(tree.ts)}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          <p className="font-display text-lg text-brown">Dedicate a tree</p>
+          {undedicated.length === 0 ? (
+            <p className="text-sm text-brown/70">
+              {garden.length === 0
+                ? 'Finish a focus session to grow a tree, then you can dedicate it here.'
+                : 'Every tree in your garden already holds a memory. 🌿'}
+            </p>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-display text-lg text-brown">
-                  {memories.length === 0
-                    ? 'Your memory grove'
-                    : `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} kept`}
-                </p>
-                <button
-                  onClick={() => setView('pick')}
-                  className="rounded-2xl bg-brown px-3 py-1.5 font-display text-sm text-cream transition-colors hover:bg-brownDark active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-                >
-                  ＋ Dedicate a tree
-                </button>
-              </div>
-
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search your memories…"
-                aria-label="Search memories"
-                className={inputCls}
-              />
-
-              {memories.length === 0 ? (
-                <p className="text-sm text-brown/70">
-                  Dedicate a tree to remember a moment: a finished assignment, a hard day you got through, a
-                  small win. It stays here for good.
-                </p>
-              ) : filtered.length === 0 ? (
-                <p className="text-sm text-brown/70" aria-live="polite">
-                  No memories match “{search}”.
-                </p>
-              ) : (
-                <ul className="space-y-3">
-                  {filtered.map((memory) => (
-                    <li
-                      key={memory.id}
-                      className="flex gap-3 rounded-2xl border-2 border-brown/15 bg-white/55 p-3"
-                    >
-                      <ProceduralTree dna={memory.dna} stage="mature" pixel={4} />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-display text-brown">{memory.title}</p>
-                        {memory.note && <p className="mt-0.5 text-sm text-brown/75">{memory.note}</p>}
-                        <p className="mt-1 text-xs text-brown/55">
-                          {speciesLabel(memory.dna)} · grown {formatDay(memory.ts)}
-                        </p>
-                        <div className="mt-2 flex items-center gap-2">
-                          {confirmId === memory.id ? (
-                            <span className="flex items-center gap-1.5 text-xs">
-                              <span className="text-brown/60">Remove this memory?</span>
-                              <button
-                                onClick={() => removeMemory(memory)}
-                                className="rounded-lg bg-ever-red/15 px-2 py-1 font-display text-brown transition-colors hover:bg-ever-red/25 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-                              >
-                                Yes
-                              </button>
-                              <button
-                                onClick={() => setConfirmId(null)}
-                                className="rounded-lg px-2 py-1 text-brown/60 underline-offset-2 hover:text-brown hover:underline focus-visible:ring-2 focus-visible:ring-ever-yellow"
-                              >
-                                Keep
-                              </button>
-                            </span>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => startEdit(memory)}
-                                aria-label={`Edit memory ${memory.title}`}
-                                className="rounded-lg bg-brown/10 px-2 py-1 font-display text-xs text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => setConfirmId(memory.id)}
-                                aria-label={`Delete memory ${memory.title}`}
-                                className="rounded-lg bg-ever-red/15 px-2 py-1 font-display text-xs text-brown transition-colors hover:bg-ever-red/25 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-                              >
-                                Delete
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {undedicated.map((tree) => (
+                <li key={tree.ts}>
+                  <button
+                    onClick={() => startCreate(tree)}
+                    aria-label={`Dedicate the ${speciesLabel(tree.id)} grown ${formatDay(tree.ts)}`}
+                    className="flex h-full w-full flex-col items-center gap-1 rounded-2xl border-2 border-brown/15 bg-white/55 p-2 text-center transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                  >
+                    <ProceduralTree dna={tree.id} stage="mature" pixel={3} />
+                    <span className="text-[0.65rem] text-brown/60">{formatDay(tree.ts)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      </div>
-    </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-display text-lg text-brown">
+              {memories.length === 0
+                ? 'Your memory grove'
+                : `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} kept`}
+            </p>
+            <button
+              onClick={() => setView('pick')}
+              className="rounded-2xl bg-brown px-3 py-1.5 font-display text-sm text-cream transition-colors hover:bg-brownDark active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+            >
+              ＋ Dedicate a tree
+            </button>
+          </div>
+
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search your memories…"
+            aria-label="Search memories"
+            className={inputCls}
+          />
+
+          {memories.length === 0 ? (
+            <p className="text-sm text-brown/70">
+              Dedicate a tree to remember a moment: a finished assignment, a hard day you got through, a small
+              win. It stays here for good.
+            </p>
+          ) : filtered.length === 0 ? (
+            <p className="text-sm text-brown/70" aria-live="polite">
+              No memories match “{search}”.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {filtered.map((memory) => (
+                <li
+                  key={memory.id}
+                  className="flex gap-3 rounded-2xl border-2 border-brown/15 bg-white/55 p-3"
+                >
+                  <ProceduralTree dna={memory.dna} stage="mature" pixel={4} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-brown">{memory.title}</p>
+                    {memory.note && <p className="mt-0.5 text-sm text-brown/75">{memory.note}</p>}
+                    <p className="mt-1 text-xs text-brown/55">
+                      {speciesLabel(memory.dna)} · grown {formatDay(memory.ts)}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      {confirmId === memory.id ? (
+                        <span className="flex items-center gap-1.5 text-xs">
+                          <span className="text-brown/60">Remove this memory?</span>
+                          <button
+                            onClick={() => removeMemory(memory)}
+                            className="rounded-lg bg-ever-red/15 px-2 py-1 font-display text-brown transition-colors hover:bg-ever-red/25 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setConfirmId(null)}
+                            className="rounded-lg px-2 py-1 text-brown/60 underline-offset-2 hover:text-brown hover:underline focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                          >
+                            Keep
+                          </button>
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEdit(memory)}
+                            aria-label={`Edit memory ${memory.title}`}
+                            className="rounded-lg bg-brown/10 px-2 py-1 font-display text-xs text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => setConfirmId(memory.id)}
+                            aria-label={`Delete memory ${memory.title}`}
+                            className="rounded-lg bg-ever-red/15 px-2 py-1 font-display text-xs text-brown transition-colors hover:bg-ever-red/25 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </GameWindow>
   )
 }
 
