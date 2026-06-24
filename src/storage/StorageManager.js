@@ -11,7 +11,7 @@ import { backfillFromGarden } from '../data/focusLog.js'
 import { spiritMetrics, reconcileSpirits } from '../data/spirits.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 9
+export const SCHEMA_VERSION = 10
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -73,6 +73,10 @@ export const DEFAULTS = {
   'emily.themes': { selected: null, unlocked: {} }, // unlocked: { [id]: 'YYYY-MM-DD' }
   // Chosen focus-session length in minutes (25 stays the default). Additive.
   'emily.timer': { focusMin: 25 },
+  // Cozy 16-bit JRPG theme prefs (device-local; visual only). `effects` scales the
+  // flavour (full | calm | minimal); `typewriter` toggles the dialogue reveal;
+  // `sounds` is the UI-blip volume (0 = off until enabled, low by default).
+  'emily.ui': { effects: 'full', typewriter: true, sounds: 0 },
 }
 
 /** Safe read with a defaults fallback; never throws. */
@@ -186,6 +190,8 @@ export function migrate() {
     // device-local `emily.flashPrefs`. Both self-heal via normalizeCard / read()'s
     // defaults back-fill, so there is no data transform — existing cards keep
     // working untouched and a double-run is a no-op. (Mirrors the v0→v2 no-op.)
+    // v9 → v10: the JRPG theme added a device-local `emily.ui` prefs key, fully
+    // defaults-backed via read(); no data transform, double-run safe.
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
   } catch {
     /* ignore quota/availability errors — app still works on current data */

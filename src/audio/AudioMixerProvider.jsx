@@ -6,6 +6,7 @@ import { LAYERS } from './ambientLayers.js'
 import MusicPlayer from './music/MusicPlayer.js'
 import { MUSIC_STYLES, labelFor } from './music/styles.js'
 import { pickAutoMood } from './music/autoMood.js'
+import { playBlip } from './uiSounds.js'
 
 /**
  * AudioMixerProvider — owns the single AudioContext and the synthesized ambient
@@ -95,6 +96,12 @@ export function useMixer() {
   const ctx = useContext(MixerContext)
   if (!ctx) throw new Error('useMixer must be used within <AudioMixerProvider>')
   return ctx
+}
+
+/** Like useMixer but returns null outside a provider, so optional consumers (e.g.
+ *  the UI-sound hook used by kit pieces rendered in isolation) never throw. */
+export function useMixerSafe() {
+  return useContext(MixerContext)
 }
 
 export default function AudioMixerProvider({ children }) {
@@ -290,6 +297,16 @@ export default function AudioMixerProvider({ children }) {
     [setMixer],
   )
 
+  // A synthesized JRPG UI blip. Silent until the shared context is actually running
+  // (i.e. the user has started audio), so it never autoplays; the caller passes the
+  // volume from emily.ui.sounds, and 0 plays nothing. Routed into master so the
+  // focus-fade ducks it too.
+  const uiSound = useCallback((kind, volume = 0) => {
+    const ctx = ctxRef.current
+    if (!ctx || ctx.state !== 'running' || !masterRef.current || volume <= 0) return
+    playBlip(ctx, masterRef.current, kind, volume)
+  }, [])
+
   // Opt-in, honestly-labeled entrainment (a faint steady pulse). Persists always;
   // drives the player only when the graph is live.
   const setEntrainment = useCallback(
@@ -392,6 +409,7 @@ export default function AudioMixerProvider({ children }) {
     setMusicVolume,
     setEntrainment,
     setFocusActive,
+    uiSound,
     rampMaster,
     restoreMaster,
   }

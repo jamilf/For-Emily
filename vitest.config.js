@@ -32,6 +32,7 @@ export default defineConfig({
         'src/data/quests.js',
         'src/data/encouragements.js',
         'src/data/themes.js',
+        'src/data/jrpgTokens.js',
         'src/audio/music/theory.js',
         'src/audio/music/styles.js',
         'src/audio/music/generator.js',

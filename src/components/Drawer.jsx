@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import useEscapeKey from '../hooks/useEscapeKey.js'
+import GameWindow from '../ui/jrpg/GameWindow.jsx'
 
 /**
  * Drawer — a non-modal slide-in panel anchored bottom-right on desktop and a
- * bottom sheet on mobile. Wraps content in the app's window chrome.
+ * bottom sheet on mobile. The window chrome is the shared JRPG `GameWindow` (panel
+ * variant), so the cozy 16-bit look stays consistent with every other surface.
  *
  * `open` controls visibility; the parent unmounts the drawer when closed. Closes
  * on Esc and returns focus to the opener.
@@ -13,7 +15,7 @@ import useEscapeKey from '../hooks/useEscapeKey.js'
  * @param {string} title
  */
 export default function Drawer({ open = true, onClose, title, children, className = '' }) {
-  const closeRef = useRef(null)
+  const dialogRef = useRef(null)
   const openerRef = useRef(null)
 
   useEscapeKey(onClose, open)
@@ -21,7 +23,8 @@ export default function Drawer({ open = true, onClose, title, children, classNam
   useEffect(() => {
     if (open) {
       openerRef.current = document.activeElement
-      closeRef.current?.focus()
+      // Focus the first control (the window's close button) for keyboard users.
+      dialogRef.current?.querySelector('button')?.focus()
     } else if (openerRef.current instanceof HTMLElement) {
       openerRef.current.focus()
     }
@@ -29,6 +32,7 @@ export default function Drawer({ open = true, onClose, title, children, classNam
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-label={title}
       aria-hidden={!open}
@@ -38,27 +42,15 @@ export default function Drawer({ open = true, onClose, title, children, classNam
           : 'pointer-events-none translate-y-4 opacity-0'
       } transition-all duration-300 ${className}`}
     >
-      <div className="overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window">
-        <div
-          className="flex items-center justify-between gap-2 border-b-2 border-brownDark/50 px-3 py-2"
-          style={{ background: 'linear-gradient(to bottom, #9B3D73, #7C3F76 55%, #5C3A6E)' }}
-        >
-          <span className="font-display text-base text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
-            {title}
-          </span>
-          <button
-            ref={closeRef}
-            onClick={onClose}
-            aria-label={`Close ${title}`}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-cream/90 transition-colors hover:text-cream active:scale-90"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="paper-grain relative max-h-[65dvh] overflow-y-auto bg-cream p-4 text-brownDark sm:max-h-none">
-          {children}
-        </div>
-      </div>
+      <GameWindow
+        title={title}
+        onClose={onClose}
+        variant="panel"
+        className="shadow-window"
+        bodyClassName="max-h-[65dvh] overflow-y-auto p-4 sm:max-h-none"
+      >
+        {children}
+      </GameWindow>
     </div>
   )
 }

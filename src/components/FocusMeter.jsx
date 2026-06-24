@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import WindowFrame from './WindowFrame.jsx'
+import { StatGauge } from '../ui/jrpg/StatusPanel.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import { DEFAULTS } from '../storage/StorageManager.js'
 import { dayStr } from '../utils/day.js'
@@ -80,6 +81,17 @@ export default function FocusMeter({ className = '' }) {
             <span className="text-xs text-brown/60">of {goal} min</span>
           </div>
         </div>
+
+        {/* JRPG status bar: today's focus as a positive-fill gauge (never depletes). */}
+        <StatGauge
+          label="Today's focus"
+          icon="🔆"
+          value={minutes}
+          max={goal}
+          tone="gold"
+          valueText={`${minutes} / ${goal} min`}
+          className="px-1"
+        />
 
         <div className="grid w-full grid-cols-3 gap-2 sm:gap-3">
           <Tile value={sessions} label="sessions today" icon="🍃" />

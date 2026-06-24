@@ -18,21 +18,17 @@ export default function WindowFrame({
   return (
     <section
       aria-label={title}
-      className={`group flex flex-col overflow-hidden rounded-2xl border-2 border-brownDark/40 shadow-window transition-transform duration-300 hover:-translate-y-1 ${className}`}
+      className={`group pixel-bevel flex flex-col overflow-hidden rounded-xl shadow-window transition-transform duration-300 hover:-translate-y-1 ${className}`}
     >
-      {/* Title bar — warm wood tone */}
+      {/* JRPG nameplate title bar — plum→indigo, with a pixel gem ornament. */}
       <div
-        className={`flex items-center gap-2 border-b-2 border-brownDark/50 px-3 py-2 ${barClass}`}
+        className={`flex items-center gap-2 border-b-2 border-jrpg-edge px-3 py-2 ${barClass}`}
         style={
-          barClass ? undefined : { background: 'linear-gradient(to bottom, #9B3D73, #7C3F76 55%, #5C3A6E)' }
+          barClass ? undefined : { background: 'linear-gradient(to bottom, #5C3A6E, #4A2F5C 55%, #352A52)' }
         }
       >
-        <span className="flex gap-1.5" aria-hidden="true">
-          <span className="h-3 w-3 rounded-full bg-ever-red shadow-sm" />
-          <span className="h-3 w-3 rounded-full bg-ever-yellow shadow-sm" />
-          <span className="h-3 w-3 rounded-full bg-ever-green shadow-sm" />
-        </span>
-        <span className="ml-1 font-display text-base font-medium tracking-wide text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
+        <span aria-hidden="true" className="h-2.5 w-2.5 rotate-45 bg-jrpg-cursor" />
+        <span className="ml-0.5 font-display text-base font-medium tracking-wide text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
           {title}
         </span>
       </div>

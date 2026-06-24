@@ -18,6 +18,8 @@ import usePersistedState from './hooks/useLocalStorage.js'
 import usePageHidden from './hooks/usePageHidden.js'
 import useParallax from './hooks/useParallax.js'
 import useStory from './hooks/useStory.js'
+import useUiPrefs from './hooks/useUiPrefs.js'
+import SceneTransition from './ui/jrpg/SceneTransition.jsx'
 import SpriteGreeting from './components/SpriteGreeting.jsx'
 import ChapterReveal from './components/ChapterReveal.jsx'
 import LetterReveal from './components/LetterReveal.jsx'
@@ -83,12 +85,20 @@ function Dashboard() {
   const season = useMemo(() => seasonForHarvest(garden.length), [garden.length])
   const { enabled: mixerEnabled, setFocusActive: setMixerFocusActive } = useMixer()
   const pageHidden = usePageHidden()
+  const { effects } = useUiPrefs() // JRPG effects intensity → root data-fx
+  const [sceneWipe, setSceneWipe] = useState(0)
   useParallax() // publishes pointer/scroll depth vars for the scene bands
 
   // Let the mixer duck + simplify the focus music while a Pomodoro session runs.
   useEffect(() => {
     setMixerFocusActive(focusActive)
   }, [focusActive, setMixerFocusActive])
+
+  // Play a fast, skippable scene wipe when a focus session begins (cosmetic only;
+  // SceneTransition never blocks input and is instant under reduced motion / Minimal).
+  useEffect(() => {
+    if (focusActive) setSceneWipe((n) => n + 1)
+  }, [focusActive])
 
   // In focus mode the supporting rail recedes so the timer is the single point
   // of focus.
@@ -123,13 +133,16 @@ function Dashboard() {
     .join(' ')
 
   return (
-    <div className={rootClass}>
+    <div className={rootClass} data-fx={effects}>
       <a
         href="#main-content"
         className="sr-only z-[100] rounded-lg bg-brown px-4 py-2 font-display text-sm text-cream focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
       >
         Skip to main content
       </a>
+
+      {/* Fast, skippable scene wipe on entering a focus session (cosmetic, non-blocking). */}
+      <SceneTransition trigger={sceneWipe} />
 
       {/* Painterly Ghibli landscape (fixed; content scrolls over it) */}
       <SkyScene />

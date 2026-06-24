@@ -33,6 +33,20 @@ export default {
           purple: '#D699B6',
         },
 
+        // JRPG dialogue-window tokens (see src/data/jrpgTokens.js; mirrored as CSS
+        // custom properties in index.css). Used by the shared GameWindow UI kit.
+        jrpg: {
+          window: 'var(--jrpg-window-bg)',
+          windowHi: 'var(--jrpg-window-hi)',
+          text: 'var(--jrpg-window-text)',
+          textDim: 'var(--jrpg-window-text-dim)',
+          edge: 'var(--jrpg-edge-dark)',
+          edgeLight: 'var(--jrpg-edge-light)',
+          nameplate: 'var(--jrpg-nameplate-bg)',
+          cursor: 'var(--jrpg-cursor)',
+          sel: 'var(--jrpg-sel-bg)',
+        },
+
         // Pixel-art sunset / dusk palette (scene + warm accents).
         sunset: {
           indigo: '#352A52', // top-of-sky / deep dusk

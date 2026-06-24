@@ -57,6 +57,54 @@ body {
 }
 
 /* ------------------------------------------------------------------ *
+ * JRPG UI tokens. The cozy 16-bit dialogue window layered on the app's
+ * Everforest + sunset warmth. Mirrored from src/data/jrpgTokens.js, which is
+ * the single source of truth and the contrast-tested one. `--fx-scale` (0..1)
+ * scales decorative motion + typewriter speed; the root `data-fx` attribute
+ * (set from emily.ui.effects) and reduced-motion drive it down to calm/instant.
+ * ------------------------------------------------------------------ */
+:root {
+  --jrpg-window-bg: #2a2342;
+  --jrpg-window-hi: #3a3158;
+  --jrpg-window-text: #fdf6e3;
+  --jrpg-window-text-dim: #d3c6aa;
+  --jrpg-edge-light: #6e5a8c;
+  --jrpg-edge-dark: #15112a;
+  --jrpg-nameplate-bg: #6e4527;
+  --jrpg-nameplate-text: #fdf6e3;
+  --jrpg-cursor: #ffd27d;
+  --jrpg-sel-bg: #4a3e6e;
+  --fx-scale: 1;
+}
+[data-fx='calm'] {
+  --fx-scale: 0.6;
+}
+[data-fx='minimal'] {
+  --fx-scale: 0;
+}
+/* Deep focus + Zen quiet the flavour, mirroring the audio ducking. */
+.focus-active,
+.zen {
+  --fx-scale: 0;
+}
+
+/* A chunky 16-bit beveled border drawn entirely with box-shadow (no images):
+   an outer dark frame, a top-left light highlight, a bottom-right shadow. */
+.pixel-bevel {
+  box-shadow:
+    0 0 0 2px var(--jrpg-edge-dark),
+    inset 2px 2px 0 0 var(--jrpg-edge-light),
+    inset -2px -2px 0 0 var(--jrpg-edge-dark);
+}
+/* Inset (pressed / recessed) variant: swap the highlight + shadow corners. */
+.pixel-bevel--inset {
+  box-shadow:
+    0 0 0 2px var(--jrpg-edge-dark),
+    inset -2px -2px 0 0 var(--jrpg-edge-light),
+    inset 2px 2px 0 0 var(--jrpg-edge-dark);
+}
+
+/* ------------------------------------------------------------------ *
  * Components
  * ------------------------------------------------------------------ */
 @layer components {
@@ -727,6 +775,53 @@ body {
 }
 
 /* ------------------------------------------------------------------ *
+ * JRPG kit motion: a fast non-blocking scene wipe + a soft typewriter caret.
+ * Both are gated by --fx-scale, so Calm halves them and Minimal / reduced-motion
+ * make the wipe invisible and the caret static (the global reduced-motion rule
+ * also zeroes the durations).
+ * ------------------------------------------------------------------ */
+@keyframes jrpgWipe {
+  0% {
+    transform: translateX(-100%);
+    opacity: calc(0.5 * var(--fx-scale));
+  }
+  60% {
+    opacity: calc(0.5 * var(--fx-scale));
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+.jrpg-wipe {
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(53, 42, 82, 0.5) 35%,
+    rgba(92, 58, 110, 0.55) 50%,
+    rgba(53, 42, 82, 0.5) 65%,
+    transparent 100%
+  );
+  animation: jrpgWipe 0.26s ease-out forwards;
+}
+
+@keyframes jrpgCaret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+.jrpg-caret {
+  animation: jrpgCaret 0.7s steps(2, jump-none) infinite;
+}
+.jrpg-advance {
+  animation: sootBob 1.2s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ *
  * Respect prefers-reduced-motion
  * ------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
@@ -737,6 +832,11 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+  /* Reduced motion forces every JRPG effect (typewriter, wipes, ornaments) to its
+     instant, static alternative regardless of the chosen effects intensity. */
+  :root {
+    --fx-scale: 0 !important;
   }
 }
 

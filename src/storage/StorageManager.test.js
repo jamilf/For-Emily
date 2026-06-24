@@ -122,6 +122,21 @@ describe('migrate', () => {
     expect(localStorage.getItem('emily.flashcards')).toBe(before)
   })
 
+  it('v9→v10: the JRPG emily.ui prefs key is defaults-backed and non-destructive', () => {
+    localStorage.setItem('emily.schemaVersion', '9')
+    localStorage.setItem('emily.brainDump', JSON.stringify('keep me'))
+    migrate()
+    expect(localStorage.getItem('emily.schemaVersion')).toBe(String(SCHEMA_VERSION))
+    // The new prefs resolve to their defaults via read()'s fallback (no write needed).
+    expect(read('emily.ui').effects).toBe('full')
+    expect(read('emily.ui').typewriter).toBe(true)
+    expect(read('emily.ui').sounds).toBe(0)
+    // Unrelated existing data is untouched, and a double-run changes nothing.
+    expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
+    migrate()
+    expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
+  })
+
   it('seeds the Grove retroactively from existing stats on the v2→v3 upgrade', () => {
     localStorage.setItem('emily.schemaVersion', '2')
     // Two grown trees already → first-sprout (≥1) and quiet-pine (≥2) earned.
