@@ -16,6 +16,7 @@ test('Firefly Calendar opens from the Focus Meter, selects a day, and screenshot
 
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     const DAY = 86400000
     const now = Date.now()
     const ymd = (t) => {

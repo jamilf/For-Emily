@@ -32,6 +32,7 @@ export default function useUiPrefs() {
     effects,
     typewriter: ui.typewriter !== false,
     sounds: ui.sounds ?? 0,
+    onboarded: ui.onboarded === true,
     reduced,
     instantMotion,
     fxScale,

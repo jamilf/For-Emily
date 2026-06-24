@@ -35,6 +35,7 @@ test('modals: scroll-locked, no horizontal overflow, keyboard-closable (per view
 
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     // A few trees so the garden's collection buttons render and the page is tall.
     const now = Date.now()
     localStorage.setItem(

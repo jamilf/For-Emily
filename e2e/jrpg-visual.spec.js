@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true })))
+})
+
 // Visual record of the cozy 16-bit JRPG theme. Runs under both the desktop and
 // mobile projects (so each shot is captured at both widths) and attaches the PNGs
 // to the HTML report, which CI uploads as an artifact. These are not pixel-diff

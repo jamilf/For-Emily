@@ -137,6 +137,22 @@ describe('migrate', () => {
     expect(JSON.parse(localStorage.getItem('emily.brainDump'))).toBe('keep me')
   })
 
+  it('v10→v11: existing users (with history) skip the first-run intro', () => {
+    localStorage.setItem('emily.schemaVersion', '10')
+    localStorage.setItem('emily.garden', JSON.stringify([{ id: 1, ts: Date.now() }]))
+    migrate()
+    expect(read('emily.ui').onboarded).toBe(true) // history → never re-onboarded
+    // Idempotent: a second run keeps it true.
+    migrate()
+    expect(read('emily.ui').onboarded).toBe(true)
+  })
+
+  it('v10→v11: a brand-new install keeps onboarded=false so the intro shows once', () => {
+    localStorage.setItem('emily.schemaVersion', '10')
+    migrate()
+    expect(read('emily.ui').onboarded).toBe(false)
+  })
+
   it('seeds the Grove retroactively from existing stats on the v2→v3 upgrade', () => {
     localStorage.setItem('emily.schemaVersion', '2')
     // Two grown trees already → first-sprout (≥1) and quiet-pine (≥2) earned.

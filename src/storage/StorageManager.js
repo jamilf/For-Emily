@@ -11,7 +11,7 @@ import { backfillFromGarden } from '../data/focusLog.js'
 import { spiritMetrics, reconcileSpirits } from '../data/spirits.js'
 
 const VERSION_KEY = 'emily.schemaVersion'
-export const SCHEMA_VERSION = 10
+export const SCHEMA_VERSION = 11
 const NS = 'emily.'
 // Keys excluded from a portable backup: the auth session token (device/secret)
 // and the internal sync bookkeeping (rebuilt automatically).
@@ -76,7 +76,8 @@ export const DEFAULTS = {
   // Cozy 16-bit JRPG theme prefs (device-local; visual only). `effects` scales the
   // flavour (full | calm | minimal); `typewriter` toggles the dialogue reveal;
   // `sounds` is the UI-blip volume (0 = off until enabled, low by default).
-  'emily.ui': { effects: 'full', typewriter: true, sounds: 0 },
+  // `onboarded` gates the one-time companion-led first-run intro.
+  'emily.ui': { effects: 'full', typewriter: true, sounds: 0, onboarded: false },
 }
 
 /** Safe read with a defaults fallback; never throws. */
@@ -192,6 +193,23 @@ export function migrate() {
     // working untouched and a double-run is a no-op. (Mirrors the v0→v2 no-op.)
     // v9 → v10: the JRPG theme added a device-local `emily.ui` prefs key, fully
     // defaults-backed via read(); no data transform, double-run safe.
+    // v10 → v11: the companion-led first-run intro added `emily.ui.onboarded`. Stamp
+    // it `true` for any install that already has history (a grown grove, a prior
+    // visit, or reviewed cards), so existing users never see the intro; a brand-new
+    // install keeps the default `false` and gets it once. Mirrors the v6→v7 lastSeen
+    // seeding; idempotent (only writes the field when it is still absent).
+    if (current < 11) {
+      const ui = read('emily.ui', DEFAULTS['emily.ui'])
+      const raw = localStorage.getItem('emily.ui')
+      const saved = raw != null ? JSON.parse(raw) : {}
+      if (saved.onboarded === undefined) {
+        const hasHistory =
+          (read('emily.garden', []).length || 0) > 0 ||
+          (read('emily.story', {}).lastSeen || 0) > 0 ||
+          (read('emily.flashcardStats', {}).total || 0) > 0
+        write('emily.ui', { ...ui, onboarded: hasHistory })
+      }
+    }
     localStorage.setItem(VERSION_KEY, String(SCHEMA_VERSION))
   } catch {
     /* ignore quota/availability errors — app still works on current data */

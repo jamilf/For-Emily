@@ -21,6 +21,7 @@ test('a return after a gap blooms a welcome-back, reveals a chapter, and opens t
   await page.addInitScript(() => {
     if (localStorage.getItem('__storySeeded')) return
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     const DAY = 24 * 60 * 60 * 1000
     // 10 finished sessions → through "Lanternlight"; last seen 5 days ago.
     localStorage.setItem(
@@ -113,6 +114,7 @@ test('a milestone letter arrives as a gentle toast and opens to the letter shelf
   await page.addInitScript(() => {
     if (localStorage.getItem('__letterSeeded')) return
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     localStorage.setItem(
       'emily.garden',
       JSON.stringify(Array.from({ length: 10 }, (_, i) => ({ id: 0, ts: Date.now() - i * 3600000 }))),

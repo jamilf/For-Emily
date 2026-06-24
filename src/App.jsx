@@ -23,6 +23,7 @@ import SceneTransition from './ui/jrpg/SceneTransition.jsx'
 import SpriteGreeting from './components/SpriteGreeting.jsx'
 import ChapterReveal from './components/ChapterReveal.jsx'
 import LetterReveal from './components/LetterReveal.jsx'
+import Onboarding from './components/Onboarding.jsx'
 import { SEED_CARDS, countDue } from './data/flashcards.js'
 import { migrate } from './storage/StorageManager.js'
 
@@ -85,7 +86,8 @@ function Dashboard() {
   const season = useMemo(() => seasonForHarvest(garden.length), [garden.length])
   const { enabled: mixerEnabled, setFocusActive: setMixerFocusActive } = useMixer()
   const pageHidden = usePageHidden()
-  const { effects } = useUiPrefs() // JRPG effects intensity → root data-fx
+  const { effects, onboarded, setUi } = useUiPrefs() // JRPG effects intensity + first-run gate
+  const [, setMeter] = usePersistedState('emily.meter', { dailyGoalMin: 100 })
   const [sceneWipe, setSceneWipe] = useState(0)
   useParallax() // publishes pointer/scroll depth vars for the scene bands
 
@@ -290,17 +292,29 @@ function Dashboard() {
         )}
       </Suspense>
 
+      {/* First run: a gentle, skippable, companion-led intro. Shown once (gated by
+          emily.ui.onboarded; existing users are migrated to onboarded=true), and it
+          suppresses the ambient announcements below while it is up. */}
+      {!onboarded && (
+        <Onboarding
+          onDone={() => setUi({ onboarded: true })}
+          onSetName={story.setCompanionName}
+          onSetGoal={(min) => setMeter((m) => ({ ...m, dailyGoalMin: min }))}
+        />
+      )}
+
       {/* The sprite's contextual hello + gentle reveals. Priority: the welcome-back
           moment first, then a chapter reveal, then a milestone letter, then the
-          greeting — so at most one ambient announcement appears at a time. */}
-      {!story.comeback && story.unseenChapter && (
+          greeting — so at most one ambient announcement appears at a time. Held back
+          until the first-run intro is done. */}
+      {onboarded && !story.comeback && story.unseenChapter && (
         <ChapterReveal
           chapter={story.unseenChapter}
           onRead={() => setShowStory(true)}
           onAck={story.ackChapter}
         />
       )}
-      {!story.comeback && !story.unseenChapter && story.unseenLetter && (
+      {onboarded && !story.comeback && !story.unseenChapter && story.unseenLetter && (
         <LetterReveal
           letter={story.unseenLetter}
           companionName={story.companionName}
@@ -308,7 +322,7 @@ function Dashboard() {
           onAck={story.ackLetter}
         />
       )}
-      {!story.comeback && !story.unseenChapter && !story.unseenLetter && story.greeting && (
+      {onboarded && !story.comeback && !story.unseenChapter && !story.unseenLetter && story.greeting && (
         <SpriteGreeting
           text={story.greeting}
           companionName={story.companionName}

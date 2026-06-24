@@ -14,6 +14,7 @@ test('Journal opens from the Grove hub, shows a timeline, and screenshots', asyn
 
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     const now = Date.now()
     localStorage.setItem(
       'emily.memories',

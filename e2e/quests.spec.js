@@ -14,6 +14,7 @@ test('Focus Quests opens from the toolbar and shows the daily board', async ({ p
 
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     const at = (h) => {
       const d = new Date()
       d.setHours(h, 0, 0, 0)

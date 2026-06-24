@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true })))
+})
+
 // Flashcards recall-depth + friction features (CI; real browser). UI + persistence
 // only — no audio/gesture concerns. Each context starts with empty localStorage,
 // so the built-in SEED_CARDS are present on first open.

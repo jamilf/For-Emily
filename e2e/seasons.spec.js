@@ -16,6 +16,7 @@ test('Sanctuary Seasons opens from the Grove hub and marks the current season', 
 
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     // 22 harvested trees → Autumn (>= 20).
     localStorage.setItem(
       'emily.garden',

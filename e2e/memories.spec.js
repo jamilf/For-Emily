@@ -14,6 +14,7 @@ test('Memory Grove opens from the garden, dedicates a tree, and screenshots', as
 
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     localStorage.setItem(
       'emily.garden',
       JSON.stringify([

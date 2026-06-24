@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true })))
+})
+
 // Sound & Music drawer — focus-music picker (UI + persistence only; we drive the
 // controls and assert state survives a reload, without asserting actual audio,
 // which the browser only permits behind a user gesture and can't verify headless).

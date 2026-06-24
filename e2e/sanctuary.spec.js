@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test'
 
+// Skip the one-time first-run intro so these journeys land straight on the dashboard.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true })))
+})
+
 // These run in CI (browsers installed there). They assert real-browser journeys
 // and that no console errors occur during any run.
 

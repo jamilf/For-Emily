@@ -16,6 +16,7 @@ test('Constellations opens from the Grove hub, shows the sky + list, and screens
 
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     const now = Date.now()
     localStorage.setItem(
       'emily.garden',

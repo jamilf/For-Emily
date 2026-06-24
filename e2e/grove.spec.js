@@ -12,7 +12,10 @@ test('Grove Almanac opens, shows locked silhouettes, and screenshots', async ({ 
   })
   page.on('pageerror', (e) => errors.push(String(e)))
 
-  await page.addInitScript(() => localStorage.clear())
+  await page.addInitScript(() => {
+    localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
+  })
   await page.goto('/')
 
   // Screenshot the dashboard (the garden side rail) first.

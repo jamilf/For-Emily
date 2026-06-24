@@ -16,6 +16,7 @@ test('Forest Spirits opens from the garden, shows found + locked, and screenshot
 
   await page.addInitScript(() => {
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     // 7-day streak earns Persistence; one session earns Curiosity.
     localStorage.setItem('emily.stats', JSON.stringify({ streak: 7 }))
     localStorage.setItem('emily.garden', JSON.stringify([{ id: 0, ts: Date.now() }]))

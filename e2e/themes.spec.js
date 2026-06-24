@@ -8,6 +8,7 @@ test('unlocking and choosing a scene theme persists across a reload', async ({ p
   await page.addInitScript(() => {
     if (localStorage.getItem('__themeSeeded')) return
     localStorage.clear()
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true }))
     localStorage.setItem(
       'emily.garden',
       JSON.stringify(Array.from({ length: 6 }, (_, i) => ({ id: 0, ts: Date.now() - i * 3600000 }))),
