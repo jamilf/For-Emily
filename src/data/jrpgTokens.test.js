@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { TOKENS, relativeLuminance, contrastRatio, meetsAA, CONTRAST_PAIRS } from './jrpgTokens.js'
+import {
+  TOKENS,
+  SOOT_DARKEST,
+  relativeLuminance,
+  contrastRatio,
+  meetsAA,
+  CONTRAST_PAIRS,
+} from './jrpgTokens.js'
 
 describe('relativeLuminance', () => {
   it('is 0 for black and 1 for white', () => {
@@ -38,6 +45,13 @@ describe('JRPG token palette meets WCAG AA everywhere it is rendered', () => {
       expect(ratio, `${pair.name} = ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(need)
     })
   }
+
+  it('the soot companion sprite stays legible on its portrait frame (the reported fix)', () => {
+    // Near-black soot on the dark dialogue window is unreadable; the light portrait
+    // frame restores high contrast.
+    expect(contrastRatio(SOOT_DARKEST, TOKENS.portraitBg)).toBeGreaterThanOrEqual(4.5)
+    expect(contrastRatio(SOOT_DARKEST, TOKENS.windowBg)).toBeLessThan(3) // why the frame is needed
+  })
 
   it('every CONTRAST_PAIR references real token values', () => {
     const values = new Set(Object.values(TOKENS))

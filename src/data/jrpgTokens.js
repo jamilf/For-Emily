@@ -26,7 +26,14 @@ export const TOKENS = {
   // Light "paper" body (unchanged content surface, kept for long-form reading).
   paperBg: '#FDF6E3', // cream
   paperText: '#3A2A1A', // a hair darker than brownDark for body copy
+  // The companion portrait sits in its own light frame so the near-black soot
+  // sprite stays legible against the dark dialogue window.
+  portraitBg: '#FDF6E3', // cream
 }
+
+// The darkest pixel in the soot companion sprite (sprites.js PAL 'b'); the portrait
+// frame must keep it legible.
+export const SOOT_DARKEST = '#20272b'
 
 /** sRGB hex (#rgb or #rrggbb) → {r,g,b} in 0..255. */
 function toRgb(hex) {

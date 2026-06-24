@@ -66,7 +66,11 @@ export default function DialogueBox({
       )}
 
       <div className="flex items-start gap-3 p-3.5">
-        <PixelSprite grid={portraitGrid} palette={portraitPalette} pixel={3} className="shrink-0" />
+        {/* Portrait frame: a light beveled sub-window so the near-black soot sprite
+            stays legible on the dark dialogue window (the JRPG portrait convention). */}
+        <div className="pixel-bevel shrink-0 self-start rounded-md bg-cream p-1.5">
+          <PixelSprite grid={portraitGrid} palette={portraitPalette} pixel={3} />
+        </div>
 
         <div className="min-w-0 flex-1">
           {/* The reveal the eye follows. It is aria-hidden (SR reads the full copy
