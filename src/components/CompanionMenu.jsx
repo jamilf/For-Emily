@@ -39,7 +39,9 @@ export default function CompanionMenu({
   onClose,
 }) {
   const trapRef = useFocusTrap(true, { onEscape: onClose })
-  const name = companionName || 'your soot friend'
+  // Fall back to the same plain term the tappable sprite uses ("the sprite"), so the
+  // dialogue the user lands in is named for the control they just tapped.
+  const name = companionName || 'the sprite'
   const line = useMemo(
     () => pickLine({ companionName, dueCount, hasMail }),
     [companionName, dueCount, hasMail],
