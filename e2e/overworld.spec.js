@@ -11,7 +11,10 @@ test('tapping the companion opens a talk panel that routes to the grove', async 
   await page.goto('/')
 
   // The soot companion idles by the timer; tapping it opens the talk dialogue.
-  await page.getByRole('button', { name: /talk to the sprite/i }).click()
+  // The sprite bobs (an infinite ambient animation), so a normal click can wait
+  // forever on actionability stability; dispatch the event straight to it, as the
+  // sanctuary journey does for the same sprite.
+  await page.getByRole('button', { name: /talk to the sprite/i }).dispatchEvent('click')
   const talk = page.getByRole('dialog', { name: /talk to the sprite/i })
   await expect(talk).toBeVisible()
 

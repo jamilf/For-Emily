@@ -45,7 +45,10 @@ test('a finished focus session brings a letter from the sprite', async ({ page }
   // The sprite bobs and the fixed Dock can overlap its strip; dispatch the click
   // event straight to the button so it always reaches the handler regardless of
   // overlay or scroll position (force-click coordinates can miss off-screen).
-  await page.getByRole('button', { name: /open a letter from the sprite/i }).dispatchEvent('click')
+  // Tapping the sprite now opens the companion talk panel; the waiting letter is
+  // its first offered action.
+  await page.getByRole('button', { name: /talk to the sprite/i }).dispatchEvent('click')
+  await page.getByRole('button', { name: /read your letter/i }).click()
   await expect(page.getByRole('dialog', { name: /a letter for you/i })).toBeVisible()
 
   expect(errors).toEqual([])
