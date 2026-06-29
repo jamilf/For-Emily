@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import useFocusTrap from '../hooks/useFocusTrap.js'
 import DialogueBox from '../ui/jrpg/DialogueBox.jsx'
 import MenuList from '../ui/jrpg/MenuList.jsx'
@@ -63,7 +64,12 @@ export default function CompanionMenu({
     { key: 'never', icon: '🤍', label: 'Never mind', onSelect: onClose },
   ].filter(Boolean)
 
-  return (
+  // Portal to <body>: this panel is rendered deep inside the dashboard, where an
+  // ancestor carries a transform (the timer column's slide-in / focus scale). A
+  // transformed ancestor becomes the containing block for `position: fixed`, which
+  // would anchor this overlay to that column instead of the viewport. Portaling out
+  // keeps `fixed inset-0` true to the screen on every device.
+  return createPortal(
     <div className="animate-fade-in modal-overlay-pad fixed inset-0 z-[55] flex items-center justify-center">
       <button
         type="button"
@@ -84,6 +90,7 @@ export default function CompanionMenu({
           <MenuList ariaLabel="What would you like to do?" items={items} />
         </DialogueBox>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
