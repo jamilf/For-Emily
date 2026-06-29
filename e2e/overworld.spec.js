@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test'
 
-// The overworld companion NPC (UI only). Reduced motion makes the dialogue instant.
-// Seed onboarded so the first-run intro is out of the way.
+// The overworld companion NPC (UI only). Seed onboarded so the first-run intro is
+// out of the way, and `effects: 'minimal'` so the dialogue typewriter is instant
+// (a crawling reveal grows the box and keeps the menu below it moving, which makes
+// the action buttons fail Playwright's actionability/stability checks).
 test.use({ reducedMotion: 'reduce' })
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true })))
+  await page.addInitScript(() =>
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true, effects: 'minimal' })),
+  )
 })
 
 test('tapping the companion opens a talk panel that routes to the grove', async ({ page }) => {

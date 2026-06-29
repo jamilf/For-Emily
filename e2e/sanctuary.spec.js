@@ -1,8 +1,13 @@
 import { test, expect } from '@playwright/test'
 
 // Skip the one-time first-run intro so these journeys land straight on the dashboard.
+// `effects: 'minimal'` keeps the companion dialogue typewriter instant, so its menu
+// of actions is laid out and stable the moment the panel opens (a crawling reveal
+// grows the box and keeps the buttons below it from settling for the click).
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true })))
+  await page.addInitScript(() =>
+    localStorage.setItem('emily.ui', JSON.stringify({ onboarded: true, effects: 'minimal' })),
+  )
 })
 
 // These run in CI (browsers installed there). They assert real-browser journeys
