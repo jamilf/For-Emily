@@ -203,6 +203,8 @@ function Dashboard() {
               onFocusActive={setFocusActive}
               reviewDue={dueCount}
               onReviewCards={() => setShowCards(true)}
+              onOpenGrove={() => setShowHub(true)}
+              companionName={story.companionName}
               className="w-full"
             />
           </div>

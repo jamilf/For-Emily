@@ -4,6 +4,7 @@ import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import useEscapeKey from '../hooks/useEscapeKey.js'
 import { SOOT_AWAKE, SOOT_NAP, PAL } from '../pixel/sprites.js'
+import CompanionMenu from './CompanionMenu.jsx'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
@@ -35,7 +36,14 @@ function tipCoords(fraction) {
 }
 
 /** Widget 2 — The Pomodoro timer (centerpiece, lofi window). */
-export default function PomodoroTimer({ onFocusActive, reviewDue = 0, onReviewCards, className = '' }) {
+export default function PomodoroTimer({
+  onFocusActive,
+  reviewDue = 0,
+  onReviewCards,
+  onOpenGrove,
+  companionName = null,
+  className = '',
+}) {
   const [timer, setTimer] = usePersistedState('emily.timer', { focusMin: DEFAULT_FOCUS_MIN })
   const focusMin = FOCUS_CHOICES.includes(timer?.focusMin) ? timer.focusMin : DEFAULT_FOCUS_MIN
   const durations = useMemo(() => ({ focus: focusMin * 60, break: BREAK_MIN * 60 }), [focusMin])
@@ -43,6 +51,7 @@ export default function PomodoroTimer({ onFocusActive, reviewDue = 0, onReviewCa
   const [secondsLeft, setSecondsLeft] = useState(durations.focus)
   const [running, setRunning] = useState(false)
   const [hasMail, setHasMail] = useState(false)
+  const [companionOpen, setCompanionOpen] = useState(false) // overworld "talk" panel
   const [letterContext, setLetterContext] = useState(null) // null = letter closed
   const pendingContext = useRef(null) // a context "armed" by an event for the next tap
   const [intention, setIntention] = useState('') // "the one thing" (session-scoped)
@@ -481,14 +490,18 @@ export default function PomodoroTimer({ onFocusActive, reviewDue = 0, onReviewCa
           </div>
         )}
 
-        {/* Pixel soot sprite companion */}
+        {/* Pixel soot sprite companion — tap to talk (the overworld NPC). It naps
+            during a focus run, so it is only conversational while you are free. */}
         <div className="flex flex-col items-center gap-1">
           <div className="relative flex h-20 w-full flex-col items-center justify-end">
             <button
-              onClick={openLetter}
-              aria-label="Open a letter from the sprite"
-              className={`group relative cursor-pointer transition-opacity active:scale-95 ${
-                napping ? 'opacity-50' : 'opacity-100'
+              onClick={napping ? undefined : () => setCompanionOpen(true)}
+              disabled={napping}
+              aria-label={
+                napping ? `The sprite is napping while you focus` : `Talk to ${companionName || 'the sprite'}`
+              }
+              className={`group relative transition-opacity active:scale-95 disabled:cursor-default ${
+                napping ? 'opacity-50' : 'cursor-pointer opacity-100'
               } ${hasMail ? 'animate-soot-rise' : 'animate-soot-bob'}`}
             >
               <PixelSprite grid={napping ? SOOT_NAP : SOOT_AWAKE} palette={PAL} pixel={5} />
@@ -511,10 +524,26 @@ export default function PomodoroTimer({ onFocusActive, reviewDue = 0, onReviewCa
               ? 'Tap the sprite. It wrote you a letter.'
               : napping
                 ? "The sprite's napping while you focus."
-                : 'Tap the sprite for a letter.'}
+                : 'Tap the sprite to say hello.'}
           </p>
         </div>
       </div>
+
+      {companionOpen && (
+        <CompanionMenu
+          companionName={companionName}
+          dueCount={reviewDue}
+          hasMail={hasMail}
+          running={running}
+          onReadLetter={openLetter}
+          onStartFocus={() => {
+            if (!running && mode === 'focus') handleStartPause()
+          }}
+          onReviewCards={onReviewCards}
+          onOpenGrove={onOpenGrove}
+          onClose={() => setCompanionOpen(false)}
+        />
+      )}
 
       <Suspense fallback={null}>
         {letterContext && <LetterModal context={letterContext} onClose={() => setLetterContext(null)} />}

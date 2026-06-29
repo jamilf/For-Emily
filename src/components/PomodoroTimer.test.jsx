@@ -78,4 +78,19 @@ describe('PomodoroTimer (timestamp-based countdown)', () => {
     expect(stats.sessionsToday).toBe(1)
     expect(stats.minutesToday).toBe(25)
   })
+
+  it('tapping the companion opens the overworld talk panel, and an action routes through', () => {
+    // Minimal effects → instant dialogue typewriter (deterministic in jsdom).
+    localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
+    const onOpenGrove = vi.fn()
+    render(
+      <AudioMixerProvider>
+        <PomodoroTimer onOpenGrove={onOpenGrove} companionName="Pip" reviewDue={2} onReviewCards={() => {}} />
+      </AudioMixerProvider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /talk to pip/i }))
+    expect(screen.getByRole('dialog', { name: /talk to pip/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /wander the grove/i }))
+    expect(onOpenGrove).toHaveBeenCalledTimes(1)
+  })
 })
