@@ -42,6 +42,8 @@ export default defineConfig({
         'src/audio/music/chiptune.js',
         'src/audio/music/autoMood.js',
         'src/pixel/SpiritGenerator.js',
+        'src/pixel/PlantGenerator.js',
+        'src/pixel/gridRects.js',
         'src/storage/StorageManager.js',
         'src/utils/**/*.js',
       ],

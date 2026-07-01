@@ -28,7 +28,10 @@ function ProceduralTree({ dna, stage = 'mature', pixel = 4, state = 'unlocked', 
 
   return (
     <div aria-hidden="true" className={className}>
-      <PixelSprite grid={grid} palette={palette} pixel={pixel} />
+      {/* Generator grids are 2x dense (Renderer 2.0), so halve the cell size to keep
+          `pixel` meaning what it always did to callers: px per ORIGINAL logical cell.
+          The SVG renderer stays crisp at fractional cell sizes (viewBox scaling). */}
+      <PixelSprite grid={grid} palette={palette} pixel={pixel / 2} />
     </div>
   )
 }

@@ -1,44 +1,43 @@
 import { memo, useMemo } from 'react'
+import { gridToRects, gridSize } from './gridRects.js'
 
 /**
- * Pure-CSS pixel-art renderer — no image files.
+ * Shared pixel-art renderer — no image files.
  *
- * Paints a grid of colored cells using a single element's `box-shadow`
- * (the classic CSS sprite technique). Each character in `grid` maps to a
- * color in `palette`; a space (or any key missing from the palette) is
- * left transparent.
+ * Paints a sprite grid as ONE `<svg>` with `shape-rendering="crispEdges"`: rows of
+ * same-colour pixels are run-length merged into single `<rect>`s (see gridRects.js),
+ * so even a high-resolution sprite costs a few hundred nodes at most. The viewBox is
+ * in grid units and the element is sized to `cols x pixel`, so any cell size (whole
+ * or fractional) stays crisp: SVG scales the geometry, never the raster.
  *
- * @param {string[]} grid    Rows of equal-length strings (each char = 1 pixel).
- * @param {Object}   palette Map of char -> hex color.
+ * Contract (unchanged from the original box-shadow renderer):
+ * @param {string[]} grid    Rows of strings (each char = 1 pixel).
+ * @param {Object}   palette Map of char -> colour; missing chars are transparent.
  * @param {number}   pixel   Size of one pixel cell in px (default 4).
  */
 function PixelSprite({ grid, palette, pixel = 4, className = '', style = {} }) {
-  const { shadow, cols, rows } = useMemo(() => {
-    const shadows = []
-    let maxCols = 0
-    grid.forEach((row, y) => {
-      maxCols = Math.max(maxCols, row.length)
-      for (let x = 0; x < row.length; x++) {
-        const color = palette[row[x]]
-        if (!color) continue // transparent
-        shadows.push(`${x * pixel}px ${y * pixel}px 0 0 ${color}`)
-      }
-    })
-    return { shadow: shadows.join(','), cols: maxCols, rows: grid.length }
-  }, [grid, palette, pixel])
+  const { rects, cols, rows } = useMemo(() => {
+    return { rects: gridToRects(grid, palette), ...gridSize(grid) }
+  }, [grid, palette])
+
+  // Snap the sprite's physical box to whole device pixels so neighbouring sprites
+  // never land on half pixels and blur (the global --px convention).
+  const width = Math.round(cols * pixel)
+  const height = Math.round(rows * pixel)
 
   return (
-    <div
+    <svg
       aria-hidden="true"
-      className={`pixelated relative ${className}`}
-      style={{ width: cols * pixel, height: rows * pixel, ...style }}
+      className={`pixelated ${className}`}
+      style={{ width, height, display: 'block', ...style }}
+      viewBox={`0 0 ${cols} ${rows}`}
+      preserveAspectRatio="none"
+      shapeRendering="crispEdges"
     >
-      {/* The single pixel cell; every other cell is a box-shadow clone of it. */}
-      <span
-        className="absolute left-0 top-0 block"
-        style={{ width: pixel, height: pixel, boxShadow: shadow }}
-      />
-    </div>
+      {rects.map((r, i) => (
+        <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill} />
+      ))}
+    </svg>
   )
 }
 

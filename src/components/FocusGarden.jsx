@@ -68,7 +68,9 @@ export default function FocusGarden({ className = '', onOpenAlmanac, onOpenSpiri
                 className="flex items-end justify-center"
                 title={new Date(tree.ts).toLocaleDateString()}
               >
-                <PixelSprite grid={tree.grid} palette={tree.palette} pixel={4} />
+                {/* Generator grids are 2x dense (Renderer 2.0): halve the cell size
+                    so garden trees keep their familiar physical size. */}
+                <PixelSprite grid={tree.grid} palette={tree.palette} pixel={2} />
               </div>
             ))}
           </div>

@@ -483,11 +483,13 @@ export default function PomodoroTimer({
         {/* Focus Garden — a seedling that grows with the session */}
         {plant && (
           <div className="flex flex-col items-center">
+            {/* Generator grids are 2x dense (Renderer 2.0): 2.5 keeps the tree the
+                same physical size it has always been. */}
             <PixelSprite
               key={withered ? 'withered' : stageIdx}
               grid={plant.grid}
               palette={plantPalette}
-              pixel={5}
+              pixel={2.5}
               className={withered ? 'animate-wither' : 'animate-pixel-pop'}
             />
             {/* Visible caption (sighted only); the sr-only live region below carries
