@@ -7,7 +7,9 @@ import { SOOT_AWAKE, SOOT_NAP, PAL } from '../pixel/sprites.js'
 import CompanionMenu from './CompanionMenu.jsx'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
-import { generate, randomDNA, stageForProgress, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
+import { generate, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
+import { sessionSeed, growthStageForProgress, growthLabel } from '../data/treeGrowth.js'
+import useUiSound from '../hooks/useUiSound.js'
 import { endsAtFrom, remainingSeconds, formatClock } from '../utils/timer.js'
 import { dayStr, yesterdayStr } from '../utils/day.js'
 import { recordSession } from '../data/focusLog.js'
@@ -72,8 +74,11 @@ export default function PomodoroTimer({
   const [grove, setGrove] = usePersistedState('emily.grove', { unlocked: {}, plantNext: null })
   const penaltyTimer = useRef(null)
   const endsAtRef = useRef(null) // wall-clock deadline while running (timestamp-based)
+  const plantNextUsedRef = useRef(null) // the queued varietal this session grew, if any
+  const lastStageRef = useRef(0) // last announced/played growth stage (avoids re-firing)
 
   const { rampMaster, restoreMaster } = useMixer()
+  const playUi = useUiSound()
 
   const total = durations[mode]
 
@@ -116,6 +121,13 @@ export default function PomodoroTimer({
       // Harvest the grown tree into the persistent garden.
       if (plantDna != null && !withered) {
         setGarden((prev) => [...prev, { id: plantDna, ts }])
+        // Spend a queued varietal only now, on a real harvest, and only if it is
+        // still the one this session grew (guards a varietal re-queued mid-session).
+        const used = plantNextUsedRef.current
+        if (used != null) {
+          setGrove((g) => (g.plantNext === used ? { ...g, plantNext: null } : g))
+          plantNextUsedRef.current = null
+        }
       }
       // Log this completed focus session to the Firefly Calendar time-series with
       // its real focus length. Breaks never reach this branch, so they never log.
@@ -209,15 +221,16 @@ export default function PomodoroTimer({
     setRunning((r) => !r)
     setHasMail(false)
     if (starting && mode === 'focus') {
-      // Plant a fresh seedling when a focus session begins from full — the one
-      // queued from the Almanac if any, otherwise a random varietal.
+      // Plant a fresh seedling when a focus session begins from full. Its DNA is the
+      // varietal queued from the Almanac if any, otherwise derived deterministically
+      // from the start time, so the tree she watches grow is the one that harvests.
+      // plantNext is NOT consumed here: it is spent only on a successful harvest, so
+      // an abandoned session never burns it.
       if (secondsLeft === total) {
-        if (grove?.plantNext != null) {
-          setPlantDna(grove.plantNext)
-          setGrove((g) => ({ ...g, plantNext: null }))
-        } else {
-          setPlantDna(randomDNA())
-        }
+        const queued = grove?.plantNext ?? null
+        plantNextUsedRef.current = queued
+        lastStageRef.current = 0
+        setPlantDna(sessionSeed({ startTs: Date.now(), plantNext: queued }))
         setWithered(false)
       }
       restoreMaster(2) // ensure audio is back to normal during focus
@@ -267,7 +280,7 @@ export default function PomodoroTimer({
 
   // The session's growing tree (seed → sprout → sapling → mature by progress).
   const elapsedFrac = total > 0 ? (total - secondsLeft) / total : 0
-  const stageIdx = secondsLeft === 0 ? 3 : stageForProgress(elapsedFrac)
+  const stageIdx = secondsLeft === 0 ? 3 : growthStageForProgress(elapsedFrac)
   // generate() is deterministic and only changes shape with the species/stage —
   // not with every 1s tick — so memoize on those instead of secondsLeft.
   const plant = useMemo(
@@ -278,6 +291,16 @@ export default function PomodoroTimer({
     () => (plant && withered ? witherPalette(plant.palette) : plant?.palette),
     [plant, withered],
   )
+
+  // A soft blip when the tree reaches a new growth stage during an active run.
+  // Subtle and additive: safe no-op until audio is enabled, and never on the initial
+  // seed (lastStageRef starts at 0 and is reset to 0 at each fresh start).
+  useEffect(() => {
+    if (mode === 'focus' && plantDna != null && running && stageIdx > lastStageRef.current) {
+      playUi('confirm')
+    }
+    lastStageRef.current = stageIdx
+  }, [stageIdx, running, mode, plantDna, playUi])
 
   return (
     <WindowFrame title="Pomodoro" bodyClass="bg-latte" className={className}>
@@ -459,7 +482,7 @@ export default function PomodoroTimer({
 
         {/* Focus Garden — a seedling that grows with the session */}
         {plant && (
-          <div className="flex flex-col items-center" aria-live="polite">
+          <div className="flex flex-col items-center">
             <PixelSprite
               key={withered ? 'withered' : stageIdx}
               grid={plant.grid}
@@ -467,7 +490,9 @@ export default function PomodoroTimer({
               pixel={5}
               className={withered ? 'animate-wither' : 'animate-pixel-pop'}
             />
-            <p className="mt-2 max-w-xs text-center text-xs text-brown/70">
+            {/* Visible caption (sighted only); the sr-only live region below carries
+                the equivalent announcement so screen readers hear it once, on change. */}
+            <p aria-hidden="true" className="mt-2 max-w-xs text-center text-xs text-brown/70">
               {withered
                 ? "This seedling's on pause. Hit reset to start a new one whenever you're ready."
                 : stageIdx === 0
@@ -477,6 +502,9 @@ export default function PomodoroTimer({
                     : stageIdx === 2
                       ? 'Coming along.'
                       : 'Grown. Into the garden it goes.'}
+            </p>
+            <p className="sr-only" aria-live="polite">
+              {withered ? 'The seedling is resting for now.' : growthLabel(stageIdx)}
             </p>
           </div>
         )}

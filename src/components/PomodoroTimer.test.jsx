@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
+import { axe } from 'vitest-axe'
 import AudioMixerProvider from '../audio/AudioMixerProvider.jsx'
 import PomodoroTimer from './PomodoroTimer.jsx'
+import { sessionSeed } from '../data/treeGrowth.js'
 
 function renderTimer() {
   return render(
@@ -92,5 +94,84 @@ describe('PomodoroTimer (timestamp-based countdown)', () => {
     expect(screen.getByRole('dialog', { name: /talk to pip/i })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /wander the grove/i }))
     expect(onOpenGrove).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('PomodoroTimer — live tree growth', () => {
+  const start = () => fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  const advance = (ms) => act(() => vi.advanceTimersByTime(ms))
+
+  it('grows the tree through its stages as a 25-minute session runs, announcing each kindly', () => {
+    localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
+    renderTimer()
+    start()
+    expect(screen.getByText('Seed planted.')).toBeInTheDocument()
+
+    advance(8 * 60_000) // 0.32 -> sprout
+    expect(screen.getByText('Sprouting.')).toBeInTheDocument()
+    expect(screen.getByText(/a sprout, unfurling/i)).toBeInTheDocument()
+
+    advance(8 * 60_000) // 0.64 -> sapling
+    expect(screen.getByText('Coming along.')).toBeInTheDocument()
+    expect(screen.getByText(/a sapling, reaching up/i)).toBeInTheDocument()
+
+    advance(7 * 60_000) // 0.92 -> mature
+    expect(screen.getByText('Grown. Into the garden it goes.')).toBeInTheDocument()
+    expect(screen.getByText(/grown full and green/i)).toBeInTheDocument()
+  })
+
+  it('does not advance the stage while paused (growth tracks active time)', () => {
+    renderTimer()
+    start()
+    advance(8 * 60_000) // sprout
+    fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
+    advance(10 * 60_000) // would cross thresholds if it kept counting
+    expect(screen.getByText('Sprouting.')).toBeInTheDocument()
+  })
+
+  it('harvests the same deterministic dna it grew', () => {
+    const startTs = new Date('2026-06-19T09:00:00').getTime()
+    renderTimer()
+    start()
+    advance(25 * 60_000)
+    const garden = JSON.parse(localStorage.getItem('emily.garden'))
+    expect(garden).toHaveLength(1)
+    expect(garden[0].id).toBe(sessionSeed({ startTs }))
+  })
+
+  it('spends a queued varietal only on a successful harvest', () => {
+    localStorage.setItem('emily.grove', JSON.stringify({ unlocked: {}, plantNext: 42 }))
+    renderTimer()
+    start()
+    advance(25 * 60_000)
+    const garden = JSON.parse(localStorage.getItem('emily.garden'))
+    expect(garden[0].id).toBe(42) // it grew the queued varietal
+    expect(JSON.parse(localStorage.getItem('emily.grove')).plantNext).toBeNull()
+  })
+
+  it('keeps a queued varietal when the session is abandoned', () => {
+    localStorage.setItem('emily.grove', JSON.stringify({ unlocked: {}, plantNext: 42 }))
+    renderTimer()
+    start()
+    advance(60_000)
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(JSON.parse(localStorage.getItem('emily.grove')).plantNext).toBe(42)
+  })
+
+  it('a break grows nothing', () => {
+    renderTimer()
+    fireEvent.click(screen.getByRole('button', { name: /rest/i }))
+    start()
+    advance(5 * 60_000)
+    expect(JSON.parse(localStorage.getItem('emily.garden') || '[]')).toHaveLength(0)
+  })
+
+  it('has no axe-detectable violations while a tree is growing', async () => {
+    renderTimer()
+    start()
+    advance(8 * 60_000)
+    fireEvent.click(screen.getByRole('button', { name: 'Pause' })) // clears the tick interval
+    vi.useRealTimers()
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 })

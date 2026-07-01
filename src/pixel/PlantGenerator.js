@@ -152,29 +152,36 @@ export function generate(dna, stage = 'mature') {
   return { grid: grid.map((row) => row.join('')), palette }
 }
 
-/** Map a focus-progress fraction (0..1) to a growth stage index. */
-export function stageForProgress(fraction) {
-  if (fraction >= 1) return 3
-  if (fraction >= 0.66) return 2
-  if (fraction >= 0.33) return 1
-  return 0
-}
-
 /** A withered version of a tree (browns), for the leave-the-tab penalty. */
 export function witherPalette(palette) {
   return { ...palette, C: '#8a7a5a', c: '#6b5e44', d: '#9a8a6a', o: '#7a6a4a', T: '#5e4e34', t: '#4e4028' }
 }
 
-/** Pick a fresh DNA, lightly weighted so common greens appear more than rare palettes. */
-export function randomDNA() {
-  const base = Math.floor(Math.random() * (SHAPES * TRUNKS * PATTERNS))
-  // weight palette: green common, golden/autumn rarer
-  const r = Math.random()
+// Turn two unit-interval rolls into a weighted DNA: green common, golden/autumn
+// rarer. Shared by the deterministic and random entry points so both draw from the
+// same distribution.
+function weightedDNA(baseRoll, palRoll) {
+  const base = Math.floor(baseRoll * (SHAPES * TRUNKS * PATTERNS))
   let palIdx
-  if (r < 0.4) palIdx = 0
-  else if (r < 0.62) palIdx = 2
-  else if (r < 0.8) palIdx = 3
-  else if (r < 0.92) palIdx = 1
+  if (palRoll < 0.4) palIdx = 0
+  else if (palRoll < 0.62) palIdx = 2
+  else if (palRoll < 0.8) palIdx = 3
+  else if (palRoll < 0.92) palIdx = 1
   else palIdx = 4
   return base + palIdx * SHAPES * TRUNKS * PATTERNS
+}
+
+/**
+ * A valid, deterministic DNA from an integer seed, using the same weighting as
+ * `randomDNA` (green common, golden/autumn rarer). Same seed always gives the same
+ * tree, so a session's tree is reproducible from its start time.
+ */
+export function dnaFromSeed(seedInt) {
+  const rng = mulberry32(Math.floor(seedInt) | 0)
+  return weightedDNA(rng(), rng())
+}
+
+/** Pick a fresh DNA, lightly weighted so common greens appear more than rare palettes. */
+export function randomDNA() {
+  return dnaFromSeed(Math.floor(Math.random() * 2 ** 31))
 }
