@@ -43,6 +43,7 @@ const StoryModal = lazy(() => import('./components/StoryModal.jsx'))
 const ForestSpiritsModal = lazy(() => import('./components/ForestSpiritsModal.jsx'))
 const MemoryGroveModal = lazy(() => import('./components/MemoryGroveModal.jsx'))
 const GroveHub = lazy(() => import('./components/GroveHub.jsx'))
+const WeekInGrove = lazy(() => import('./components/WeekInGrove.jsx'))
 const ComebackMoment = lazy(() => import('./components/ComebackMoment.jsx'))
 
 function Dashboard() {
@@ -61,6 +62,7 @@ function Dashboard() {
   const [showSpirits, setShowSpirits] = useState(false)
   const [showMemories, setShowMemories] = useState(false)
   const [showHub, setShowHub] = useState(false)
+  const [showWeek, setShowWeek] = useState(false)
 
   // The Grove hub launches each world surface (so the toolbar stays calm).
   const openFromHub = (key) => {
@@ -73,6 +75,7 @@ function Dashboard() {
       themes: setShowThemes,
       constellations: setShowConstellations,
       journal: setShowJournal,
+      week: setShowWeek,
     }[key]
     open?.(true)
   }
@@ -283,6 +286,9 @@ function Dashboard() {
 
         {/* The Grove — one companion-led launcher for every world surface */}
         {showHub && <GroveHub onClose={() => setShowHub(false)} onOpen={openFromHub} />}
+
+        {/* Your week — a gentle, derived weekly reflection */}
+        {showWeek && <WeekInGrove onClose={() => setShowWeek(false)} />}
 
         {/* Welcome-back moment after a gap — a gift, shown once per day */}
         {story.comeback && (

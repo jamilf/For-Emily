@@ -28,6 +28,7 @@ const ITEMS = [
     blurb: 'Your progress, drawn in the night sky.',
   },
   { key: 'journal', emoji: '📔', label: 'Journal', blurb: 'A quiet timeline of meaningful moments.' },
+  { key: 'week', emoji: '🗓️', label: 'Your week', blurb: 'A gentle look back at the past week.' },
 ]
 
 export default function GroveHub({ onClose, onOpen }) {

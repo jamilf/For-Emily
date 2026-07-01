@@ -7,6 +7,8 @@ import { dayStr } from '../utils/day.js'
 
 // The calendar carries the whole meadow grid; load it only when opened.
 const FireflyCalendar = lazy(() => import('./FireflyCalendar.jsx'))
+// The weekly reflection is derived on open; load it lazily too.
+const WeekInGrove = lazy(() => import('./WeekInGrove.jsx'))
 
 const EMPTY_STATS = { day: '', minutesToday: 0, sessionsToday: 0, streak: 0, lastStudyDay: null }
 const R = 52
@@ -23,6 +25,7 @@ export default function FocusMeter({ className = '' }) {
   const [garden] = usePersistedState('emily.garden', [])
   const [meter] = usePersistedState('emily.meter', DEFAULTS['emily.meter'])
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [weekOpen, setWeekOpen] = useState(false)
 
   const today = dayStr()
   const minutes = stats.day === today ? stats.minutesToday : 0
@@ -103,17 +106,31 @@ export default function FocusMeter({ className = '' }) {
           {message}
         </p>
 
-        <button
-          onClick={() => setCalendarOpen(true)}
-          className="rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
-        >
-          ✨ Firefly Calendar
-        </button>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => setCalendarOpen(true)}
+            className="rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+          >
+            ✨ Firefly Calendar
+          </button>
+          <button
+            onClick={() => setWeekOpen(true)}
+            className="rounded-2xl bg-brown/10 px-4 py-2 font-display text-sm text-brown transition-colors hover:bg-brown/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-ever-yellow"
+          >
+            🌿 Your week
+          </button>
+        </div>
       </div>
 
       {calendarOpen && (
         <Suspense fallback={null}>
           <FireflyCalendar onClose={() => setCalendarOpen(false)} />
+        </Suspense>
+      )}
+
+      {weekOpen && (
+        <Suspense fallback={null}>
+          <WeekInGrove onClose={() => setWeekOpen(false)} />
         </Suspense>
       )}
     </WindowFrame>
