@@ -27,7 +27,9 @@ function ProceduralSpirit({ spiritId, state = 'unlocked', pixel = 5, className =
 
   return (
     <div aria-hidden="true" className={className}>
-      <PixelSprite grid={grid} palette={palette} pixel={pixel} />
+      {/* Generator grids are 2x dense (Renderer 2.0), so halve the cell size to keep
+          `pixel` meaning what it always did to callers. */}
+      <PixelSprite grid={grid} palette={palette} pixel={pixel / 2} />
     </div>
   )
 }
