@@ -41,6 +41,9 @@ export default function PomodoroTimer({
   reviewDue = 0,
   onReviewCards,
   onOpenGrove,
+  onOpenWeek,
+  onSetName,
+  partOfDay = 'day',
   companionName = null,
   className = '',
 }) {
@@ -535,12 +538,15 @@ export default function PomodoroTimer({
           dueCount={reviewDue}
           hasMail={hasMail}
           running={running}
+          partOfDay={partOfDay}
           onReadLetter={openLetter}
           onStartFocus={() => {
             if (!running && mode === 'focus') handleStartPause()
           }}
           onReviewCards={onReviewCards}
           onOpenGrove={onOpenGrove}
+          onOpenWeek={onOpenWeek}
+          onSetName={onSetName}
           onClose={() => setCompanionOpen(false)}
         />
       )}

@@ -25,6 +25,7 @@ export default defineConfig({
         'src/data/grove.js',
         'src/data/focusLog.js',
         'src/data/weekReview.js',
+        'src/data/companionLine.js',
         'src/data/spirits.js',
         'src/data/memories.js',
         'src/data/journal.js',

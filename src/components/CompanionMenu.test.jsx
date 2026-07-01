@@ -68,10 +68,45 @@ describe('CompanionMenu (overworld NPC)', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  it('offers "See your week" and routes to it only when a handler is given', () => {
+    setup()
+    expect(screen.queryByRole('button', { name: /see your week/i })).not.toBeInTheDocument()
+
+    const onOpenWeek = vi.fn()
+    const onClose = vi.fn()
+    render(<CompanionMenu companionName="Pip" onOpenWeek={onOpenWeek} onClose={onClose} />)
+    fireEvent.click(screen.getByRole('button', { name: /see your week/i }))
+    expect(onOpenWeek).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('lets her name the companion, passing the value up and closing', () => {
+    const onSetName = vi.fn()
+    const onClose = vi.fn()
+    render(<CompanionMenu companionName={null} onSetName={onSetName} onClose={onClose} />)
+    // With no name yet, the action invites naming.
+    fireEvent.click(screen.getByRole('button', { name: /give me a name/i }))
+    const input = screen.getByRole('textbox', { name: /a name for your companion/i })
+    fireEvent.change(input, { target: { value: 'Sootling' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    expect(onSetName).toHaveBeenCalledWith('Sootling')
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('labels the naming action "Rename me" once named, and can cancel back to the menu', () => {
+    const onSetName = vi.fn()
+    render(<CompanionMenu companionName="Pip" onSetName={onSetName} onClose={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /rename me/i }))
+    expect(screen.getByRole('textbox', { name: /a name for your companion/i })).toBeInTheDocument()
+    // The form's cancel returns to the menu without saving.
+    fireEvent.click(screen.getByRole('button', { name: /never mind/i }))
+    expect(onSetName).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: /wander the grove/i })).toBeInTheDocument()
+  })
+
   it('has no axe-detectable accessibility violations', async () => {
-    const { container } = render(
-      <CompanionMenu companionName="Pip" dueCount={2} hasMail onClose={() => {}} />,
-    )
-    expect(await axe(container)).toHaveNoViolations()
+    // The overlay portals to <body> in tests, so scan the document.
+    render(<CompanionMenu companionName="Pip" dueCount={2} hasMail onSetName={() => {}} onClose={() => {}} />)
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 })

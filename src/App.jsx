@@ -207,6 +207,9 @@ function Dashboard() {
               reviewDue={dueCount}
               onReviewCards={() => setShowCards(true)}
               onOpenGrove={() => setShowHub(true)}
+              onOpenWeek={() => setShowWeek(true)}
+              onSetName={story.setCompanionName}
+              partOfDay={story.partOfDay}
               companionName={story.companionName}
               className="w-full"
             />
