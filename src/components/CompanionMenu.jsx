@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import useFocusTrap from '../hooks/useFocusTrap.js'
+import { portalTarget } from '../utils/portalTarget.js'
 import DialogueBox from '../ui/jrpg/DialogueBox.jsx'
 import MenuList from '../ui/jrpg/MenuList.jsx'
 
@@ -66,11 +67,12 @@ export default function CompanionMenu({
     { key: 'never', icon: '🤍', label: 'Never mind', onSelect: onClose },
   ].filter(Boolean)
 
-  // Portal to <body>: this panel is rendered deep inside the dashboard, where an
-  // ancestor carries a transform (the timer column's slide-in / focus scale). A
-  // transformed ancestor becomes the containing block for `position: fixed`, which
-  // would anchor this overlay to that column instead of the viewport. Portaling out
-  // keeps `fixed inset-0` true to the screen on every device.
+  // Portal out of the dashboard subtree: an ancestor carries a transform (the timer
+  // column's slide-in / focus scale), which becomes the containing block for
+  // `position: fixed` and would anchor this overlay to that column instead of the
+  // viewport. `.app-root` has no transform, so `fixed inset-0` stays true to the
+  // screen, and it keeps the `--fx-scale` / `data-fx` cascade a bare <body> portal
+  // would drop.
   return createPortal(
     <div className="animate-fade-in modal-overlay-pad fixed inset-0 z-[55] flex items-center justify-center">
       <button
@@ -93,6 +95,6 @@ export default function CompanionMenu({
         </DialogueBox>
       </div>
     </div>,
-    document.body,
+    portalTarget(),
   )
 }

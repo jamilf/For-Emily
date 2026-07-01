@@ -76,9 +76,10 @@ describe('MemoryGroveModal', () => {
   })
 
   it('renders a tree sprite (shared ProceduralTree) for each memory', () => {
-    const { container } = render(<MemoryGroveModal onClose={() => {}} />)
+    // The modal overlay is portaled to the app root (or <body> in tests).
+    render(<MemoryGroveModal onClose={() => {}} />)
     // ProceduralTree → PixelSprite renders a decorative `.pixelated` box-shadow grid.
-    expect(container.querySelectorAll('.pixelated').length).toBeGreaterThanOrEqual(1)
+    expect(document.body.querySelectorAll('.pixelated').length).toBeGreaterThanOrEqual(1)
   })
 
   it('closes on Escape', () => {
@@ -89,7 +90,7 @@ describe('MemoryGroveModal', () => {
   })
 
   it('has no axe-detectable accessibility violations', async () => {
-    const { container } = render(<MemoryGroveModal onClose={() => {}} />)
-    expect(await axe(container)).toHaveNoViolations()
+    render(<MemoryGroveModal onClose={() => {}} />)
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 })

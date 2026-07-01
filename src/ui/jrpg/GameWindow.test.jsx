@@ -1,7 +1,12 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { axe } from 'vitest-axe'
 import GameWindow from './GameWindow.jsx'
+
+// Clean up any app-root nodes a test added so portal targeting stays deterministic.
+afterEach(() => {
+  document.querySelectorAll('.app-root').forEach((el) => el.remove())
+})
 
 describe('GameWindow', () => {
   it('renders an inline titled panel (no dialog role) by default', () => {
@@ -48,12 +53,46 @@ describe('GameWindow', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
-  it('has no axe-detectable violations (modal)', async () => {
+  it('portals the modal overlay into .app-root, escaping its inline location', () => {
+    // In the real app the inline location can be a transformed ancestor (the
+    // dashboard timer column), which would anchor a `fixed` overlay to itself. The
+    // overlay must land in the app root instead so it stays true to the viewport.
+    const appRoot = document.createElement('div')
+    appRoot.className = 'app-root'
+    document.body.appendChild(appRoot)
+
     const { container } = render(
+      <div data-testid="inline-location">
+        <GameWindow modal title="Letter" onClose={() => {}}>
+          <p>note</p>
+        </GameWindow>
+      </div>,
+    )
+
+    const dialog = screen.getByRole('dialog', { name: /letter/i })
+    expect(appRoot.contains(dialog)).toBe(true)
+    // It left the inline render location entirely.
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+  })
+
+  it('falls back to rendering the modal when no app root exists (still reachable)', () => {
+    render(
+      <GameWindow modal title="Guide" onClose={() => {}}>
+        <p>help</p>
+      </GameWindow>,
+    )
+    // With no .app-root present it portals to document.body; still in the document.
+    expect(screen.getByRole('dialog', { name: /guide/i })).toBeInTheDocument()
+  })
+
+  it('has no axe-detectable violations (modal)', async () => {
+    render(
       <GameWindow modal title="Settings" onClose={() => {}}>
         <p>content</p>
       </GameWindow>,
     )
-    expect(await axe(container)).toHaveNoViolations()
+    // The overlay is portaled to <body>, so scan the document rather than the
+    // (now empty) render container.
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 })

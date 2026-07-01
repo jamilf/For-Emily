@@ -49,11 +49,12 @@ describe('QuestBoard', () => {
 
   it('celebrates (cosmetically) when every quest is done', () => {
     seedAllDone()
-    const { container } = render(<QuestBoard onClose={() => {}} />)
+    // The modal overlay is portaled to the app root (or <body> in tests).
+    render(<QuestBoard onClose={() => {}} />)
     expect(screen.getByText(/3 of 3 quests tended today/i)).toBeInTheDocument()
     expect(screen.getByText(/all tended today/i)).toBeInTheDocument()
     expect(screen.getAllByText('✓ Done')).toHaveLength(3)
-    expect(container.querySelector('.animate-pixel-pop')).toBeTruthy()
+    expect(document.body.querySelector('.animate-pixel-pop')).toBeTruthy()
   })
 
   it('drops the celebration animation under reduced motion', () => {
@@ -70,9 +71,9 @@ describe('QuestBoard', () => {
       dispatchEvent: () => false,
     })
     try {
-      const { container } = render(<QuestBoard onClose={() => {}} />)
+      render(<QuestBoard onClose={() => {}} />)
       expect(screen.getByText(/all tended today/i)).toBeInTheDocument() // still celebrates
-      expect(container.querySelector('.animate-pixel-pop')).toBeNull() // just no motion
+      expect(document.body.querySelector('.animate-pixel-pop')).toBeNull() // just no motion
     } finally {
       window.matchMedia = prev
     }
@@ -95,7 +96,7 @@ describe('QuestBoard', () => {
 
   it('has no axe-detectable accessibility violations', async () => {
     seedAllDone()
-    const { container } = render(<QuestBoard onClose={() => {}} />)
-    expect(await axe(container)).toHaveNoViolations()
+    render(<QuestBoard onClose={() => {}} />)
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 })

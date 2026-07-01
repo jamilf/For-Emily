@@ -45,15 +45,16 @@ describe('Constellations', () => {
   })
 
   it('keeps the decorative sky out of the accessibility tree', () => {
-    const { container } = render(<Constellations onClose={() => {}} />)
-    const svg = container.querySelector('svg')
+    // The modal overlay is portaled to the app root (or <body> in tests).
+    render(<Constellations onClose={() => {}} />)
+    const svg = document.body.querySelector('svg')
     expect(svg).toBeTruthy()
     expect(svg.getAttribute('aria-hidden')).toBe('true')
   })
 
   it('twinkles lit stars normally but stays static under reduced motion', () => {
-    const { container, unmount } = render(<Constellations onClose={() => {}} />)
-    expect(container.querySelectorAll('.animate-twinkle').length).toBeGreaterThan(0)
+    const { unmount } = render(<Constellations onClose={() => {}} />)
+    expect(document.body.querySelectorAll('.animate-twinkle').length).toBeGreaterThan(0)
     unmount()
 
     const prev = window.matchMedia
@@ -68,8 +69,8 @@ describe('Constellations', () => {
       dispatchEvent: () => false,
     })
     try {
-      const { container: c2 } = render(<Constellations onClose={() => {}} />)
-      expect(c2.querySelectorAll('.animate-twinkle').length).toBe(0)
+      render(<Constellations onClose={() => {}} />)
+      expect(document.body.querySelectorAll('.animate-twinkle').length).toBe(0)
     } finally {
       window.matchMedia = prev
     }
@@ -83,7 +84,7 @@ describe('Constellations', () => {
   })
 
   it('has no axe-detectable accessibility violations', async () => {
-    const { container } = render(<Constellations onClose={() => {}} />)
-    expect(await axe(container)).toHaveNoViolations()
+    render(<Constellations onClose={() => {}} />)
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 })

@@ -66,20 +66,21 @@ describe('ForestSpiritsModal', () => {
       dispatchEvent: () => false,
     })
     try {
-      const { container } = render(<ForestSpiritsModal onClose={() => {}} />)
-      expect(container.querySelectorAll('.animate-float').length).toBe(0)
+      render(<ForestSpiritsModal onClose={() => {}} />)
+      expect(document.body.querySelectorAll('.animate-float').length).toBe(0)
     } finally {
       window.matchMedia = prev
     }
   })
 
   it('animates the idle drift when motion is allowed', () => {
-    const { container } = render(<ForestSpiritsModal onClose={() => {}} />)
-    expect(container.querySelectorAll('.animate-float').length).toBeGreaterThan(0)
+    // The modal overlay is portaled to the app root (or <body> in tests).
+    render(<ForestSpiritsModal onClose={() => {}} />)
+    expect(document.body.querySelectorAll('.animate-float').length).toBeGreaterThan(0)
   })
 
   it('has no axe-detectable accessibility violations', async () => {
-    const { container } = render(<ForestSpiritsModal onClose={() => {}} />)
-    expect(await axe(container)).toHaveNoViolations()
+    render(<ForestSpiritsModal onClose={() => {}} />)
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 })

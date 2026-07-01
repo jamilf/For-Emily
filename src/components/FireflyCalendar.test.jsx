@@ -55,11 +55,13 @@ describe('FireflyCalendar', () => {
   })
 
   it('moves focus with arrow keys via roving tabindex', () => {
-    const { container } = render(<FireflyCalendar onClose={() => {}} />)
-    const start = container.querySelector('button[tabindex="0"]')
+    // The modal overlay is portaled to the app root (or <body> in tests), so query
+    // the document rather than the render container.
+    render(<FireflyCalendar onClose={() => {}} />)
+    const start = document.body.querySelector('button[tabindex="0"]')
     expect(start).toBeTruthy()
     fireEvent.keyDown(start, { key: 'ArrowLeft' })
-    const next = container.querySelector('button[tabindex="0"]')
+    const next = document.body.querySelector('button[tabindex="0"]')
     expect(next).not.toBe(start)
     expect(next).toBe(document.activeElement)
   })
@@ -73,9 +75,9 @@ describe('FireflyCalendar', () => {
   })
 
   it('twinkles fireflies normally but stays static under reduced motion', () => {
-    const { container, unmount } = render(<FireflyCalendar onClose={() => {}} />)
+    const { unmount } = render(<FireflyCalendar onClose={() => {}} />)
     // Default stub reports no preference → fireflies twinkle.
-    expect(container.querySelectorAll('span.bg-ever-yellow.animate-twinkle').length).toBeGreaterThan(0)
+    expect(document.body.querySelectorAll('span.bg-ever-yellow.animate-twinkle').length).toBeGreaterThan(0)
     unmount()
 
     const prev = window.matchMedia
@@ -90,8 +92,8 @@ describe('FireflyCalendar', () => {
       dispatchEvent: () => false,
     })
     try {
-      const { container: c2 } = render(<FireflyCalendar onClose={() => {}} />)
-      const dots = c2.querySelectorAll('span.bg-ever-yellow')
+      render(<FireflyCalendar onClose={() => {}} />)
+      const dots = document.body.querySelectorAll('span.bg-ever-yellow')
       expect(dots.length).toBeGreaterThan(0)
       dots.forEach((d) => expect(d.classList.contains('animate-twinkle')).toBe(false))
     } finally {
@@ -107,8 +109,8 @@ describe('FireflyCalendar', () => {
   })
 
   it('has no axe-detectable accessibility violations', async () => {
-    const { container } = render(<FireflyCalendar onClose={() => {}} />)
-    expect(await axe(container)).toHaveNoViolations()
+    render(<FireflyCalendar onClose={() => {}} />)
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 })
 

@@ -1,5 +1,7 @@
 import { useRef } from 'react'
+import { createPortal } from 'react-dom'
 import useFocusTrap from '../../hooks/useFocusTrap.js'
+import { portalTarget } from '../../utils/portalTarget.js'
 
 /**
  * GameWindow — the cozy 16-bit JRPG window chrome, built once and adopted across
@@ -105,7 +107,12 @@ export default function GameWindow({
 
   if (!modal) return windowEl
 
-  return (
+  // Portal the overlay to `.app-root` (falling back to <body>): rendered inline, a
+  // `fixed` overlay anchors to the nearest transformed ancestor (e.g. the dashboard
+  // timer column) instead of the viewport. The app root has no transform, so `fixed`
+  // stays true to the screen, and it keeps the `--fx-scale` / `data-fx` cascade a
+  // bare <body> portal would lose.
+  const overlay = (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center modal-overlay-pad">
       <button
         type="button"
@@ -119,4 +126,7 @@ export default function GameWindow({
       </div>
     </div>
   )
+
+  const target = portalTarget()
+  return target ? createPortal(overlay, target) : overlay
 }
