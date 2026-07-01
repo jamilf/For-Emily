@@ -27,6 +27,7 @@ export default defineConfig({
         'src/data/weekReview.js',
         'src/data/companionLine.js',
         'src/data/treeGrowth.js',
+        'src/data/sceneState.js',
         'src/data/spirits.js',
         'src/data/memories.js',
         'src/data/journal.js',

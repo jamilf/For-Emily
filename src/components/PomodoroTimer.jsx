@@ -5,6 +5,7 @@ import usePersistedState from '../hooks/useLocalStorage.js'
 import useEscapeKey from '../hooks/useEscapeKey.js'
 import { SOOT_AWAKE, SOOT_NAP, PAL } from '../pixel/sprites.js'
 import CompanionMenu from './CompanionMenu.jsx'
+import GroveWindow from './GroveWindow.jsx'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
@@ -480,11 +481,13 @@ export default function PomodoroTimer({
           </button>
         </div>
 
-        {/* Focus Garden — a seedling that grows with the session */}
-        {plant && (
-          <div className="flex flex-col items-center">
-            {/* Generator grids are 2x dense (Renderer 2.0): 2.5 keeps the tree the
-                same physical size it has always been. */}
+        {/* The Grove Window — the card's living diorama. The session tree and the
+            companion inhabit one scene whose sky follows the real part of day and
+            whose weather follows the ambient mixer. */}
+        <GroveWindow partOfDay={partOfDay} className="h-40 w-full">
+          {plant && (
+            /* Generator grids are 2x dense (Renderer 2.0): 2.5 keeps the tree the
+               same physical size it has always been. */
             <PixelSprite
               key={withered ? 'withered' : stageIdx}
               grid={plant.grid}
@@ -492,41 +495,11 @@ export default function PomodoroTimer({
               pixel={2.5}
               className={withered ? 'animate-wither' : 'animate-pixel-pop'}
             />
-            {/* Visible caption (sighted only); the sr-only live region below carries
-                the equivalent announcement so screen readers hear it once, on change. */}
-            <p aria-hidden="true" className="mt-2 max-w-xs text-center text-xs text-brown/70">
-              {withered
-                ? "This seedling's on pause. Hit reset to start a new one whenever you're ready."
-                : stageIdx === 0
-                  ? 'Seed planted.'
-                  : stageIdx === 1
-                    ? 'Sprouting.'
-                    : stageIdx === 2
-                      ? 'Coming along.'
-                      : 'Grown. Into the garden it goes.'}
-            </p>
-            <p className="sr-only" aria-live="polite">
-              {withered ? 'The seedling is resting for now.' : growthLabel(stageIdx)}
-            </p>
-          </div>
-        )}
+          )}
 
-        {/* Break micro-activity */}
-        {mode === 'break' && breakTip && (
-          <div
-            className="w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown"
-            aria-live="polite"
-          >
-            <span className="font-display text-brown/70">Try this:</span>
-            <br />
-            {breakTip}
-          </div>
-        )}
-
-        {/* Pixel soot sprite companion — tap to talk (the overworld NPC). It naps
-            during a focus run, so it is only conversational while you are free. */}
-        <div className="flex flex-col items-center gap-1">
-          <div className="relative flex h-20 w-full flex-col items-center justify-end">
+          {/* Pixel soot sprite companion — tap to talk (the overworld NPC). It naps
+              during a focus run, so it is only conversational while you are free. */}
+          <div className="relative flex flex-col items-center justify-end">
             <button
               onClick={napping ? undefined : () => setCompanionOpen(true)}
               disabled={napping}
@@ -551,15 +524,50 @@ export default function PomodoroTimer({
               className="animate-shadow-squish mt-1 h-2 w-12 rounded-full bg-black/25 blur-sm"
             />
           </div>
+        </GroveWindow>
 
-          <p className="text-center text-xs text-brown/70">
-            {hasMail
-              ? 'Tap the sprite. It wrote you a letter.'
-              : napping
-                ? "The sprite's napping while you focus."
-                : 'Tap the sprite to say hello.'}
-          </p>
-        </div>
+        {/* Captions live below the scene, on the card surface, so text contrast
+            never depends on the sky. */}
+        {plant && (
+          <>
+            {/* Visible caption (sighted only); the sr-only live region below carries
+                the equivalent announcement so screen readers hear it once, on change. */}
+            <p aria-hidden="true" className="-mt-2 max-w-xs text-center text-xs text-brown/70">
+              {withered
+                ? "This seedling's on pause. Hit reset to start a new one whenever you're ready."
+                : stageIdx === 0
+                  ? 'Seed planted.'
+                  : stageIdx === 1
+                    ? 'Sprouting.'
+                    : stageIdx === 2
+                      ? 'Coming along.'
+                      : 'Grown. Into the garden it goes.'}
+            </p>
+            <p className="sr-only" aria-live="polite">
+              {withered ? 'The seedling is resting for now.' : growthLabel(stageIdx)}
+            </p>
+          </>
+        )}
+
+        {/* Break micro-activity */}
+        {mode === 'break' && breakTip && (
+          <div
+            className="w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown"
+            aria-live="polite"
+          >
+            <span className="font-display text-brown/70">Try this:</span>
+            <br />
+            {breakTip}
+          </div>
+        )}
+
+        <p className="-mt-2 text-center text-xs text-brown/70">
+          {hasMail
+            ? 'Tap the sprite. It wrote you a letter.'
+            : napping
+              ? "The sprite's napping while you focus."
+              : 'Tap the sprite to say hello.'}
+        </p>
       </div>
 
       {companionOpen && (

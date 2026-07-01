@@ -104,9 +104,16 @@ class Thunder {
 }
 
 export default class WeatherEngine {
-  constructor(canvas, flashEl) {
+  /**
+   * @param {HTMLCanvasElement} canvas
+   * @param {HTMLElement} flashEl  lightning flash overlay
+   * @param {{fitParent?: boolean}} [opts]  size to the canvas's parent instead of
+   *   the window (for a card-scoped scene like the Grove Window)
+   */
+  constructor(canvas, flashEl, { fitParent = false } = {}) {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
+    this.fitParent = fitParent
     this.elements = [new Rain(), new Thunder(flashEl)]
     this.state = { rain: 0, thunder: 0, w: 0, h: 0 }
     this.reduced = false
@@ -130,8 +137,9 @@ export default class WeatherEngine {
 
   resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    const w = window.innerWidth
-    const h = window.innerHeight
+    const host = this.fitParent ? this.canvas.parentElement : null
+    const w = host ? host.clientWidth || 1 : window.innerWidth
+    const h = host ? host.clientHeight || 1 : window.innerHeight
     this.canvas.width = w * dpr
     this.canvas.height = h * dpr
     this.canvas.style.width = w + 'px'
