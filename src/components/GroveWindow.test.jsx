@@ -41,6 +41,21 @@ describe('GroveWindow (the timer diorama)', () => {
     expect(container.querySelector('canvas').closest('[aria-hidden="true"]')).toBeTruthy()
   })
 
+  it('lights exactly the given fireflies (of 12 fixed spots) and marks the phase', () => {
+    const { container } = renderScene({ partOfDay: 'dusk', phase: 'golden', fireflies: 5, warmth: 1 })
+    expect(container.querySelector('[data-phase="golden"]')).toBeTruthy()
+    const dots = [...container.querySelectorAll('.gw-dot')]
+    expect(dots).toHaveLength(12)
+    expect(dots.filter((d) => d.style.opacity !== '0')).toHaveLength(5)
+  })
+
+  it('shows no fireflies or phase outside a session', () => {
+    const { container } = renderScene({ partOfDay: 'day' })
+    expect(container.querySelector('[data-daypart]').hasAttribute('data-phase')).toBe(false)
+    const dots = [...container.querySelectorAll('.gw-dot')]
+    expect(dots.filter((d) => d.style.opacity !== '0')).toHaveLength(0)
+  })
+
   it('has no axe-detectable violations', async () => {
     renderScene({ partOfDay: 'night' }, <button>Talk to the sprite</button>)
     expect(await axe(document.body)).toHaveNoViolations()

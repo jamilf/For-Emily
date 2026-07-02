@@ -40,8 +40,12 @@ test('a finished focus session brings a letter from the sprite', async ({ page }
   await page.clock.fastForward(25 * 60 * 1000 + 2000)
 
   await expect(page.getByText('Session done.')).toBeVisible()
-  // A reflection check-in overlay opens on completion — dismiss it (Esc) before
-  // reaching for the sprite.
+  // The harvest ceremony opens first (skippable); Esc hands off into the
+  // reflection check-in, which we dismiss the same way before reaching the sprite.
+  const ceremony = page.getByRole('dialog', { name: /a little harvest/i })
+  await ceremony.waitFor()
+  await page.keyboard.press('Escape')
+  await expect(ceremony).toBeHidden()
   const reflection = page.getByRole('dialog', { name: /session reflection/i })
   await reflection.waitFor()
   await page.keyboard.press('Escape')

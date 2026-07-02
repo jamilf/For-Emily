@@ -10,6 +10,7 @@ import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
 import { sessionSeed, growthStageForProgress, growthLabel } from '../data/treeGrowth.js'
+import { bloom, bloomLabel } from '../data/sessionBloom.js'
 import useUiSound from '../hooks/useUiSound.js'
 import { endsAtFrom, remainingSeconds, formatClock } from '../utils/timer.js'
 import { dayStr, yesterdayStr } from '../utils/day.js'
@@ -20,6 +21,7 @@ import { recordSession } from '../data/focusLog.js'
 // initial bundle and only loads when Emily opens a letter.
 const LetterModal = lazy(() => import('./LetterModal.jsx'))
 const ReflectionModal = lazy(() => import('./ReflectionModal.jsx'))
+const HarvestCeremony = lazy(() => import('./HarvestCeremony.jsx'))
 
 // Focus length is chosen by Emily so the session can fit the task (a small
 // challenge-skill / planning aid). 25 stays the default; the break is fixed at 5.
@@ -67,6 +69,7 @@ export default function PomodoroTimer({
   const [, setGarden] = usePersistedState('emily.garden', [])
   const [, setFocusLog] = usePersistedState('emily.focusLog', {})
   const [showReflection, setShowReflection] = useState(false)
+  const [showCeremony, setShowCeremony] = useState(false) // the harvest moment
   const [reflectionNote, setReflectionNote] = useState('')
   const [breakTip, setBreakTip] = useState(null)
   const [plantDna, setPlantDna] = useState(null) // this session's growing tree
@@ -115,11 +118,12 @@ export default function PomodoroTimer({
     setHasMail(true)
     if (mode === 'focus') {
       recordFocusSession()
-      setShowReflection(true)
       // One timestamp shared by the garden + the Firefly Calendar so they stay
       // consistent for the same completed session.
       const ts = Date.now()
-      // Harvest the grown tree into the persistent garden.
+      // Harvest the grown tree into the persistent garden. A real harvest opens the
+      // Harvest Ceremony (which hands off into the reflection); a session that
+      // finished withered skips straight to the reflection, with no loss language.
       if (plantDna != null && !withered) {
         setGarden((prev) => [...prev, { id: plantDna, ts }])
         // Spend a queued varietal only now, on a real harvest, and only if it is
@@ -129,6 +133,9 @@ export default function PomodoroTimer({
           setGrove((g) => (g.plantNext === used ? { ...g, plantNext: null } : g))
           plantNextUsedRef.current = null
         }
+        setShowCeremony(true)
+      } else {
+        setShowReflection(true)
       }
       // Log this completed focus session to the Firefly Calendar time-series with
       // its real focus length. Breaks never reach this branch, so they never log.
@@ -196,6 +203,7 @@ export default function PomodoroTimer({
     setRunning(false)
     setHasMail(false)
     setShowReflection(false)
+    setShowCeremony(false)
     setPlantDna(null)
     setWithered(false)
     setBreakTip(
@@ -303,9 +311,31 @@ export default function PomodoroTimer({
     lastStageRef.current = stageIdx
   }, [stageIdx, running, mode, plantDna, playUi])
 
+  // The scene's accretion state. secondsLeft only changes once per real second, so
+  // this recomputes (and the scene re-renders) at most 1/sec, within the perf budget.
+  const bloomState = useMemo(() => bloom(elapsedFrac, { durationSec: total }), [elapsedFrac, total])
+  const sceneLive = mode === 'focus' && plantDna != null
+
+  // THE one polite live region for the whole card. Priority order: completion, then
+  // the break, then the wither pause, then growth + scene milestones, then timer
+  // state. Text only changes at meaningful moments, so nothing chatters per second.
+  const announcement = (() => {
+    if (secondsLeft === 0) return mode === 'focus' ? `Session done. ${growthLabel(3)}` : "Break's over."
+    if (mode === 'break') return breakTip ? `Resting. Try this: ${breakTip}` : 'Time for a break.'
+    if (withered) return 'The seedling is resting for now.'
+    if (sceneLive) return `${growthLabel(stageIdx)} ${bloomLabel(bloomState.phase)}`
+    return running ? 'In focus.' : 'Ready when you are.'
+  })()
+
   return (
     <WindowFrame title="Pomodoro" bodyClass="bg-latte" className={className}>
       <div className="flex flex-col items-center gap-5">
+        {/* The card's single consolidated live region (visible status lines below
+            are aria-hidden so screen readers hear one kind announcement, on change). */}
+        <p className="sr-only" aria-live="polite">
+          {announcement}
+        </p>
+
         {/* Mode toggle */}
         <div
           role="group"
@@ -379,7 +409,7 @@ export default function PomodoroTimer({
         ) : (
           mode === 'focus' &&
           trimmedIntention && (
-            <p className="max-w-xs text-center font-display text-sm text-brown" aria-live="polite">
+            <p className="max-w-xs text-center font-display text-sm text-brown">
               <span className="text-brown/60">When I start:</span> {trimmedIntention}
             </p>
           )
@@ -440,7 +470,7 @@ export default function PomodoroTimer({
             <span className="font-sans text-6xl font-bold tabular-nums tracking-tight sm:text-6xl md:text-7xl">
               {formatClock(secondsLeft)}
             </span>
-            <span className="mt-1.5 text-sm text-brown" aria-live="polite">
+            <span className="mt-1.5 text-sm text-brown" aria-hidden="true">
               {secondsLeft === 0
                 ? mode === 'focus'
                   ? 'Session done.'
@@ -484,7 +514,15 @@ export default function PomodoroTimer({
         {/* The Grove Window — the card's living diorama. The session tree and the
             companion inhabit one scene whose sky follows the real part of day and
             whose weather follows the ambient mixer. */}
-        <GroveWindow partOfDay={partOfDay} className="h-40 w-full">
+        {/* Fireflies and warmth freeze with the clock during any pause (including
+            the wither rest) and never regress: nothing earned in a session leaves. */}
+        <GroveWindow
+          partOfDay={partOfDay}
+          phase={sceneLive ? bloomState.phase : null}
+          fireflies={sceneLive ? bloomState.fireflies : 0}
+          warmth={sceneLive ? bloomState.lightWarmth : 0}
+          className="h-40 w-full"
+        >
           {plant && (
             /* Generator grids are 2x dense (Renderer 2.0): 2.5 keeps the tree the
                same physical size it has always been. */
@@ -529,32 +567,24 @@ export default function PomodoroTimer({
         {/* Captions live below the scene, on the card surface, so text contrast
             never depends on the sky. */}
         {plant && (
-          <>
-            {/* Visible caption (sighted only); the sr-only live region below carries
-                the equivalent announcement so screen readers hear it once, on change. */}
-            <p aria-hidden="true" className="-mt-2 max-w-xs text-center text-xs text-brown/70">
-              {withered
-                ? "This seedling's on pause. Hit reset to start a new one whenever you're ready."
-                : stageIdx === 0
-                  ? 'Seed planted.'
-                  : stageIdx === 1
-                    ? 'Sprouting.'
-                    : stageIdx === 2
-                      ? 'Coming along.'
-                      : 'Grown. Into the garden it goes.'}
-            </p>
-            <p className="sr-only" aria-live="polite">
-              {withered ? 'The seedling is resting for now.' : growthLabel(stageIdx)}
-            </p>
-          </>
+          /* Visible caption (sighted only); the card's consolidated live region
+             carries the equivalent announcement, once, on change. */
+          <p aria-hidden="true" className="-mt-2 max-w-xs text-center text-xs text-brown/70">
+            {withered
+              ? "This seedling's on pause. Hit reset to start a new one whenever you're ready."
+              : stageIdx === 0
+                ? 'Seed planted.'
+                : stageIdx === 1
+                  ? 'Sprouting.'
+                  : stageIdx === 2
+                    ? 'Coming along.'
+                    : 'Grown. Into the garden it goes.'}
+          </p>
         )}
 
-        {/* Break micro-activity */}
+        {/* Break micro-activity (announced by the consolidated region above) */}
         {mode === 'break' && breakTip && (
-          <div
-            className="w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown"
-            aria-live="polite"
-          >
+          <div className="w-full max-w-xs rounded-2xl bg-ever-green/15 px-4 py-3 text-center text-sm text-brown">
             <span className="font-display text-brown/70">Try this:</span>
             <br />
             {breakTip}
@@ -591,6 +621,18 @@ export default function PomodoroTimer({
 
       <Suspense fallback={null}>
         {letterContext && <LetterModal context={letterContext} onClose={() => setLetterContext(null)} />}
+        {/* The harvest moment: one short skippable ceremony, then the reflection. */}
+        {showCeremony && plant && (
+          <HarvestCeremony
+            plant={plant}
+            intention={trimmedIntention}
+            companionName={companionName}
+            onDone={() => {
+              setShowCeremony(false)
+              setShowReflection(true)
+            }}
+          />
+        )}
         {justFinishedFocus && showReflection && (
           <ReflectionModal
             note={reflectionNote}

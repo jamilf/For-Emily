@@ -614,6 +614,28 @@ body {
 .animate-modal-in {
   animation: modalIn 0.28s ease-out forwards;
 }
+/* Grove Window fireflies: a slow gather-and-drift. Frozen to a still, visible dot
+   by the global prefers-reduced-motion rule; the component also drops the class
+   entirely under Minimal effects so the frame is truly static. */
+@keyframes gwFirefly {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(4px, -7px);
+    opacity: 1;
+  }
+}
+.gw-firefly {
+  animation: gwFirefly 4.6s ease-in-out infinite;
+}
+/* The golden minute: fireflies brighten while the scene's warmth blooms. */
+[data-phase='golden'] .gw-dot,
+[data-phase='done'] .gw-dot {
+  box-shadow: 0 0 7px 2.5px rgba(255, 210, 125, 0.85);
+}
 .animate-fade-in {
   animation: fadeIn 0.22s ease-out forwards;
 }

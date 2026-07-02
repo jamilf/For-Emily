@@ -25,7 +25,7 @@ describe('PomodoroTimer (timestamp-based countdown)', () => {
   it('starts at 25:00 in focus mode', () => {
     renderTimer()
     expect(screen.getByText('25:00')).toBeInTheDocument()
-    expect(screen.getByText('Ready when you are.')).toBeInTheDocument()
+    expect(screen.getAllByText('Ready when you are.').length).toBeGreaterThan(0)
   })
 
   it('counts down from a wall-clock deadline once started', () => {
@@ -51,7 +51,7 @@ describe('PomodoroTimer (timestamp-based countdown)', () => {
     act(() => vi.advanceTimersByTime(30_000))
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
     expect(screen.getByText('25:00')).toBeInTheDocument()
-    expect(screen.getByText('Ready when you are.')).toBeInTheDocument()
+    expect(screen.getAllByText('Ready when you are.').length).toBeGreaterThan(0)
   })
 
   it('lets her choose a focus length, which retimes the clock and persists', () => {
@@ -173,5 +173,70 @@ describe('PomodoroTimer — live tree growth', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pause' })) // clears the tick interval
     vi.useRealTimers()
     expect(await axe(document.body)).toHaveNoViolations()
+  })
+})
+
+describe('PomodoroTimer — session bloom + harvest ceremony', () => {
+  const start = () => fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  const advance = (ms) => act(() => vi.advanceTimersByTime(ms))
+  const scene = () => document.body.querySelector('[data-daypart]')
+
+  it('the scene moves settling -> growing -> golden as the session runs', () => {
+    renderTimer()
+    start()
+    expect(scene().getAttribute('data-phase')).toBe('settling')
+    advance(9 * 60_000) // 0.36 of 25 min
+    expect(scene().getAttribute('data-phase')).toBe('growing')
+    advance(15.5 * 60_000) // 24.5 min: inside the final minute
+    expect(scene().getAttribute('data-phase')).toBe('golden')
+  })
+
+  it('keeps exactly ONE live region in the card, announcing milestones kindly', () => {
+    const { container } = renderTimer()
+    const regions = container.querySelectorAll('[aria-live]')
+    expect(regions).toHaveLength(1)
+    start()
+    expect(regions[0].textContent).toMatch(/a seed, tucked into the soil/i)
+    expect(regions[0].textContent).toMatch(/the grove settles in with you/i)
+    advance(9 * 60_000)
+    expect(regions[0].textContent).toMatch(/fireflies are starting to gather/i)
+  })
+
+  it('completion opens the harvest ceremony, and Esc hands off into the reflection', async () => {
+    localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
+    renderTimer()
+    start()
+    advance(25 * 60_000)
+    vi.useRealTimers() // let the lazy overlays resolve
+    const ceremony = await screen.findByRole('dialog', { name: /a little harvest/i })
+    expect(ceremony).toHaveTextContent(/one more tree for your grove/i)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(await screen.findByRole('dialog', { name: /session reflection/i })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: /a little harvest/i })).not.toBeInTheDocument()
+  })
+
+  it('the ceremony shows her intention back and its Continue button also advances', async () => {
+    localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
+    renderTimer()
+    fireEvent.change(screen.getByLabelText(/when i start, i will/i), {
+      target: { value: 'read one page' },
+    })
+    start()
+    advance(25 * 60_000)
+    vi.useRealTimers()
+    const ceremony = await screen.findByRole('dialog', { name: /a little harvest/i })
+    expect(ceremony).toHaveTextContent(/read one page/)
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }))
+    expect(await screen.findByRole('dialog', { name: /session reflection/i })).toBeInTheDocument()
+  })
+
+  it('an abandoned session shows no loss language and returns to a quiet scene', () => {
+    renderTimer()
+    start()
+    advance(6 * 60_000)
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(screen.getAllByText('Ready when you are.').length).toBeGreaterThan(0)
+    expect(document.body.textContent).not.toMatch(/lost|wasted|failed|gave up|broke/i)
+    expect(scene().hasAttribute('data-phase')).toBe(false)
   })
 })

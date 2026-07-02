@@ -19,10 +19,11 @@ export function sessionSeed({ startTs, plantNext } = {}) {
 
 // Stage thresholds tuned so the final stretch shows a full, thriving tree: mature is
 // reached at 0.90, before completion, so finishing reads as a harvest rather than the
-// moment it matures.
-const SPROUT_AT = 0.3
-const SAPLING_AT = 0.62
-const MATURE_AT = 0.9
+// moment it matures. Exported so the scene (sessionBloom) aligns its milestones to
+// the same numbers instead of restating them.
+export const SPROUT_AT = 0.3
+export const SAPLING_AT = 0.62
+export const MATURE_AT = 0.9
 
 /**
  * Growth stage index (0..3 over STAGES) for a focus-progress fraction. Clamps

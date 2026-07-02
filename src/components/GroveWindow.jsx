@@ -28,9 +28,33 @@ const FLORA = [
   { grid: 2, className: 'bottom-2 right-4' },
 ]
 
-function GroveWindow({ partOfDay = 'day', className = '', children }) {
+// Twelve fixed firefly spots (matching the FIREFLY_CAP): they appear one by one as
+// the session progresses and hold; positions never shuffle mid-session.
+const FIREFLY_SPOTS = [
+  [16, 58],
+  [78, 44],
+  [34, 36],
+  [62, 62],
+  [8, 40],
+  [88, 58],
+  [46, 30],
+  [70, 26],
+  [24, 70],
+  [54, 48],
+  [90, 34],
+  [12, 24],
+]
+
+function GroveWindow({
+  partOfDay = 'day',
+  phase = null,
+  fireflies = 0,
+  warmth = 0,
+  className = '',
+  children,
+}) {
   const mixer = useMixerSafe()
-  const { reduced } = useUiPrefs()
+  const { reduced, instantMotion } = useUiPrefs()
   const rain = mixer?.levels?.steadyRain ?? 0
   const thunder = mixer?.levels?.thunder ?? 0
 
@@ -73,7 +97,11 @@ function GroveWindow({ partOfDay = 'day', className = '', children }) {
   const { skyRamp } = scene
 
   return (
-    <div data-daypart={scene.daypart} className={`relative overflow-hidden rounded-2xl ${className}`}>
+    <div
+      data-daypart={scene.daypart}
+      data-phase={phase || undefined}
+      className={`relative overflow-hidden rounded-2xl ${className}`}
+    >
       {/* Sky */}
       <div
         aria-hidden="true"
@@ -121,6 +149,42 @@ function GroveWindow({ partOfDay = 'day', className = '', children }) {
           className="absolute inset-0 bg-white"
           style={{ opacity: 0, transition: 'opacity 120ms linear' }}
         />
+      </div>
+      {/* Session warmth: the light blooms gold as completion approaches (fully
+          golden in the final minute). Opacity-only, so it never costs layout. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 85%, rgba(255,210,125,0.5), transparent 72%)',
+          opacity: warmth,
+          transition: 'opacity 2000ms ease',
+        }}
+      />
+      {/* Fireflies gather one by one at fixed spots and hold (never fewer). Drift is
+          a transform/opacity loop, dropped entirely under Minimal effects. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        {FIREFLY_SPOTS.map(([left, top], i) => {
+          const lit = i < fireflies
+          return (
+            <span
+              key={`${left}-${top}`}
+              // The drift animation only runs on lit dots (a CSS animation would
+              // override the inline opacity that keeps unlit dots invisible).
+              className={`gw-dot absolute h-1 w-1 rounded-full bg-ever-yellow ${
+                lit && !instantMotion ? 'gw-firefly' : ''
+              }`}
+              style={{
+                left: `${left}%`,
+                top: `${top}%`,
+                opacity: lit ? 0.8 : 0,
+                transition: 'opacity 1200ms ease',
+                boxShadow: '0 0 4px 1px rgba(219,188,127,0.8)',
+                animationDelay: `${(i % 6) * 0.7}s`,
+              }}
+            />
+          )
+        })}
       </div>
       {/* The world's inhabitants: the session tree and the companion */}
       <div className="relative flex h-full items-end justify-center gap-10 px-4 pb-1">{children}</div>
