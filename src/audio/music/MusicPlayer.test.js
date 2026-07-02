@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import MusicPlayer from './MusicPlayer.js'
+import { RESOLUTION_MOTIF } from './scoreArc.js'
 
 // A tiny offline AudioContext mock: it records the nodes it makes and every
 // connect/disconnect, so we can assert the player wires + tears down correctly
@@ -154,5 +155,64 @@ describe('MusicPlayer — wiring with a mocked AudioContext', () => {
     p.dispose()
     expect(p.out.disconnect).toHaveBeenCalled()
     expect(p.entGain.disconnect).toHaveBeenCalled()
+  })
+
+  it('setPhase updates the role-gain mix and is a no-op when unchanged', () => {
+    const p = new MusicPlayer(ctx, dest)
+    expect(p.layerGain.pad).toBe(1) // outside a session: full presence, unaffected
+    p.setPhase('settling')
+    expect(p.phase).toBe('settling')
+    expect(p.layerGain.pad).toBe(0)
+    expect(p.layerGain.bass).toBe(1)
+    const sameRef = p.layerGain
+    p.setPhase('settling') // unchanged: no-op, does not even recompute the map
+    expect(p.layerGain).toBe(sameRef)
+    p.setPhase('golden')
+    expect(p.layerGain.pad).toBe(1)
+  })
+
+  it('the session phase blooms the pad layer in through the real scheduler, bass unaffected', () => {
+    vi.useFakeTimers()
+    const p = new MusicPlayer(ctx, dest)
+    p.setStyle('ghibli') // pad: true, so the pad layer is meaningfully present
+    vi.advanceTimersByTime(260)
+    expect(p.style).toBeTruthy()
+
+    p.setPhase('settling')
+    ctx.created.length = 0
+    p._scheduleBar(0, ctx.currentTime)
+    const settlingOsc = ctx.ofKind('osc').length
+
+    p.setPhase('golden')
+    ctx.created.length = 0
+    p._scheduleBar(0, ctx.currentTime) // identical bar index + seed: same notes planned
+    const goldenOsc = ctx.ofKind('osc').length
+
+    // The pad voice stacks 3 detuned oscillators per note (voices.js); silenced
+    // entirely at settling (roleGain 0), fully present at golden.
+    expect(goldenOsc).toBeGreaterThan(settlingOsc)
+    p.stop()
+  })
+
+  it('playPhrase is a safe no-op without a style selected (music off)', () => {
+    const p = new MusicPlayer(ctx, dest)
+    ctx.created.length = 0
+    p.playPhrase(RESOLUTION_MOTIF)
+    expect(ctx.ofKind('osc').length).toBe(0)
+  })
+
+  it('playPhrase plays the resolution motif in the current style key', () => {
+    vi.useFakeTimers()
+    const p = new MusicPlayer(ctx, dest)
+    p.setStyle('ghibli') // tonic C4 (midi 60), lydian
+    vi.advanceTimersByTime(260)
+    ctx.created.length = 0
+    p.playPhrase(RESOLUTION_MOTIF)
+    // 4 'tri' notes (1 osc each) + 2 'pad' notes (3 detuned osc each) = 10.
+    expect(ctx.ofKind('osc').length).toBe(10)
+    // The first note (degree 1, the tonic) lands on middle C.
+    const firstOsc = ctx.ofKind('osc')[0]
+    expect(firstOsc.frequency.value).toBeCloseTo(261.63, 1)
+    p.stop()
   })
 })

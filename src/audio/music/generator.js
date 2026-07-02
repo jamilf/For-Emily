@@ -4,9 +4,11 @@
 // which is what makes it unit-testable. The player (voices/MusicPlayer) turns
 // these events into sound; this file decides only WHAT is played, never HOW.
 //
-// A NoteEvent is { start, dur, midi, freq, gain, voice } with start/dur in BEATS
-// (the player scales by 60/bpm). `voice` is one of 'piano' | 'epiano' | 'pad' |
-// 'bass' and maps to a synth voice in voices.js.
+// A NoteEvent is { start, dur, midi, freq, gain, voice, role } with start/dur in
+// BEATS (the player scales by 60/bpm). `voice` is one of 'piano' | 'epiano' | 'pad' |
+// 'bass' and maps to a synth voice in voices.js. `role` is one of 'bass' | 'pad' |
+// 'chord' | 'lead' | 'perc' — the layer this event belongs to, consulted by the
+// player for focus-thinning and the session-phase role mix (scoreArc.js).
 
 import {
   mulberry32,
@@ -59,23 +61,23 @@ export function planBar(style, seed, barIndex) {
   // ---- bass --------------------------------------------------------------
   const rootMidi = foldIntoRange(degreeToMidi(tonicMidi, mode, chord.degree), bassFloor, bassFloor + 11)
   if (style.bassPattern === 'root') {
-    push(0, beatsPerBar, rootMidi, hum(0.5), voices.bass)
+    push(0, beatsPerBar, rootMidi, hum(0.5), voices.bass, 'bass')
   } else if (style.bassPattern === 'rootfifth') {
     const fifth = foldIntoRange(degreeToMidi(tonicMidi, mode, chord.degree + 4), bassFloor, bassFloor + 11)
-    push(0, beatsPerBar / 2, rootMidi, hum(0.5), voices.bass)
-    push(beatsPerBar / 2, beatsPerBar / 2, fifth, hum(0.42), voices.bass)
+    push(0, beatsPerBar / 2, rootMidi, hum(0.5), voices.bass, 'bass')
+    push(beatsPerBar / 2, beatsPerBar / 2, fifth, hum(0.42), voices.bass, 'bass')
   } else if (style.bassPattern === 'alberti') {
     // The classic broken-chord left hand: low, high, middle, high.
     const triad = voiceChord(tonicMidi, mode, chordDegrees(chord.degree, 3), bassFloor)
     const order = [0, 2, 1, 2]
     for (let k = 0; k < beatsPerBar * 2; k++) {
-      push(k * EIGHTH, EIGHTH * 0.95, triad[order[k % 4]], hum(0.32), voices.bass)
+      push(k * EIGHTH, EIGHTH * 0.95, triad[order[k % 4]], hum(0.32), voices.bass, 'bass')
     }
   }
 
   // ---- chord layer -------------------------------------------------------
   if (style.pad) {
-    for (const m of voiced) push(0, beatsPerBar, m, hum(0.16), 'pad')
+    for (const m of voiced) push(0, beatsPerBar, m, hum(0.16), 'pad', 'pad')
   }
   if (style.chordPattern === 'arp') {
     // Quarter-note roll for slow styles, eighth-note roll otherwise.
@@ -87,15 +89,15 @@ export function planBar(style, seed, barIndex) {
       const ti = k % voiced.length
       const oct = Math.floor(k / voiced.length)
       const start = swung(Math.round((k * stepBeats) / EIGHTH), swing)
-      push(start, stepBeats * 0.9, voiced[ti] + oct * 12, hum(0.26), voices.chord)
+      push(start, stepBeats * 0.9, voiced[ti] + oct * 12, hum(0.26), voices.chord, 'chord')
     }
   } else if (style.chordPattern === 'stab') {
     // Soft electric-piano chords on beats 2 and 4, plus an occasional syncopation.
     for (const pos of [2, 6]) {
-      for (const m of voiced) push(swung(pos, swing), beatsPerBar / 4, m, hum(0.22), voices.chord)
+      for (const m of voiced) push(swung(pos, swing), beatsPerBar / 4, m, hum(0.22), voices.chord, 'chord')
     }
     if (rng() < 0.5) {
-      for (const m of voiced) push(swung(7, swing), EIGHTH, m, hum(0.16), voices.chord)
+      for (const m of voiced) push(swung(7, swing), EIGHTH, m, hum(0.16), voices.chord, 'chord')
     }
   }
 
@@ -120,7 +122,7 @@ export function planBar(style, seed, barIndex) {
   // stays in key; the noise voice ignores pitch and just centres its filter.
   if (style.percussion) {
     for (const b of [1, 3]) {
-      if (b < beatsPerBar) push(b, 0.12, tonicMidi, hum(0.16), 'noise')
+      if (b < beatsPerBar) push(b, 0.12, tonicMidi, hum(0.16), 'noise', 'perc')
     }
   }
 

@@ -84,7 +84,7 @@ export default function PomodoroTimer({
   const plantNextUsedRef = useRef(null) // the queued varietal this session grew, if any
   const lastStageRef = useRef(0) // last announced/played growth stage (avoids re-firing)
 
-  const { rampMaster, restoreMaster } = useMixer()
+  const { rampMaster, restoreMaster, setSessionPhase, playResolutionMotif } = useMixer()
   const playUi = useUiSound()
 
   const total = durations[mode]
@@ -137,6 +137,8 @@ export default function PomodoroTimer({
           plantNextUsedRef.current = null
         }
         setShowCeremony(true)
+        // One short original phrase, only on a real harvest — never on a withered ending.
+        playResolutionMotif()
       } else {
         setShowReflection(true)
       }
@@ -326,6 +328,12 @@ export default function PomodoroTimer({
   // this recomputes (and the scene re-renders) at most 1/sec, within the perf budget.
   const bloomState = useMemo(() => bloom(elapsedFrac, { durationSec: total }), [elapsedFrac, total])
   const sceneLive = mode === 'focus' && plantDna != null
+
+  // Let the score breathe with the session arc: the accompaniment blooms in as
+  // the scene escalates (setSessionPhase itself no-ops when the phase repeats).
+  useEffect(() => {
+    setSessionPhase(sceneLive && !withered ? bloomState.phase : null)
+  }, [sceneLive, withered, bloomState.phase, setSessionPhase])
 
   // A tiny lit lantern appears beside the companion for the golden minute, whether
   // it is awake or napping through the run, a small warm cue nothing else conveys.

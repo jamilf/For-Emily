@@ -9,6 +9,8 @@
 import { getStyle } from './styles.js'
 import { planBar, secondsPerBeat } from './generator.js'
 import { triggerVoice, createCrackle } from './voices.js'
+import { degreeToMidi, midiOf, midiToFreq } from './theory.js'
+import { layersForPhase } from './scoreArc.js'
 
 const LOOKAHEAD = 0.1 // schedule this far ahead, in seconds
 const TICK = 25 // scheduler wake interval, in ms
@@ -71,6 +73,11 @@ export default class MusicPlayer {
     this.crackleDispose = null
     this.volume = 0.6
     this.focus = false
+    // The session's scene phase (settling/growing/golden/done, or null outside a
+    // session) drives a per-role gain multiplier, so the accompaniment breathes
+    // with the session arc without touching the focus-thinning above.
+    this.phase = null
+    this.layerGain = layersForPhase(null)
   }
 
   // The volume to ride to, gently dipped while a deep-focus session is active.
@@ -181,7 +188,20 @@ export default class MusicPlayer {
       // During a deep-focus session, thin the music: drop the melody + percussion,
       // keeping the calm bass/chord/pad bed (it also ducks, in setFocus).
       if (this.focus && (e.role === 'lead' || e.voice === 'noise')) continue
-      triggerVoice(ctx, this.busIn, e.voice, e.freq * wow, t0 + e.start * beat, e.dur * beat, e.gain)
+      // The session-phase role mix: the pad/chord layers bloom in as the scene
+      // escalates (scoreArc.js). A silent role is skipped rather than triggered
+      // at zero gain.
+      const roleGain = this.layerGain[e.role] ?? 1
+      if (roleGain <= 0) continue
+      triggerVoice(
+        ctx,
+        this.busIn,
+        e.voice,
+        e.freq * wow,
+        t0 + e.start * beat,
+        e.dur * beat,
+        e.gain * roleGain,
+      )
     }
   }
 
@@ -202,6 +222,32 @@ export default class MusicPlayer {
     const t = this.ctx.currentTime
     this.out.gain.cancelScheduledValues(t)
     this.out.gain.setTargetAtTime(this._targetVol(), t, 0.6)
+  }
+
+  /** The session's scene phase (or null outside a session); see scoreArc.js. */
+  setPhase(phase) {
+    if (this.phase === phase) return
+    this.phase = phase
+    this.layerGain = layersForPhase(phase)
+  }
+
+  /**
+   * Play a short one-shot phrase (scale degrees relative to the CURRENT style's
+   * tonic/mode, so it always lands in key) straight onto the bus, bypassing the
+   * bar scheduler. A safe no-op with no style selected (music off): there is
+   * nothing to resolve into.
+   * @param {Array<{start:number,dur:number,degree:number,voice:string,gain:number}>} events
+   */
+  playPhrase(events) {
+    if (!this.style || this.styleId === 'off') return
+    const ctx = this.ctx
+    const beat = secondsPerBeat(this.style)
+    const t0 = ctx.currentTime + 0.05
+    const tonicMidi = midiOf(this.style.tonic.name, this.style.tonic.octave)
+    for (const e of events) {
+      const freq = midiToFreq(degreeToMidi(tonicMidi, this.style.mode, e.degree))
+      triggerVoice(ctx, this.busIn, e.voice, freq, t0 + e.start * beat, e.dur * beat, e.gain)
+    }
   }
 
   /**

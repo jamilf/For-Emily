@@ -6,6 +6,7 @@ import { LAYERS } from './ambientLayers.js'
 import MusicPlayer from './music/MusicPlayer.js'
 import { MUSIC_STYLES, labelFor } from './music/styles.js'
 import { pickAutoMood } from './music/autoMood.js'
+import { RESOLUTION_MOTIF } from './music/scoreArc.js'
 import { playBlip } from './uiSounds.js'
 
 /**
@@ -124,6 +125,7 @@ export default function AudioMixerProvider({ children }) {
   const rainRef = useRef(mixer.levels.steadyRain ?? 0)
   rainRef.current = mixer.levels.steadyRain ?? 0
   const focusActiveRef = useRef(false)
+  const sessionPhaseRef = useRef(null)
   const partOfDay = useTimeOfDay()
 
   // Resolve a chosen music id to a concrete style id. Everything but 'auto' passes
@@ -332,6 +334,21 @@ export default function AudioMixerProvider({ children }) {
     [resolveStyle],
   )
 
+  // Reported by the Pomodoro: the session's scene phase (settling/growing/golden/
+  // done), or null outside a session. Blooms the pad/chord layers in as the scene
+  // escalates. Not persisted, purely ephemeral like setFocusActive.
+  const setSessionPhase = useCallback((phase) => {
+    if (sessionPhaseRef.current === phase) return
+    sessionPhaseRef.current = phase
+    musicRef.current?.setPhase(phase)
+  }, [])
+
+  // A short, original resolution motif for a real harvest — safe no-op if music
+  // is off (playPhrase itself no-ops with no style selected).
+  const playResolutionMotif = useCallback(() => {
+    musicRef.current?.playPhrase(RESOLUTION_MOTIF)
+  }, [])
+
   // Re-resolve Auto (crossfaded) when the part of day or the rain level changes.
   // setStyle no-ops when the resolved mood is unchanged, so this is cheap.
   useEffect(() => {
@@ -409,6 +426,8 @@ export default function AudioMixerProvider({ children }) {
     setMusicVolume,
     setEntrainment,
     setFocusActive,
+    setSessionPhase,
+    playResolutionMotif,
     uiSound,
     rampMaster,
     restoreMaster,
