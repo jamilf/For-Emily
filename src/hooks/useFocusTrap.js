@@ -53,6 +53,11 @@ export default function useFocusTrap(active = true, { onEscape, initialFocus } =
 
     function onKeyDown(e) {
       if (e.key === 'Escape') {
+        // Stop this keypress here: if onEscape closes this overlay and a new one
+        // opens in response (e.g. the harvest ceremony handing off to the
+        // reflection), a listener newly attached during this same event's bubble
+        // phase would otherwise catch the very same keydown and close that one too.
+        e.stopPropagation()
         onEscape?.()
         return
       }
