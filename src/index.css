@@ -623,8 +623,12 @@ body {
 .animate-blob-drift {
   animation: blobDrift ease-in-out infinite;
 }
+/* backwards (not both/forwards): once the entrance play-through ends the
+   animation must stop contesting opacity/transform, or a later transition on
+   the same element (e.g. the Focus Fade curtain) is permanently overridden by
+   the finished animation's held end frame and never visibly animates. */
 .animate-slide-up {
-  animation: slideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: slideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 .animate-soot-rise {
   animation: sootRise 0.75s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;

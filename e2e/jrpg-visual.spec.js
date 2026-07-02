@@ -57,3 +57,23 @@ test.describe('reduced motion', () => {
     await shoot(page, testInfo, 'dashboard-reduced-motion')
   })
 })
+
+// The Living Grove: the intention planted as a sign inside the scene, and the
+// supporting rail softening (the Focus Curtain) once a session is underway.
+test('the grove scene carries the intention sign and the session softens the rail', async ({
+  page,
+}, testInfo) => {
+  await page.clock.install()
+  await page.goto('/')
+  await page.waitForTimeout(300)
+
+  await page.getByLabel(/when i start, i will/i).fill('read one page')
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.getByText('Seed planted.')).toBeVisible()
+  await expect(page.getByText('read one page')).toBeVisible()
+
+  // Well into the final minute: golden light, fireflies, and the softened rail.
+  await page.clock.fastForward(24.5 * 60 * 1000)
+  await expect(page.getByText('Grown. Into the garden it goes.')).toBeVisible()
+  await shoot(page, testInfo, 'grove-golden-with-sign')
+})

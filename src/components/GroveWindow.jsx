@@ -3,7 +3,7 @@ import { useMixerSafe } from '../audio/AudioMixerProvider.jsx'
 import useUiPrefs from '../hooks/useUiPrefs.js'
 import WeatherEngine from '../weather/WeatherEngine.js'
 import PixelSprite from '../pixel/PixelSprite.jsx'
-import { PLANTS, PAL } from '../pixel/sprites.js'
+import { PLANTS, PAL, SIGN } from '../pixel/sprites.js'
 import { deriveScene } from '../data/sceneState.js'
 
 /**
@@ -50,6 +50,7 @@ function GroveWindow({
   phase = null,
   fireflies = 0,
   warmth = 0,
+  intention = null,
   className = '',
   children,
 }) {
@@ -186,6 +187,17 @@ function GroveWindow({
           )
         })}
       </div>
+      {/* The one thing she named for this session, planted as a small sign in the
+          grove rather than floating as separate UI above the scene. A backing chip
+          keeps the text legible over any sky. */}
+      {intention && (
+        <div className="absolute left-2 top-2 flex max-w-[70%] items-start gap-1.5">
+          <PixelSprite grid={SIGN} palette={PAL} pixel={2.5} className="shrink-0" />
+          <p className="rounded-lg bg-cream/80 px-1.5 py-0.5 text-[11px] leading-tight text-brownDark shadow-sm">
+            <span className="text-brown/60">When I start:</span> {intention}
+          </p>
+        </div>
+      )}
       {/* The world's inhabitants: the session tree and the companion */}
       <div className="relative flex h-full items-end justify-center gap-10 px-4 pb-1">{children}</div>
     </div>

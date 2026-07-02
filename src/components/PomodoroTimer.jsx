@@ -423,8 +423,10 @@ export default function PomodoroTimer({
         )}
 
         {/* Session intention as an implementation intention ("when I start, I will…"):
-            naming the concrete first action makes task initiation easier. */}
-        {showIntentionInput ? (
+            naming the concrete first action makes task initiation easier. Once the
+            session is underway it is pinned as a small sign inside the Grove Window
+            scene instead of floating here above the ring. */}
+        {showIntentionInput && (
           <div className="w-full max-w-xs">
             <label
               htmlFor="intention-input"
@@ -441,13 +443,6 @@ export default function PomodoroTimer({
               className="w-full rounded-xl border-2 border-brown/20 bg-white/70 px-3 py-2 text-center text-sm text-brownDark placeholder:text-brown/40 focus:border-brown/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow"
             />
           </div>
-        ) : (
-          mode === 'focus' &&
-          trimmedIntention && (
-            <p className="max-w-xs text-center font-display text-sm text-brown">
-              <span className="text-brown/60">When I start:</span> {trimmedIntention}
-            </p>
-          )
         )}
 
         {/* Ring */}
@@ -556,6 +551,7 @@ export default function PomodoroTimer({
           phase={sceneLive ? bloomState.phase : null}
           fireflies={sceneLive ? bloomState.fireflies : 0}
           warmth={sceneLive ? bloomState.lightWarmth : 0}
+          intention={sceneLive && trimmedIntention ? trimmedIntention : null}
           className="h-40 w-full"
         >
           {plant && (

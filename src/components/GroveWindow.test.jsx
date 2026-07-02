@@ -56,6 +56,16 @@ describe('GroveWindow (the timer diorama)', () => {
     expect(dots.filter((d) => d.style.opacity !== '0')).toHaveLength(0)
   })
 
+  it('plants the named intention as a readable sign in the scene', () => {
+    renderScene({ partOfDay: 'day', intention: 'read one page' })
+    expect(screen.getByText('read one page')).toBeInTheDocument()
+  })
+
+  it('shows no sign when there is no intention to plant', () => {
+    const { container } = renderScene({ partOfDay: 'day' })
+    expect(container.textContent).not.toMatch(/when i start/i)
+  })
+
   it('has no axe-detectable violations', async () => {
     renderScene({ partOfDay: 'night' }, <button>Talk to the sprite</button>)
     expect(await axe(document.body)).toHaveNoViolations()

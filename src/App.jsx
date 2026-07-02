@@ -221,7 +221,7 @@ function Dashboard() {
             <div className="focus-dim animate-slide-up flex" style={{ animationDelay: '150ms' }}>
               <FocusMeter className="w-full" />
             </div>
-            <div className="animate-slide-up flex lg:flex-1" style={{ animationDelay: '260ms' }}>
+            <div className="focus-dim animate-slide-up flex lg:flex-1" style={{ animationDelay: '260ms' }}>
               <FocusGarden
                 className="w-full"
                 onOpenAlmanac={() => setShowGrove(true)}

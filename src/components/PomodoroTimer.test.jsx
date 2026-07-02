@@ -230,6 +230,16 @@ describe('PomodoroTimer — session bloom + harvest ceremony', () => {
     expect(await screen.findByRole('dialog', { name: /session reflection/i })).toBeInTheDocument()
   })
 
+  it('pins her named intention as a sign inside the scene once the session starts, not floating above it', () => {
+    renderTimer()
+    fireEvent.change(screen.getByLabelText(/when i start, i will/i), {
+      target: { value: 'read one page' },
+    })
+    expect(screen.queryByText('read one page')).not.toBeInTheDocument()
+    start()
+    expect(scene()).toHaveTextContent('read one page')
+  })
+
   it('an abandoned session shows no loss language and returns to a quiet scene', () => {
     renderTimer()
     start()

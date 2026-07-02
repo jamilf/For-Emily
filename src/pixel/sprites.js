@@ -79,6 +79,10 @@ export const SOOT_NAP = [
 // --- The golden-minute lantern (5 wide): the companion's tiny warm light -----
 export const LANTERN = [' d ', 'YYY', 'YoY', 'YYY', ' d ']
 
+// --- The intention sign (7 wide): a small wooden board on a post, planted in
+// the grove so the one thing she named lives in the scene, not just above it.
+export const SIGN = [' mmmmm ', 'mwwwwwm', 'mw   wm', 'mwwwwwm', ' mmmmm ', '   d   ', '   d   ', '  ddd  ']
+
 // --- Hero scene: a framed rainy window with moon, hills and a windowsill ------
 export const STUDY_ROOM = [
   'mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm',
