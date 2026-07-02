@@ -240,3 +240,93 @@ describe('PomodoroTimer — session bloom + harvest ceremony', () => {
     expect(scene().hasAttribute('data-phase')).toBe(false)
   })
 })
+
+describe('PomodoroTimer — companion presence', () => {
+  const start = () => fireEvent.click(screen.getByRole('button', { name: 'Start' }))
+  const advance = (ms) => act(() => vi.advanceTimersByTime(ms))
+
+  function hideTab() {
+    Object.defineProperty(document, 'hidden', { value: true, configurable: true })
+    act(() => document.dispatchEvent(new Event('visibilitychange')))
+  }
+  function showTab() {
+    Object.defineProperty(document, 'hidden', { value: false, configurable: true })
+    act(() => document.dispatchEvent(new Event('visibilitychange')))
+  }
+
+  it('poses by the real part of day while idle (never while napping or with mail)', () => {
+    const { container, rerender } = render(
+      <AudioMixerProvider>
+        <PomodoroTimer partOfDay="dawn" />
+      </AudioMixerProvider>,
+    )
+    expect(container.querySelector('.animate-soot-look')).toBeTruthy()
+
+    rerender(
+      <AudioMixerProvider>
+        <PomodoroTimer partOfDay="night" />
+      </AudioMixerProvider>,
+    )
+    expect(container.querySelector('.animate-soot-doze')).toBeTruthy()
+    expect(container.querySelector('.animate-soot-look')).toBeFalsy()
+  })
+
+  it('lights a lantern beside the companion only in the golden minute', () => {
+    renderTimer()
+    start()
+    expect(document.body.querySelector('.animate-lantern-flicker')).toBeFalsy()
+    advance(24.5 * 60_000) // inside the final minute of a 25 minute session
+    expect(document.body.querySelector('.animate-lantern-flicker')).toBeTruthy()
+  })
+
+  it('wakes the seedling and offers a dismissible, kind welcome back after a wither pause', () => {
+    localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
+    renderTimer()
+    start()
+    advance(2 * 60_000)
+    hideTab()
+    advance(11_000) // past the 10s wither threshold
+    showTab()
+    expect(screen.getByText(/on pause/i)).toBeInTheDocument() // withered caption, sighted-only
+
+    start() // resume
+    const toast = screen.getByRole('status')
+    expect(toast).toHaveTextContent(/there you are|welcome back|you are here/i)
+    expect(toast.textContent).not.toMatch(/minute|hour|while|long|away|gone|absen/i)
+    expect(screen.queryByText(/on pause/i)).not.toBeInTheDocument() // seedling woke up
+
+    fireEvent.click(screen.getByRole('button', { name: /dismiss welcome back/i }))
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('never opens the welcome back toast for an ordinary fresh start', () => {
+    renderTimer()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    start()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('tapping the companion still opens the talk panel while presence is active', () => {
+    localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
+    render(
+      <AudioMixerProvider>
+        <PomodoroTimer companionName="Pip" partOfDay="morning" />
+      </AudioMixerProvider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /talk to pip/i }))
+    expect(screen.getByRole('dialog', { name: /talk to pip/i })).toBeInTheDocument()
+  })
+
+  it('has no axe-detectable violations with the welcome-back toast open', async () => {
+    localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
+    renderTimer()
+    start()
+    advance(2 * 60_000)
+    hideTab()
+    advance(11_000)
+    showTab()
+    start()
+    vi.useRealTimers()
+    expect(await axe(document.body)).toHaveNoViolations()
+  })
+})

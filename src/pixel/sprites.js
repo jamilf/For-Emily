@@ -76,6 +76,9 @@ export const SOOT_NAP = [
   '   b  b b   ',
 ]
 
+// --- The golden-minute lantern (5 wide): the companion's tiny warm light -----
+export const LANTERN = [' d ', 'YYY', 'YoY', 'YYY', ' d ']
+
 // --- Hero scene: a framed rainy window with moon, hills and a windowsill ------
 export const STUDY_ROOM = [
   'mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm',

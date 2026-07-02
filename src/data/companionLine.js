@@ -41,6 +41,7 @@ function hasNotableState({ streak, weekTrend, lastMood }) {
  * @param {'first'|'up'|'steady'|'down'} [ctx.weekTrend]
  * @param {'rain'|'cloud'|'sun'|null} [ctx.lastMood]
  * @param {number} [ctx.seed]  varies the idle line without churn (caller-supplied)
+ * @param {boolean} [ctx.welcomeBack]  she just resumed after a wither pause
  * @returns {string}
  */
 export function companionLine({
@@ -53,8 +54,20 @@ export function companionLine({
   weekTrend = 'first',
   lastMood = null,
   seed = 0,
+  welcomeBack = false,
 } = {}) {
   const who = companionName ? `, ${companionName}` : ''
+
+  // Resuming after stepping away is the freshest moment: acknowledge it warmly,
+  // above everything else, and never mention how long she was gone.
+  if (welcomeBack) {
+    const lines = [
+      `Oh, there you are${who}. Good to see you.`,
+      `Welcome back${who}. Whenever you are ready, we can pick up right here.`,
+      `You are here${who}. The tree is still growing, right where you left it.`,
+    ]
+    return lines[Math.abs(seed) % lines.length]
+  }
 
   // A waiting letter is the most important thing to mention.
   if (hasMail) return 'Oh, before you go. I left a little letter for you, for whenever you have a moment.'

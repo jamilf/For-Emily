@@ -60,6 +60,26 @@ describe('companionLine — calm idle', () => {
   })
 })
 
+describe('companionLine — welcome back', () => {
+  it('takes priority over everything else, including a waiting letter', () => {
+    const line = companionLine({ welcomeBack: true, hasMail: true, dueCount: 5, running: true })
+    expect(line).toMatch(/there you are|welcome back|you are here/i)
+  })
+
+  it('weaves the companion name in and never mentions how long she was away', () => {
+    const line = companionLine({ welcomeBack: true, companionName: 'Pip' })
+    expect(line).toMatch(/Pip/)
+    expect(line).not.toMatch(/minute|hour|while|long|away|gone|absen/i)
+  })
+
+  it('varies deterministically by seed', () => {
+    const a = companionLine({ welcomeBack: true, seed: 0 })
+    const b = companionLine({ welcomeBack: true, seed: 1 })
+    expect(a).toBe(companionLine({ welcomeBack: true, seed: 0 }))
+    expect(a).not.toBe(b)
+  })
+})
+
 describe('companionLine — copy guard', () => {
   it('never emits an em-dash in any branch', () => {
     const samples = [
@@ -72,6 +92,7 @@ describe('companionLine — copy guard', () => {
       companionLine({ lastMood: 'rain' }),
       companionLine({ lastMood: 'sun' }),
       ...[0, 1, 2, 3].map((seed) => companionLine({ seed, partOfDay: 'dusk' })),
+      ...[0, 1, 2].map((seed) => companionLine({ welcomeBack: true, seed, companionName: 'Pip' })),
     ]
     for (const s of samples) expect(s).not.toContain('—')
   })

@@ -331,6 +331,42 @@ body {
     transform: translateY(-7px);
   }
 }
+/* Companion presence idle poses (Grove Window): a slow look-around by day, a
+   slower doze by night. Both freeze correctly under the global reduced-motion
+   rule, same as the existing soot-bob/rise animations. */
+@keyframes sootLook {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-2px) rotate(-6deg);
+  }
+  55% {
+    transform: translateY(0) rotate(0deg);
+  }
+  80% {
+    transform: translateY(-2px) rotate(6deg);
+  }
+}
+@keyframes sootDoze {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+@keyframes lanternFlicker {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 @keyframes shadowSquish {
   0%,
   100% {
@@ -595,6 +631,15 @@ body {
 }
 .animate-soot-bob {
   animation: sootBob 2.6s ease-in-out infinite;
+}
+.animate-soot-look {
+  animation: sootLook 6s ease-in-out infinite;
+}
+.animate-soot-doze {
+  animation: sootDoze 4.2s ease-in-out infinite;
+}
+.animate-lantern-flicker {
+  animation: lanternFlicker 2.4s ease-in-out infinite;
 }
 .animate-shadow-squish {
   animation: shadowSquish 2.6s ease-in-out infinite;

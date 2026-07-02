@@ -3,14 +3,16 @@ import WindowFrame from './WindowFrame.jsx'
 import PixelSprite from '../pixel/PixelSprite.jsx'
 import usePersistedState from '../hooks/useLocalStorage.js'
 import useEscapeKey from '../hooks/useEscapeKey.js'
-import { SOOT_AWAKE, SOOT_NAP, PAL } from '../pixel/sprites.js'
+import { SOOT_AWAKE, SOOT_NAP, PAL, LANTERN } from '../pixel/sprites.js'
 import CompanionMenu from './CompanionMenu.jsx'
 import GroveWindow from './GroveWindow.jsx'
+import DialogueBox from '../ui/jrpg/DialogueBox.jsx'
 import { BREAK_ACTIVITIES } from '../data/breakActivities.js'
 import { useMixer } from '../audio/AudioMixerProvider.jsx'
 import { generate, witherPalette, STAGES } from '../pixel/PlantGenerator.js'
 import { sessionSeed, growthStageForProgress, growthLabel } from '../data/treeGrowth.js'
 import { bloom, bloomLabel } from '../data/sessionBloom.js'
+import { companionLine } from '../data/companionLine.js'
 import useUiSound from '../hooks/useUiSound.js'
 import { endsAtFrom, remainingSeconds, formatClock } from '../utils/timer.js'
 import { dayStr, yesterdayStr } from '../utils/day.js'
@@ -70,6 +72,7 @@ export default function PomodoroTimer({
   const [, setFocusLog] = usePersistedState('emily.focusLog', {})
   const [showReflection, setShowReflection] = useState(false)
   const [showCeremony, setShowCeremony] = useState(false) // the harvest moment
+  const [welcomeBack, setWelcomeBack] = useState(false) // resumed after a wither pause
   const [reflectionNote, setReflectionNote] = useState('')
   const [breakTip, setBreakTip] = useState(null)
   const [plantDna, setPlantDna] = useState(null) // this session's growing tree
@@ -204,6 +207,7 @@ export default function PomodoroTimer({
     setHasMail(false)
     setShowReflection(false)
     setShowCeremony(false)
+    setWelcomeBack(false)
     setPlantDna(null)
     setWithered(false)
     setBreakTip(
@@ -241,6 +245,12 @@ export default function PomodoroTimer({
         lastStageRef.current = 0
         setPlantDna(sessionSeed({ startTs: Date.now(), plantNext: queued }))
         setWithered(false)
+      } else if (withered) {
+        // Resuming mid-session after a wither pause: the seedling wakes back up
+        // (it was stuck resting forever otherwise), and the companion offers one
+        // warm line acknowledging her return, never how long she was gone.
+        setWithered(false)
+        setWelcomeBack(true)
       }
       restoreMaster(2) // ensure audio is back to normal during focus
     }
@@ -252,6 +262,7 @@ export default function PomodoroTimer({
     setHasMail(false)
     setPlantDna(null)
     setWithered(false)
+    setWelcomeBack(false)
   }
 
   // Choose how long this kind of work wants to be (only while idle in focus).
@@ -315,6 +326,22 @@ export default function PomodoroTimer({
   // this recomputes (and the scene re-renders) at most 1/sec, within the perf budget.
   const bloomState = useMemo(() => bloom(elapsedFrac, { durationSec: total }), [elapsedFrac, total])
   const sceneLive = mode === 'focus' && plantDna != null
+
+  // A tiny lit lantern appears beside the companion for the golden minute, whether
+  // it is awake or napping through the run, a small warm cue nothing else conveys.
+  const showLantern = sceneLive && !withered && (bloomState.phase === 'golden' || bloomState.phase === 'done')
+
+  // Calm idle poses, keyed to the real part of day, only while genuinely idle
+  // (napping keeps its own sleeping grid; a waiting letter keeps its own rise).
+  const poseClass = napping
+    ? 'animate-soot-bob'
+    : hasMail
+      ? 'animate-soot-rise'
+      : partOfDay === 'night'
+        ? 'animate-soot-doze'
+        : partOfDay === 'dawn' || partOfDay === 'day'
+          ? 'animate-soot-look'
+          : 'animate-soot-bob' // dusk keeps the calm default
 
   // THE one polite live region for the whole card. Priority order: completion, then
   // the break, then the wither pause, then growth + scene milestones, then timer
@@ -546,13 +573,22 @@ export default function PomodoroTimer({
               }
               className={`group relative transition-opacity active:scale-95 disabled:cursor-default ${
                 napping ? 'opacity-50' : 'cursor-pointer opacity-100'
-              } ${hasMail ? 'animate-soot-rise' : 'animate-soot-bob'}`}
+              } ${poseClass}`}
             >
               <PixelSprite grid={napping ? SOOT_NAP : SOOT_AWAKE} palette={PAL} pixel={5} />
               {hasMail && (
                 <span className="absolute -right-3 -top-3 text-3xl" aria-hidden="true">
                   ✉️
                 </span>
+              )}
+              {showLantern && (
+                <div
+                  aria-hidden="true"
+                  className="animate-lantern-flicker absolute -right-4 bottom-2"
+                  style={{ filter: 'drop-shadow(0 0 4px rgba(255,210,125,0.85))' }}
+                >
+                  <PixelSprite grid={LANTERN} palette={PAL} pixel={4} />
+                </div>
               )}
             </button>
 
@@ -563,6 +599,27 @@ export default function PomodoroTimer({
             />
           </div>
         </GroveWindow>
+
+        {/* A quiet welcome back after a wither pause: the companion's own small,
+            dismissible toast (mirrors SpriteGreeting elsewhere), never trapping
+            focus and never mentioning how long she was gone. */}
+        {welcomeBack && (
+          <div role="status" aria-live="polite" className="relative w-full max-w-xs">
+            <DialogueBox
+              name={companionName || 'your soot friend'}
+              text={companionLine({ welcomeBack: true, companionName, seed: plantDna ?? 0 })}
+              live={false}
+              className="pr-9"
+            />
+            <button
+              onClick={() => setWelcomeBack(false)}
+              aria-label="Dismiss welcome back"
+              className="absolute right-1.5 top-1.5 grid h-8 w-8 shrink-0 place-items-center rounded-md text-jrpg-text/80 transition-colors hover:text-jrpg-text focus-visible:ring-2 focus-visible:ring-ever-yellow"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Captions live below the scene, on the card surface, so text contrast
             never depends on the sky. */}
