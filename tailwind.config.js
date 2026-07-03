@@ -73,6 +73,19 @@ export default {
         // Crisp lofi "desktop window" shadow with a hard offset edge.
         window: '0 10px 0 -4px rgba(0,0,0,0.18), 0 22px 45px -16px rgba(0,0,0,0.55)',
       },
+      // The app's stacking ladder, named. Scene layers (1-2) sit under content
+      // (10); floating chrome (toasts, dock, drawers, notepad) shares one band
+      // (40); standard modals (50) go under the companion talk panel + first-run
+      // intro (55); the harvest ceremony + scene wipe top those (60); the skip
+      // link (100) and the error boundary (200) outrank everything.
+      zIndex: {
+        toast: '40',
+        modal: '50',
+        talk: '55',
+        ceremony: '60',
+        skip: '100',
+        panic: '200',
+      },
     },
   },
   plugins: [],

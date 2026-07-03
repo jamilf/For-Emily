@@ -27,12 +27,14 @@ export default function ChapterReveal({ chapter, onRead, onAck }) {
     ack()
   }
 
+  // Centered on phones; tucked to the right at desktop widths so it never
+  // covers the greeting title.
   return (
-    <div className="zen-hide pointer-events-none fixed inset-x-0 top-4 z-40 flex justify-center px-4">
+    <div className="zen-hide pointer-events-none fixed inset-x-0 top-4 z-toast flex justify-center px-4 lg:justify-end lg:pr-6">
       <div
         role="status"
         aria-live="polite"
-        className={`pointer-events-auto w-full max-w-sm rounded-2xl border-2 border-brownDark/30 bg-cream/95 p-4 text-brownDark shadow-window sm:backdrop-blur-sm ${
+        className={`toast-chrome pointer-events-auto w-full max-w-sm p-4 ${
           reduced ? '' : 'animate-slide-up'
         }`}
       >

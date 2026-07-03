@@ -196,7 +196,7 @@ function Dashboard() {
             {dueCount > 0 && !focusMode && (
               <button
                 onClick={() => setShowCards(true)}
-                className="flex items-center justify-center gap-2 rounded-2xl border-2 border-brownDark/30 bg-cream/85 px-4 py-2.5 font-display text-sm text-brown shadow-sm transition-all hover:bg-cream active:scale-[0.99] sm:backdrop-blur-sm"
+                className="toast-chrome flex items-center justify-center gap-2 px-4 py-2.5 font-display text-sm text-brown transition-all hover:bg-cream active:scale-[0.99]"
               >
                 <span aria-hidden="true">🃏</span>
                 Review {dueCount} card{dueCount === 1 ? '' : 's'} due today
@@ -232,7 +232,7 @@ function Dashboard() {
           </aside>
         </div>
 
-        <footer className="mb-24 mt-12 text-center font-display text-sm text-cream/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+        <footer className="mb-24 mt-12 text-center font-display text-sm text-cream drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
           For Emily Tran. You&apos;ve got this.
         </footer>
       </main>

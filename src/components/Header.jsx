@@ -65,7 +65,7 @@ export default function Header({
             </button>
           )}
         </div>
-        <h1 className="font-display text-4xl font-semibold text-cream drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] sm:text-[2.75rem] md:text-5xl">
+        <h1 className="font-display text-[length:var(--text-hero)] font-semibold leading-tight text-cream drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
           {greeting}, Emily
         </h1>
         <p className="mx-auto mt-3 max-w-md text-pretty text-cream/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.55)] sm:mx-0">

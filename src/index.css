@@ -64,6 +64,12 @@ body {
  * (set from emily.ui.effects) and reduced-motion drive it down to calm/instant.
  * ------------------------------------------------------------------ */
 :root {
+  /* Fluid type scale: the two sizes that vary most across the 360px-1440px range.
+     Everything else keeps Tailwind's fixed steps. --text-hero lands on the current
+     desktop size (3rem) at wide widths and eases down instead of stepping;
+     --text-clock keeps the timer digits readable at 320px without eating the card. */
+  --text-hero: clamp(2rem, 3vw + 1.25rem, 3rem);
+  --text-clock: clamp(3.25rem, 8vw + 1rem, 4.5rem);
   --jrpg-window-bg: #2a2342;
   --jrpg-window-hi: #3a3158;
   --jrpg-window-text: #fdf6e3;
@@ -190,6 +196,18 @@ body {
   .app-root.zen .zen-hide {
     opacity: 0;
     pointer-events: none;
+  }
+
+  /* Shared floating chrome. Every toast/banner and floating pill wears one of
+     these two recipes instead of restating the border/surface stack inline, so
+     the page's loose pieces read as one crafted set. Callers add their own
+     radius-preserving extras (padding, hover, shadows stay per-surface where
+     they already differ meaningfully). */
+  .toast-chrome {
+    @apply rounded-2xl border-2 border-brownDark/30 bg-cream/95 text-brownDark shadow-window sm:backdrop-blur-sm;
+  }
+  .pill-chrome {
+    @apply rounded-full border-2 border-brownDark/30 bg-cream/85 sm:backdrop-blur-sm;
   }
 }
 

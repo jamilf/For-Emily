@@ -497,7 +497,7 @@ export default function PomodoroTimer({
           </svg>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="font-sans text-6xl font-bold tabular-nums tracking-tight sm:text-6xl md:text-7xl">
+            <span className="font-sans text-[length:var(--text-clock)] font-bold tabular-nums tracking-tight">
               {formatClock(secondsLeft)}
             </span>
             <span className="mt-1.5 text-sm text-brown" aria-hidden="true">

@@ -19,6 +19,13 @@ import { portalTarget } from '../../utils/portalTarget.js'
  *                      the ad-hoc dialog shells. Keeps title/close semantics so the
  *                      existing modal tests (role + accessible name) pass unchanged.
  *
+ * Modal size tiers (pass via widthClass; pick the smallest that fits the content):
+ *   max-w-sm  → a single moment or confirmation (Reflection, Comeback, Ceremony)
+ *   max-w-md  → one focused task or document (Letter, Quests, Sync, Seasons, Themes, Week)
+ *   max-w-lg  → the default working panel (Flashcards review)
+ *   max-w-2xl → browsable collections (Almanac, Journal, Story, Spirits, Memories,
+ *               Constellations, Firefly Calendar)
+ *
  * Flavour only: no slow transitions, no added taps. Everything is reachable by tap
  * and keyboard, and the close button keeps its existing accessible name.
  */
