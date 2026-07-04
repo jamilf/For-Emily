@@ -32,7 +32,9 @@ export default function SpriteGreeting({ text, companionName = null, onName, onD
   const canName = !companionName && typeof onName === 'function'
 
   return (
-    <div className="zen-hide pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4">
+    // Anchored above the dock's reserved clearance, and left-aligned on wider
+    // screens so a hello never sits on top of the timer clock mid-viewport.
+    <div className="zen-hide pointer-events-none fixed inset-x-0 bottom-[var(--dock-clearance)] z-toast flex justify-center px-4 sm:inset-x-auto sm:left-6 sm:justify-start sm:px-0">
       <div role="status" aria-live="polite" className="pointer-events-auto relative w-full max-w-sm">
         <DialogueBox name={companionName || 'your soot friend'} text={text} live={false} className="pr-9">
           {canName && !naming && (

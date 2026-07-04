@@ -95,7 +95,7 @@ export default function GroveAlmanac({ onClose }) {
       ariaLabel="Grove Almanac"
       onClose={onClose}
       closeLabel="Close almanac"
-      widthClass="max-w-2xl"
+      size="xl"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       {selected ? (

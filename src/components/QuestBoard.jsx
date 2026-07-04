@@ -48,7 +48,7 @@ export default function QuestBoard({ onClose }) {
       ariaLabel="Focus Quests"
       onClose={onClose}
       closeLabel="Close quests"
-      widthClass="max-w-md"
+      size="md"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       <div>

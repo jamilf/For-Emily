@@ -104,7 +104,7 @@ export default function ForestSpiritsModal({ onClose }) {
       ariaLabel="Forest Spirits"
       onClose={onClose}
       closeLabel="Close forest spirits"
-      widthClass="max-w-2xl"
+      size="xl"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       {selected ? (

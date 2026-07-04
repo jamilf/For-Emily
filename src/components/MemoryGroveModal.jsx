@@ -78,7 +78,7 @@ export default function MemoryGroveModal({ onClose }) {
       ariaLabel="Memory Grove"
       onClose={onClose}
       closeLabel="Close memory grove"
-      widthClass="max-w-2xl"
+      size="xl"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       {/* Polite status for screen readers on save/remove. */}

@@ -115,7 +115,7 @@ export default function LetterModal({ context = 'idle', onClose }) {
       ariaLabel="A letter for you"
       onClose={onClose}
       closeLabel="Close letter"
-      widthClass="max-w-md"
+      size="md"
       bodyClassName="overflow-y-auto p-7"
     >
       {showKept ? (

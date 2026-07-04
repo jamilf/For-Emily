@@ -78,7 +78,7 @@ export default function SyncModal({ onClose }) {
       ariaLabel="Sync your progress"
       onClose={onClose}
       closeLabel="Close sync"
-      widthClass="max-w-md"
+      size="md"
       bodyClassName="overflow-y-auto p-6"
     >
       {!sync?.available ? (

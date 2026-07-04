@@ -27,7 +27,7 @@ export default function ComebackMoment({ comeback, companionName = null, onClose
       ariaLabel="Welcome back"
       onClose={onClose}
       closeLabel="Close welcome back"
-      widthClass="max-w-sm"
+      size="sm"
       bodyClassName="flex flex-col items-center gap-3 overflow-y-auto p-6 text-center"
     >
       <div className="flex justify-center" aria-hidden="true">

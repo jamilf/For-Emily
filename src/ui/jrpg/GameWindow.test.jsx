@@ -29,6 +29,30 @@ describe('GameWindow', () => {
     expect(screen.getByRole('dialog', { name: /flashcards/i })).toBeInTheDocument()
   })
 
+  it('titles the window with a real h2 heading', () => {
+    render(
+      <GameWindow title="Grove Almanac">
+        <p>trees</p>
+      </GameWindow>,
+    )
+    expect(screen.getByRole('heading', { level: 2, name: 'Grove Almanac' })).toBeInTheDocument()
+  })
+
+  it('applies the named size tiers to the modal shell (widthClass still wins as an override)', () => {
+    const { rerender } = render(
+      <GameWindow modal title="Letter" size="md" onClose={() => {}}>
+        <p>note</p>
+      </GameWindow>,
+    )
+    expect(document.querySelector('.animate-modal-in').className).toContain('max-w-md')
+    rerender(
+      <GameWindow modal title="Letter" size="md" widthClass="max-w-3xl" onClose={() => {}}>
+        <p>note</p>
+      </GameWindow>,
+    )
+    expect(document.querySelector('.animate-modal-in').className).toContain('max-w-3xl')
+  })
+
   it('renders a labeled close button that fires onClose', () => {
     const onClose = vi.fn()
     render(

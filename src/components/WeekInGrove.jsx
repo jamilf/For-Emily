@@ -78,7 +78,7 @@ export default function WeekInGrove({ onClose }) {
       title="🌿 Your week"
       onClose={onClose}
       closeLabel="Close your week"
-      widthClass="max-w-md"
+      size="md"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       <p className="text-sm leading-snug text-brown/80" aria-live="polite">

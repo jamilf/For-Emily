@@ -5,13 +5,13 @@ import App from './App.jsx'
 
 // The whole dashboard, mounted for real (providers, scene layers, timer card).
 // These are the page-level guarantees the redesign work leans on: the landmark
-// skeleton, one h1, a skip link, and an axe-clean main view.
+// skeleton, a logical heading outline, and an axe-clean main view.
 
 beforeEach(() => {
   localStorage.clear()
-  // Past the one-time intro, and quiet the ambient toasts' story derivations by
-  // marking today as already seen (a fresh lastSeen means a greeting, which is
-  // fine — it must also be axe-clean).
+  // Past the one-time intro; minimal effects keep the render deterministic in
+  // jsdom (no typewriters), and the canvas layers all self-guard against
+  // jsdom's missing 2D context.
   localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
 })
 
@@ -25,11 +25,35 @@ describe('App — the main view', () => {
     expect(skip).toHaveAttribute('href', '#main-content')
   })
 
+  it('keeps every floating piece inside a landmark: nav dock, notepad, contentinfo', () => {
+    render(<App />)
+    expect(screen.getByRole('navigation', { name: 'Tools' })).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Notepad' })).toBeInTheDocument()
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+  })
+
   it('has exactly one h1: the greeting', () => {
     render(<App />)
     const h1s = screen.getAllByRole('heading', { level: 1 })
     expect(h1s).toHaveLength(1)
     expect(h1s[0]).toHaveTextContent(/good (morning|afternoon|evening), emily/i)
+  })
+
+  it('has a logical heading outline: the h1 first, then the cards as h2 sections', () => {
+    render(<App />)
+    const headings = screen.getAllByRole('heading')
+    expect(headings[0].tagName).toBe('H1')
+    // No level is ever skipped going down the outline.
+    let prev = 1
+    for (const h of headings) {
+      const level = Number(h.tagName[1])
+      expect(level - prev).toBeLessThanOrEqual(1)
+      prev = level
+    }
+    // The three dashboard cards title themselves.
+    expect(screen.getByRole('heading', { level: 2, name: 'Pomodoro' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Focus Meter' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'My Garden' })).toBeInTheDocument()
   })
 
   it('renders the hearth (timer) inside main with its primary action reachable', () => {
@@ -39,7 +63,7 @@ describe('App — the main view', () => {
   })
 
   it('has no axe-detectable violations on the full dashboard', async () => {
-    const { container } = render(<App />)
-    expect(await axe(container)).toHaveNoViolations()
+    render(<App />)
+    expect(await axe(document.body)).toHaveNoViolations()
   }, 30000)
 })

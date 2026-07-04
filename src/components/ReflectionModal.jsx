@@ -30,7 +30,7 @@ export default function ReflectionModal({
       title="Nice work, Emily"
       ariaLabel="Session reflection"
       onClose={onClose}
-      widthClass="max-w-sm"
+      size="sm"
       bodyClassName="overflow-y-auto p-6 text-center"
     >
       <p className="font-display text-sm text-brown">How did that go?</p>

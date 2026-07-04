@@ -173,7 +173,7 @@ export default function FireflyCalendar({ onClose }) {
       ariaLabel="Firefly Calendar"
       onClose={onClose}
       closeLabel="Close calendar"
-      widthClass="max-w-2xl"
+      size="xl"
       bodyTone=""
       bodyClassName="space-y-5 overflow-y-auto bg-bg0 p-5 text-fg"
     >

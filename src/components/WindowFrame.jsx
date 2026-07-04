@@ -28,9 +28,11 @@ export default function WindowFrame({
         }
       >
         <span aria-hidden="true" className="h-2.5 w-2.5 rotate-45 bg-jrpg-cursor" />
-        <span className="ml-0.5 font-display text-base font-medium tracking-wide text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
+        {/* A real h2 (identical styling) so the page has a logical heading outline:
+            the greeting h1, then each card as a section heading. */}
+        <h2 className="ml-0.5 font-display text-base font-medium tracking-wide text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
           {title}
-        </span>
+        </h2>
       </div>
 
       {/* Window body — textured paper with a soft inner top highlight */}

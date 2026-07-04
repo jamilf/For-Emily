@@ -141,7 +141,7 @@ function Dashboard() {
     <div className={rootClass} data-fx={effects}>
       <a
         href="#main-content"
-        className="sr-only z-[100] rounded-lg bg-brown px-4 py-2 font-display text-sm text-cream focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        className="sr-only z-skip rounded-lg bg-brown px-4 py-2 font-display text-sm text-cream focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
       >
         Skip to main content
       </a>
@@ -232,7 +232,9 @@ function Dashboard() {
           </aside>
         </div>
 
-        <footer className="mb-24 mt-12 text-center font-display text-sm text-cream drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+        {/* Bottom margin reserves the floating dock's space (plus safe area) so the
+            last line is always scrollable clear of it. */}
+        <footer className="mb-[var(--dock-clearance)] mt-12 text-center font-display text-sm text-cream drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
           For Emily Tran. You&apos;ve got this.
         </footer>
       </main>

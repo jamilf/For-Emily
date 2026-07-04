@@ -24,7 +24,7 @@ export default function SeasonsModal({ onClose }) {
       ariaLabel="Sanctuary Seasons"
       onClose={onClose}
       closeLabel="Close seasons"
-      widthClass="max-w-md"
+      size="md"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       <p className="text-sm text-brown/75">

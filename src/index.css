@@ -81,6 +81,11 @@ body {
   --jrpg-cursor: #ffd27d;
   --jrpg-sel-bg: #4a3e6e;
   --fx-scale: 1;
+  /* Vertical room the floating dock needs at the bottom of the viewport: dock
+     height + its offset + the device safe area. Ambient toasts anchor above this
+     and the page reserves it below the content, so nothing fixed ever sits on
+     top of something she needs to read or tap. */
+  --dock-clearance: calc(5.25rem + env(safe-area-inset-bottom));
 }
 [data-fx='calm'] {
   --fx-scale: 0.6;

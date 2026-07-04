@@ -19,12 +19,13 @@ import { portalTarget } from '../../utils/portalTarget.js'
  *                      the ad-hoc dialog shells. Keeps title/close semantics so the
  *                      existing modal tests (role + accessible name) pass unchanged.
  *
- * Modal size tiers (pass via widthClass; pick the smallest that fits the content):
- *   max-w-sm  → a single moment or confirmation (Reflection, Comeback, Ceremony)
- *   max-w-md  → one focused task or document (Letter, Quests, Sync, Seasons, Themes, Week)
- *   max-w-lg  → the default working panel (Flashcards review)
- *   max-w-2xl → browsable collections (Almanac, Journal, Story, Spirits, Memories,
- *               Constellations, Firefly Calendar)
+ * Modal size tiers (pass via `size`; pick the smallest that fits the content):
+ *   sm → a single moment or confirmation (Reflection, Comeback)
+ *   md → one focused task or document (Letter, Quests, Sync, Seasons, Themes, Week)
+ *   lg → the default working panel (Flashcards review)
+ *   xl → browsable collections (Almanac, Journal, Story, Spirits, Memories,
+ *        Constellations, Firefly Calendar)
+ *   (widthClass remains as a bespoke escape hatch and wins over `size`.)
  *
  * Flavour only: no slow transitions, no added taps. Everything is reachable by tap
  * and keyboard, and the close button keeps its existing accessible name.
@@ -44,6 +45,16 @@ function Ornaments() {
   )
 }
 
+// Named modal size tiers — one scale for every overlay instead of per-caller
+// width classes: sm (small confirmations), md (letters, single-column reads),
+// lg (the default), xl (browsing grids like the Almanac).
+const SIZES = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-2xl',
+}
+
 export default function GameWindow({
   title,
   ariaLabel,
@@ -55,7 +66,8 @@ export default function GameWindow({
   className = '',
   bodyClassName = '',
   bodyTone,
-  widthClass = 'max-w-lg',
+  size = 'lg',
+  widthClass,
   headerRight = null,
   initialFocusRef,
   children,
@@ -92,9 +104,10 @@ export default function GameWindow({
         style={{ background: 'linear-gradient(to bottom, #5C3A6E, #4A2F5C 55%, #352A52)' }}
       >
         <span aria-hidden="true" className="jrpg-bar-gem h-2.5 w-2.5 rotate-45 bg-jrpg-cursor" />
-        <span className="ml-0.5 flex-1 truncate font-display text-base tracking-wide text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
+        {/* A real h2 (identical styling) so every window titles its own outline. */}
+        <h2 className="ml-0.5 flex-1 truncate font-display text-base font-normal tracking-wide text-cream drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
           {title}
-        </span>
+        </h2>
         {headerRight}
         {onClose && (
           <button
@@ -128,7 +141,11 @@ export default function GameWindow({
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-bgDim/80 sm:backdrop-blur-sm"
       />
-      <div className={`animate-modal-in relative z-10 flex max-h-full w-full flex-col ${widthClass}`}>
+      <div
+        className={`animate-modal-in relative z-10 flex max-h-full w-full flex-col ${
+          widthClass || SIZES[size] || SIZES.lg
+        }`}
+      >
         {windowEl}
       </div>
     </div>

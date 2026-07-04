@@ -110,7 +110,7 @@ export default function Journal({ onClose }) {
       ariaLabel="Your Journal"
       onClose={onClose}
       closeLabel="Close journal"
-      widthClass="max-w-2xl"
+      size="xl"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       <p className="text-sm text-brown/75">

@@ -74,7 +74,7 @@ export default function Constellations({ onClose }) {
       ariaLabel="Your Constellations"
       onClose={onClose}
       closeLabel="Close constellations"
-      widthClass="max-w-2xl"
+      size="xl"
       bodyTone=""
       bodyClassName="space-y-4 overflow-y-auto bg-bg0 p-5 text-fg"
     >

@@ -18,9 +18,10 @@ export default function Dock({
     'relative flex h-11 w-11 items-center justify-center rounded-full border-2 text-lg transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-ever-yellow'
 
   return (
-    <div
+    // A nav landmark (not a bare toolbar) so the floating dock is reachable from
+    // landmark navigation and every part of the page lives inside a region.
+    <nav
       aria-label="Tools"
-      role="toolbar"
       className="pill-chrome fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-toast mx-auto flex w-fit items-center gap-2 px-2.5 py-2 shadow-window"
     >
       {items.map((it) => {
@@ -75,6 +76,6 @@ export default function Dock({
       >
         <span aria-hidden="true">🌙</span>
       </button>
-    </div>
+    </nav>
   )
 }

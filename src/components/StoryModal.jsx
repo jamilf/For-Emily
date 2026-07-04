@@ -108,7 +108,7 @@ export default function StoryModal({ onClose }) {
       ariaLabel="Grove Story"
       onClose={onClose}
       closeLabel="Close story"
-      widthClass="max-w-2xl"
+      size="xl"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       {unlocked.length === 0 ? (

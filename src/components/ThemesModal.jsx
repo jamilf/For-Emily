@@ -47,7 +47,7 @@ export default function ThemesModal({ onClose }) {
       ariaLabel="Scene Themes"
       onClose={onClose}
       closeLabel="Close themes"
-      widthClass="max-w-md"
+      size="md"
       bodyClassName="space-y-4 overflow-y-auto p-5"
     >
       <p className="text-sm text-brown/75">
