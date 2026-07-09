@@ -234,8 +234,12 @@ function Dashboard() {
 
         {/* Bottom margin reserves the floating dock's space (plus safe area) so the
             last line is always scrollable clear of it. */}
-        <footer className="mb-[var(--dock-clearance)] mt-12 text-center font-display text-sm text-cream drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-          For Emily Tran. You&apos;ve got this.
+        <footer className="mb-[var(--dock-clearance)] mt-12 text-center">
+          {/* A soft chip (same idiom as the Grove badge) so the dedication stays
+              readable over every daypart's sky and the light sill alike. */}
+          <p className="inline-block rounded-full border border-cream/20 bg-bgDim/40 px-4 py-1.5 font-display text-sm text-cream sm:backdrop-blur-sm">
+            For Emily Tran. You&apos;ve got this.
+          </p>
         </footer>
       </main>
 

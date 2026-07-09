@@ -214,6 +214,11 @@ body {
   .pill-chrome {
     @apply rounded-full border-2 border-brownDark/30 bg-cream/85 sm:backdrop-blur-sm;
   }
+
+  /* The one focus-visible style every new interactive element wears. */
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-ever-yellow;
+  }
 }
 
 /* ------------------------------------------------------------------ *

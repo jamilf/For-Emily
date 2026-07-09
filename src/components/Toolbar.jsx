@@ -15,8 +15,10 @@ export default function Toolbar({
   dueCount = 0,
 }) {
   const sync = useSync()
+  // Labels stay visible at every width (icon-only circles read as mystery meat on
+  // a phone); the chip just tightens a little below sm.
   const chip =
-    'pill-chrome flex items-center gap-2 px-4 py-2 font-display text-sm text-brown shadow-sm transition-all hover:bg-cream active:scale-95'
+    'pill-chrome flex min-h-[44px] items-center gap-1.5 px-3 py-2 font-display text-xs text-brown shadow-sm transition-all hover:bg-cream active:scale-95 sm:gap-2 sm:px-4 sm:text-sm'
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
@@ -28,7 +30,7 @@ export default function Toolbar({
           aria-pressed={focusMode}
           className={`${chip} ${focusMode ? 'ring-2 ring-ever-yellow' : ''}`}
         >
-          🎯 <span className="hidden sm:inline">{focusMode ? 'Focusing' : 'Focus'}</span>
+          🎯 <span>{focusMode ? 'Focusing' : 'Focus'}</span>
         </button>
       )}
 
@@ -40,7 +42,7 @@ export default function Toolbar({
           className={`relative ${chip}`}
           aria-label="Open flashcards"
         >
-          🃏 <span className="hidden sm:inline">Flashcards</span>
+          🃏 <span>Flashcards</span>
           {dueCount > 0 && (
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-ever-green px-1.5 text-xs text-bg0">
               {dueCount}
@@ -52,14 +54,14 @@ export default function Toolbar({
       {/* Focus quests */}
       {onOpenQuests && (
         <button type="button" onClick={onOpenQuests} className={chip} aria-label="Open today's focus quests">
-          📜 <span className="hidden sm:inline">Quests</span>
+          📜 <span>Quests</span>
         </button>
       )}
 
       {/* Guide */}
       {onOpenGuide && (
         <button type="button" onClick={onOpenGuide} className={chip} aria-label="How to use this app">
-          ❔ <span className="hidden sm:inline">Guide</span>
+          ❔ <span>Guide</span>
         </button>
       )}
 
@@ -71,7 +73,7 @@ export default function Toolbar({
           className={`relative ${chip}`}
           aria-label={sync.signedIn ? 'Sync settings, signed in' : 'Sync your progress across devices'}
         >
-          ☁️ <span className="hidden sm:inline">{sync.signedIn ? 'Synced' : 'Sync'}</span>
+          ☁️ <span>{sync.signedIn ? 'Synced' : 'Sync'}</span>
           {sync.signedIn && (
             <span
               aria-hidden="true"
