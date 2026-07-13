@@ -213,7 +213,9 @@ describe('PomodoroTimer — session bloom + harvest ceremony', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(await screen.findByRole('dialog', { name: /session reflection/i })).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: /a little harvest/i })).not.toBeInTheDocument()
-  })
+    // Driving a full 25-minute session fires ~6000 interval ticks; generous
+    // timeout so a slow shared CI runner never flakes this on pure contention.
+  }, 15_000)
 
   it('the ceremony shows her intention back and its Continue button also advances', async () => {
     localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
@@ -287,7 +289,8 @@ describe('PomodoroTimer — companion presence', () => {
     expect(document.body.querySelector('.animate-lantern-flicker')).toBeFalsy()
     advance(24.5 * 60_000) // inside the final minute of a 25 minute session
     expect(document.body.querySelector('.animate-lantern-flicker')).toBeTruthy()
-  })
+    // ~5900 interval ticks of render work; see the ceremony test above.
+  }, 15_000)
 
   it('wakes the seedling and offers a dismissible, kind welcome back after a wither pause', () => {
     localStorage.setItem('emily.ui', JSON.stringify({ effects: 'minimal', onboarded: true }))
