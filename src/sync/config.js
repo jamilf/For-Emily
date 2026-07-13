@@ -12,6 +12,23 @@ export const SUPABASE_ANON_KEY =
 
 export const SYNC_ENABLED = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
 
+/**
+ * Where the sign-in email's link should land: this app, INCLUDING the deploy
+ * base path. `window.location.origin` alone loses Vite's base, so on GitHub
+ * Pages the link would land on the account root (a 404) instead of
+ * /For-Emily/. Root deploys are unchanged (base '/'). The origin must also be
+ * in the Supabase project's Auth URL allow-list for it to take effect.
+ * @param {string} origin  e.g. https://jamilf.github.io
+ * @param {string} base    Vite base path, e.g. '/' or '/For-Emily/'
+ */
+export function authRedirectUrl(
+  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  base = import.meta.env.BASE_URL || '/',
+) {
+  if (!origin) return undefined
+  return new URL(base, origin).href
+}
+
 // Lazily create a single Supabase client. Imported dynamically so the SDK stays
 // out of the initial bundle and only loads when sync is actually used.
 let _client = null

@@ -144,7 +144,8 @@ export default function SyncModal({ onClose }) {
         // ── Code step ────────────────────────────────────────────────
         <form onSubmit={handleVerify} className="space-y-3">
           <p className="text-sm text-brown/80">
-            Enter the 6-digit code we sent to <span className="font-display">{email}</span>.
+            Enter the 6-digit code we sent to <span className="font-display">{email}</span>. If the email
+            shows a sign-in link instead, opening that link on this device also signs you in.
           </p>
           <input
             inputMode="numeric"

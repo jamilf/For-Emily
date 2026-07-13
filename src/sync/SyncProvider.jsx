@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { getClient, SYNC_ENABLED } from './config.js'
+import { getClient, SYNC_ENABLED, authRedirectUrl } from './config.js'
 import { CHANNEL } from '../hooks/useLocalStorage.js'
 import { isSyncKey, isSuppressed, stampKey, syncOnce } from './syncEngine.js'
 
@@ -105,12 +105,12 @@ export default function SyncProvider({ children }) {
     async (addr) => {
       const client = await ensureClient()
       if (!client) throw new Error('Sync is unavailable.')
-      // Point any link in the email at THIS app's origin (foremilytran.com in
-      // production, localhost:5173 in dev) instead of the Supabase project's
-      // default Site URL (localhost:3000). The origin must also be in the
-      // project's Auth → URL Configuration redirect allow-list for it to take
-      // effect; the typed 6-digit code path works regardless.
-      const emailRedirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
+      // Point any link in the email at THIS app (origin + deploy base path,
+      // so GitHub Pages lands on /For-Emily/ and not a 404) instead of the
+      // Supabase project's default Site URL (localhost:3000). The URL must
+      // also be in the project's Auth URL allow-list to take effect; the
+      // typed 6-digit code path works regardless.
+      const emailRedirectTo = authRedirectUrl()
       const { error } = await client.auth.signInWithOtp({
         email: addr,
         options: { shouldCreateUser: true, emailRedirectTo },
